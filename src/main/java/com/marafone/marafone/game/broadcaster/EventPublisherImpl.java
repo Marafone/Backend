@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class GameBroadcaster implements EventBroadcaster{
+public class EventPublisherImpl implements EventPublisher {
 
     private final SimpMessagingTemplate template;
     private final String topic = "/topic/game/";
@@ -17,11 +17,19 @@ public class GameBroadcaster implements EventBroadcaster{
 
     }
     @Override
-    public void publishMyCardsState(Long gameId, MyCardsState myCardsState) {
+    public void publishMyCardsState(Long gameId, MyCardsState myCardsState, String principalName) {
 
     }
     @Override
-    public void publishPlayersInfoState(Long gameId, PlayersInfoState playersInfoState) {
+    public void publishPlayersOrderState(Long gameId, PlayersOrderState playersInfoState) {
+
+    }
+    @Override
+    public void publishPointState(Long gameId, PointState pointState) {
+
+    }
+    @Override
+    public void publishTeamState(Long gameId, TeamState teamState) {
 
     }
     @Override

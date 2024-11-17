@@ -4,7 +4,7 @@ import com.marafone.marafone.game.model.GamePlayer;
 
 import java.util.List;
 
-public class PlayersInfoState {
-    List<GamePlayer> playersInfo;
+public class PlayersOrderState {
+    List<String> playersOrder;
 }
 
