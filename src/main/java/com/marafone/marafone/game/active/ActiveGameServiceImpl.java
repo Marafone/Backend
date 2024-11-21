@@ -1,5 +1,6 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class ActiveGameServiceImpl implements ActiveGameService{
 
     private final ActiveGameRepository activeGameRepository;
+    private final EventPublisher eventPublisher;
 
     @Override
     public Long createGame(CreateGameRequest createGameRequest, String principalName) {

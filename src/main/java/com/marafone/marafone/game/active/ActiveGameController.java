@@ -8,12 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -25,12 +21,14 @@ public class ActiveGameController {
 
     /* Principal is the owner of the game. Should return id of the created game. */
     @PostMapping("/game/create")
+    @ResponseBody
     public Long createGame(@RequestBody CreateGameRequest createGameRequest, Principal principal){
         return null;
     }
 
     /* Should return 200 OK when user correctly joins the game and broadcast new PlayerInfoState to /topic/game/{id}*/
     @PostMapping("/game/{id}/join")
+    @ResponseBody
     public ResponseEntity<Void> joinGame(@PathVariable("id") Long gameId, @RequestBody JoinGameRequest joinGameRequest, Principal principal){
 
         return null;

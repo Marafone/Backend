@@ -1,13 +1,23 @@
 package com.marafone.marafone.user;
 
 import jakarta.persistence.Entity;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.Collection;
+import java.io.Serializable;
 
 @Entity
-public class User /*implements UserDetails*/{
+@Data
+@Builder
+@AllArgsConstructor
+@Table(name = "users")
+@NoArgsConstructor
+public class User implements Serializable /*implements UserDetails*/{
+    @Id
     private Long id;
     private String username;
     private String email;
