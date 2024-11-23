@@ -1,25 +1,15 @@
 package com.marafone.marafone.game.logic;
 
+import com.marafone.marafone.game.event.incoming.CardSelectEvent;
+import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
+
 public class Maraffa extends GameLogic{
-
     @Override
-    public synchronized void addPlayer() {
-
+    public synchronized boolean selectCard(CardSelectEvent cardSelectEvent, String principalName) {
+        return false;
     }
     @Override
-    public synchronized void startGame() {
-
-    }
-    @Override
-    public synchronized void checkTimeout() {
-
-    }
-    @Override
-    public synchronized void selectCard() {
-
-    }
-    @Override
-    public synchronized void selectSuit() {
-
+    public synchronized boolean selectSuit(TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName) {
+        return false;
     }
 }

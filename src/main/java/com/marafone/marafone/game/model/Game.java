@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 @Entity
 @Data
@@ -33,5 +35,5 @@ public class Game {
     @JoinColumn
     private GamePlayer owner;
     @Transient
-    private GamePlayer currentPlayerTurn;
+    private ListIterator<GamePlayer> currentPlayerTurn;
 }
