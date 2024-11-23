@@ -13,7 +13,7 @@ public class ActiveGameRepositoryImpl implements ActiveGameRepository{
 
     @Override
     public Optional<Game> findById(Long id) {
-        return Optional.ofNullable(activeGames.get(id));
+        return null;
     }
 
     /* Generate random int, put it into hashmap and return id*/
