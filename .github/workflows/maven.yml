@@ -21,6 +21,14 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+
+    - name: Start up dependencies
+      run: docker compose up -d
+
+    - name: Wait for dependencies to start up
+      run: sleep 30s
+      shell: bash
+
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
