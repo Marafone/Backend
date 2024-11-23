@@ -89,6 +89,15 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<!-- Surefire Plugin to display test results in xml format -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M5</version> <!-- Adjust version if needed -->
+				<configuration>
+					<reportsDirectory>${project.basedir}/target/surefire-reports</reportsDirectory>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
