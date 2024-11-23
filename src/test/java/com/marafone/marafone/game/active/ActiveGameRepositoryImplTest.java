@@ -34,9 +34,7 @@ class ActiveGameRepositoryImplTest {
         var result = activeGameRepository.findById(1L);
 
         //then
-
         assertFalse(result.isPresent());
     }
-
 
 }
