@@ -1,10 +1,11 @@
 package com.marafone.marafone.game.event.outgoing;
 
-import com.marafone.marafone.game.model.GamePlayer;
+import lombok.Data;
 
 import java.util.List;
 
-public class PlayersOrderState {
+@Data
+public class PlayersOrderState extends OutEvent{
     List<String> playersOrder;
 }
 

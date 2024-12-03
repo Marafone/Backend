@@ -19,6 +19,7 @@ public class Game {
     @Id
     @GeneratedValue
     private Long id;
+    private String name;
     private LocalDateTime createdAt;
     private LocalDateTime startedAt;
     private Team winnerTeam;

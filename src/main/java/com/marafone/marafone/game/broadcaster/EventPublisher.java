@@ -1,12 +1,17 @@
 package com.marafone.marafone.game.broadcaster;
-import com.marafone.marafone.game.event.outgoing.*;
+
+import com.marafone.marafone.game.event.outgoing.OutEvent;
+
+import java.util.List;
+
 public interface EventPublisher {
-    void publishGameState(Long gameId, GameState gameState);
-    void publishMyCardsState(Long gameId, MyCardsState myCardsState, String principalName);
-    void publishPlayersOrderState(Long gameId, PlayersOrderState playersInfoState);
-    void publishPointState(Long gameId, PointState pointState);
-    void publishTeamState(Long gameId, TeamState teamState);
-    void publishTrumpSuitState(Long gameId, TrumpSuitState trumpSuitState);
-    void publishTurnState(Long gameId, TurnState turnState);
-    void publishWinnerState(Long gameId, WinnerState winnerState);
+    default void publishToLobby(Long gameId, OutEvent outEvent){
+        publishToLobby(gameId, List.of(outEvent));
+    }
+    void publishToLobby(Long gameId, List<OutEvent> outEvents);
+
+    default void publishToPlayerInTheLobby(Long gameId, String username, OutEvent outEvent){
+        publishToPlayerInTheLobby(gameId, username, List.of(outEvent));
+    }
+    void publishToPlayerInTheLobby(Long gameId, String username, List<OutEvent> outEvents);
 }

@@ -30,7 +30,6 @@ public class ActiveGameController {
     @PostMapping("/game/{id}/join")
     @ResponseBody
     public ResponseEntity<Void> joinGame(@PathVariable("id") Long gameId, @RequestBody JoinGameRequest joinGameRequest, Principal principal){
-
         return null;
     }
 

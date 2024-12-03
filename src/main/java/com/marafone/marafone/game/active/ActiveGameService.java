@@ -5,7 +5,6 @@ import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 
-import java.security.Principal;
 public interface ActiveGameService {
     Long createGame(CreateGameRequest createGameRequest, String principalName);
     Boolean joinGame(Long gameId, JoinGameRequest joinGameRequest, String principalName);
