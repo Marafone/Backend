@@ -2,6 +2,10 @@ package com.marafone.marafone.game.active;
 import com.marafone.marafone.DummyData;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
+import com.marafone.marafone.game.event.incoming.JoinGameRequest;
+import com.marafone.marafone.game.model.Game;
+import com.marafone.marafone.game.model.Team;
+import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,8 +42,49 @@ class ActiveGameServiceImplTest {
         Mockito.when(userRepository.findByUsername(any())).thenReturn(Optional.ofNullable(DummyData.getUserA()));
 
         //when
-        Long gameId = activeGameServiceImpl.createGame(DummyData.getCreateGameRequestA(), "Norbert");
+        Long gameId = activeGameServiceImpl.createGame(DummyData.getCreateGameRequestA(), DummyData.getUserA().getUsername());
 
         //then
-        assertEquals(2L, gameId);}
+        assertEquals(2L, gameId);
+    }
+
+    @Test
+    void joiningNotFullTeamShouldReturnTrue(){
+        //given
+        var game = DummyData.getGameA();
+        game.setStartedAt(null);
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.ofNullable(game));
+        Mockito.when(userRepository.findByUsername(any())).thenReturn(Optional.ofNullable(DummyData.getUserB()));
+
+        //when
+        Boolean joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB().getUsername());
+
+        //then
+        assertEquals(true, joined);
+    }
+
+    /* TODO implement tests for joining game
+
+    @Test
+    void joiningFullTeamShouldReturnFalse(){
+
+    }
+
+    @Test
+    void joiningNotExistentGameShouldThrowException(){
+
+    }
+
+    @Test
+    void joiningGameWithBadJoinCodeShouldReturnFalse(){
+
+    }
+
+    @Test
+    void joiningSameGameTwoTimesShouldReturnFalse(){
+
+    }
+
+     */
+
 }

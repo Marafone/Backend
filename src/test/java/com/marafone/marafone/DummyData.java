@@ -1,6 +1,7 @@
 package com.marafone.marafone;
 
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
+import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.User;
 
@@ -16,6 +17,15 @@ public class DummyData {
                 .username("John")
                 .email("john@gmail.com")
                 .password("123")
+                .build();
+    }
+
+    public static User getUserB(){
+        return User.builder()
+                .id(2L)
+                .username("Maria")
+                .email("Cariah")
+                .password("qwerty")
                 .build();
     }
 
@@ -36,6 +46,24 @@ public class DummyData {
                                 new Card(2L, CardRank.C, Suit.CUPS),
                                 new Card(3L, CardRank.A, Suit.CLUBS)
                             )
+                        )
+                )
+                .build();
+    }
+
+    public static GamePlayer getGamePlayerB(){
+        return GamePlayer.builder()
+                .id(1L)
+                .user(getUserB())
+                .team(Team.BLUE)
+                .points(9)
+                .ownedCards(
+                        new ArrayList<>(
+                                Arrays.asList(
+                                        getCardA(),
+                                        new Card(2L, CardRank.FIVE, Suit.CUPS),
+                                        new Card(3L, CardRank.J, Suit.SWORDS)
+                                )
                         )
                 )
                 .build();
@@ -71,6 +99,10 @@ public class DummyData {
 
     public static CreateGameRequest getCreateGameRequestA(){
         return new CreateGameRequest(GameType.MARAFFA, "123");
+    }
+
+    public static JoinGameRequest getJoinGameRequestA(){
+        return new JoinGameRequest(Team.BLUE, null);
     }
 
 }

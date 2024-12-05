@@ -5,17 +5,16 @@ import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
+import com.marafone.marafone.game.event.outgoing.PlayersOrderState;
 import com.marafone.marafone.game.model.Game;
 import com.marafone.marafone.game.model.GamePlayer;
 import com.marafone.marafone.game.model.Team;
-import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.LinkedList;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,13 +24,17 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final UserRepository userRepository;
 
-    @Override
-    public Long createGame(CreateGameRequest createGameRequest, String principalName) {
-        GamePlayer gamePlayer = GamePlayer.builder()
+    private GamePlayer createGamePlayer(String principalName, Team team){
+        return GamePlayer.builder()
                 .user(userRepository.findByUsername(principalName).get())
-                .team(Team.RED)
+                .team(team)
                 .points(0)
                 .build();
+    }
+
+    @Override
+    public Long createGame(CreateGameRequest createGameRequest, String principalName) {
+        GamePlayer gamePlayer = createGamePlayer(principalName, Team.RED);
 
         Game game = Game.builder()
                 .createdAt(LocalDateTime.now())
@@ -39,6 +42,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .rounds(new LinkedList<>())
                 .gameType(createGameRequest.getGameType())
                 .owner(gamePlayer)
+                .joinGameCode(createGameRequest.getJoinGameCode())
                 .build();
 
         Long id = activeGameRepository.put(game);
@@ -47,13 +51,26 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         return id;
     }
-    /*
-        Should load game from repo, try to add player, if added player then emit events e.g. PlayersOrderState
-        if could not add player (e.g. lobby was full or game was already started) then should not emit any events and just ignore the request
-     */
+
     @Override
     public Boolean joinGame(Long gameId, JoinGameRequest joinGameRequest, String principalName) {
-        return null;
+        Game game = activeGameRepository.findById(gameId)
+                .orElseThrow();
+
+        synchronized (game){
+            if(game.teamIsFull(joinGameRequest.team) || game.hasStarted() || !game.checkCode(joinGameRequest.joinGameString)
+            || game.playerAlreadyJoined(principalName)){
+                return false;
+            }
+            GamePlayer gamePlayer = createGamePlayer(principalName, joinGameRequest.team);
+            game.getPlayersList().add(gamePlayer);
+
+            eventPublisher.publishToLobby(gameId, new PlayersOrderState(
+                    game.getPlayersList().stream().map(player -> player.getUser().getUsername()).toList()
+            ));
+        }
+
+        return true;
     }
     /*
         Check if last action was made more than 16 sec ago and if yes then should select random card (similiar logic to selectCard)

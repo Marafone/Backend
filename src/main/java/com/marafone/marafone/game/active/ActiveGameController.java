@@ -5,6 +5,7 @@ import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.NoSuchElementException;
 
 @Controller
 @RequiredArgsConstructor
@@ -30,7 +32,15 @@ public class ActiveGameController {
     @PostMapping("/game/{id}/join")
     @ResponseBody
     public ResponseEntity<Void> joinGame(@PathVariable("id") Long gameId, @RequestBody JoinGameRequest joinGameRequest, Principal principal){
-        return null;
+        try {
+            boolean joined = activeGameService.joinGame(gameId, joinGameRequest, principal.getName());
+            if(joined)
+                return new ResponseEntity<>(HttpStatus.OK);
+            else
+                return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }catch (NoSuchElementException e){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     /*

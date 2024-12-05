@@ -34,6 +34,23 @@ public class Game {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn
     private GamePlayer owner;
+    private String joinGameCode;
     @Transient
     private ListIterator<GamePlayer> currentPlayerTurn;
+
+    public boolean hasStarted(){
+        return startedAt != null;
+    }
+
+    public boolean checkCode(String joinGameCode){
+        return this.joinGameCode == null || this.joinGameCode.equals(joinGameCode);
+    }
+
+    public boolean teamIsFull(Team joiningTeam){
+        return playersList.stream().filter(x -> x.getTeam().equals(joiningTeam)).count() == 2;
+    }
+
+    public boolean playerAlreadyJoined(String principalName){
+        return playersList.stream().map(player -> player.getUser().getUsername()).anyMatch(username -> username.equals(principalName));
+    }
 }
