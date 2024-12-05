@@ -9,6 +9,7 @@ import com.marafone.marafone.game.event.outgoing.PlayersOrderState;
 import com.marafone.marafone.game.model.Game;
 import com.marafone.marafone.game.model.GamePlayer;
 import com.marafone.marafone.game.model.Team;
+import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
     private GamePlayer createGamePlayer(String principalName, Team team){
         return GamePlayer.builder()
-                .user(userRepository.findByUsername(principalName).get())
+                .user(
+                        //userRepository.findByUsername(principalName).get()
+                        new User(1L, "user", "user@gmail.com", "12312")//mocking this for now
+                )
                 .team(team)
                 .points(0)
                 .build();
@@ -58,7 +62,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .orElseThrow();
 
         synchronized (game){
-            if(game.teamIsFull(joinGameRequest.team) || game.hasStarted() || !game.checkCode(joinGameRequest.joinGameString)
+            if(game.teamIsFull(joinGameRequest.team) || game.hasStarted() || !game.checkCode(joinGameRequest.joinGameCode)
             || game.playerAlreadyJoined(principalName)){
                 return false;
             }

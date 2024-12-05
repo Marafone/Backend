@@ -24,8 +24,9 @@ public class ActiveGameController {
     /* Principal is the owner of the game. Should return id of the created game. */
     @PostMapping("/game/create")
     @ResponseBody
-    public Long createGame(@RequestBody CreateGameRequest createGameRequest, Principal principal){
-        return activeGameService.createGame(createGameRequest, principal.getName());
+    public String createGame(@RequestBody CreateGameRequest createGameRequest, Principal principal){
+        Long gameId = activeGameService.createGame(createGameRequest, principal.getName());
+        return String.valueOf(gameId);
     }
 
     /* Should return 200 OK when user correctly joins the game and broadcast new PlayerInfoState to /topic/game/{id}*/

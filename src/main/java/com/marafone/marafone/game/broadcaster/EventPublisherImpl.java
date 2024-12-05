@@ -15,7 +15,7 @@ public class EventPublisherImpl implements EventPublisher{
 
     @Override
     public void publishToLobby(Long gameId, List<OutEvent> outEvents) {
-
+        template.convertAndSend(topic + gameId, outEvents);
     }
 
     @Override

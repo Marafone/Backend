@@ -6,5 +6,5 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class JoinGameRequest {
     public Team team;
-    public String joinGameString;
+    public String joinGameCode;
 }
