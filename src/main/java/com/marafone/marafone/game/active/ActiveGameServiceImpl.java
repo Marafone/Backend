@@ -5,8 +5,17 @@ import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
+import com.marafone.marafone.game.model.Game;
+import com.marafone.marafone.game.model.GamePlayer;
+import com.marafone.marafone.game.model.Team;
+import com.marafone.marafone.user.User;
+import com.marafone.marafone.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.LinkedList;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -14,11 +23,29 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
     private final ActiveGameRepository activeGameRepository;
     private final EventPublisher eventPublisher;
+    private final UserRepository userRepository;
 
-    /* Should add new game to active game repository */
     @Override
     public Long createGame(CreateGameRequest createGameRequest, String principalName) {
-        return null;
+        GamePlayer gamePlayer = GamePlayer.builder()
+                .user(userRepository.findByUsername(principalName).get())
+                .team(Team.RED)
+                .points(0)
+                .build();
+
+        Game game = Game.builder()
+                .createdAt(LocalDateTime.now())
+                .playersList(new LinkedList<>())
+                .rounds(new LinkedList<>())
+                .gameType(createGameRequest.getGameType())
+                .owner(gamePlayer)
+                .build();
+
+        Long id = activeGameRepository.put(game);
+
+        game.setName(String.valueOf(id));
+
+        return id;
     }
     /*
         Should load game from repo, try to add player, if added player then emit events e.g. PlayersOrderState

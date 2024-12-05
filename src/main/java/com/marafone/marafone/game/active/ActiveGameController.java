@@ -23,7 +23,7 @@ public class ActiveGameController {
     @PostMapping("/game/create")
     @ResponseBody
     public Long createGame(@RequestBody CreateGameRequest createGameRequest, Principal principal){
-        return null;
+        return activeGameService.createGame(createGameRequest, principal.getName());
     }
 
     /* Should return 200 OK when user correctly joins the game and broadcast new PlayerInfoState to /topic/game/{id}*/

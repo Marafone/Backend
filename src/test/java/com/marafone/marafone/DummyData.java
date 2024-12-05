@@ -1,5 +1,6 @@
 package com.marafone.marafone;
 
+import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.User;
 
@@ -66,6 +67,10 @@ public class DummyData {
                 .owner(getGamePlayerA())
                 .currentPlayerTurn(new ArrayList<>(Arrays.asList(getGamePlayerA())).listIterator())
                 .build();
+    }
+
+    public static CreateGameRequest getCreateGameRequestA(){
+        return new CreateGameRequest(GameType.MARAFFA, "123");
     }
 
 }
