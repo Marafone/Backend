@@ -1,13 +1,14 @@
 package com.marafone.marafone.game.event.outgoing;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import java.util.List;
 
-@Data
-@AllArgsConstructor
-public class PlayersOrderState extends OutEvent{
-    List<String> playersOrder;
+public final class PlayersOrderState extends OutEvent{
+
+    public List<String> playersOrder;
+
+    public PlayersOrderState(List<String> playersOrder){
+        super("PlayersOrderState");
+        this.playersOrder = playersOrder;
+    }
 }
 

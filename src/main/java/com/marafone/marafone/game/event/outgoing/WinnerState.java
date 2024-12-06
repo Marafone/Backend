@@ -1,10 +1,13 @@
 package com.marafone.marafone.game.event.outgoing;
 
 import com.marafone.marafone.game.model.Team;
-import lombok.Data;
 
+public final class WinnerState extends OutEvent{
 
-@Data
-public class WinnerState extends OutEvent{
-    Team winnerTeam;
+    public Team winnerTeam;
+
+    public WinnerState(Team winnerTeam){
+        super("WinnerState");
+        this.winnerTeam = winnerTeam;
+    }
 }

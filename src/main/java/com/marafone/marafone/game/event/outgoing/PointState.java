@@ -1,10 +1,13 @@
 package com.marafone.marafone.game.event.outgoing;
 
-import lombok.Data;
-
 import java.util.Map;
 
-@Data
-public class PointState extends OutEvent{
-    Map<String, Integer> playerPointState; //username -> points
+public final class PointState extends OutEvent{
+
+    public Map<String, Integer> playerPointState; //username -> points
+
+    public PointState(Map<String, Integer> playerPointState){
+        super("PointState");
+        this.playerPointState = playerPointState;
+    }
 }

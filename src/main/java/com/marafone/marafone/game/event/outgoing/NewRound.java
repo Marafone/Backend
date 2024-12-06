@@ -1,8 +1,9 @@
 package com.marafone.marafone.game.event.outgoing;
 
-import lombok.Data;
+public final class NewRound extends OutEvent {
 
-@Data
-public class NewRound extends OutEvent {
+    public NewRound(){
+        super("NewRound");
+    }
 
 }

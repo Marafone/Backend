@@ -1,8 +1,12 @@
 package com.marafone.marafone.game.event.outgoing;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.Data;
-@JsonTypeInfo(use=JsonTypeInfo.Id.SIMPLE_NAME, include=JsonTypeInfo.As.PROPERTY, property="@class")
-@Data
-public class OutEvent {
+public sealed abstract class OutEvent permits
+        MyCardsState, NewRound, PlayersOrderState, PointState,
+        TeamState, TrumpSuitState, TurnState, WinnerState {
+
+    public final String eventType;
+
+    OutEvent(String eventType){
+        this.eventType = eventType;
+    }
 }
