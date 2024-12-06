@@ -13,11 +13,16 @@
         <div class="col-md-6">
             <form class="form-inline">
                 <div class="form-group">
-                    <label for="connect">WebSocket connection:</label>
+                    <label for="gameId">GameId:</label>
                     <input id="gameId" type="number" placeholder="Game id">
-                    <button id="connect" class="btn btn-default" type="submit">Connect</button>
-                    <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
-                    </button>
+                    <label for="username">Username:</label>
+                    <input id="username" placeholder="Username">
+                    <label for="password">Password:</label>
+                    <input id="password" placeholder="Password">
+                    <button id="connect" class="btn btn-default" type="submit">Connect to websockets</button>
+                    <button id="disconnect" class="btn btn-default" type="submit">Disconnect from websockets</button>
+                    <button id="login" class="btn btn-default" type="submit">Log In</button>
+                    <button id="register" class="btn btn-default" type="submit">Register</button>
                 </div>
             </form>
         </div>

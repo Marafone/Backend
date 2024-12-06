@@ -27,10 +27,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
     private GamePlayer createGamePlayer(String principalName, Team team){
         return GamePlayer.builder()
-                .user(
-                        //userRepository.findByUsername(principalName).get()
-                        new User(1L, "user", "user@gmail.com", "12312")//mocking this for now
-                )
+                .user(userRepository.findByUsername(principalName).get())
                 .team(team)
                 .points(0)
                 .build();

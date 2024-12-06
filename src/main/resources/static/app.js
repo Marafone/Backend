@@ -79,6 +79,55 @@ async function joinGame(){
   }
 }
 
+async function logIn(){
+  const url = "http://localhost:8080/auth/login";
+  try {
+    const response = await fetch(url,{
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username:  $( "#username" ).val(),
+            password:  $( "#password" ).val()
+        })
+    });
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    console.log(response.status);
+    console.log("Logged in as user")
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function register(){
+  const url = "http://localhost:8080/auth/register";
+  try {
+    const response = await fetch(url,{
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username:  $( "#username" ).val(),
+            email: "user@gmail.com",
+            password:  $( "#password" ).val()
+        })
+    });
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    console.log(response.status);
+    console.log("Registered as user")
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
 function sendCard() {
     const id = Math.random() < 0.5 ? 1 : 2; // Randomly choose between 1 and 2 (to be sure that only people in lobby 1 get message)
     console.log("Sending card to game with id: " + id);
@@ -110,5 +159,7 @@ $(function () {
     $( "#joinGame" ).click(() => joinGame());
     $( "#sendCard" ).click(() => sendCard());
     $( "#sendSuit" ).click(() => sendSuit());
+    $( "#login" ).click(() => logIn());
+    $( "#register" ).click(() => register());
 });
 
