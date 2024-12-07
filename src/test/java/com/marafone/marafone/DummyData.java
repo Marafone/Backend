@@ -130,7 +130,7 @@ public class DummyData {
                 .rounds(new LinkedList<>(Arrays.asList(getRoundA())))
                 .gameType(GameType.MARAFFA)
                 .owner(getGamePlayerRedA())
-                .currentPlayerTurn(new ArrayList<>(Arrays.asList(getGamePlayerRedA())).listIterator())
+                .currentPlayer(new ArrayList<>(Arrays.asList(getGamePlayerRedA())).listIterator())
                 .build();
     }
 
@@ -141,7 +141,6 @@ public class DummyData {
                 .rounds(new LinkedList<>())
                 .gameType(GameType.MARAFFA)
                 .owner(getGamePlayerRedA())
-                .currentPlayerTurn(new ArrayList<>(Arrays.asList(getGamePlayerRedA())).listIterator())
                 .build();
     }
 
