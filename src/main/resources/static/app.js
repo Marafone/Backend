@@ -59,7 +59,7 @@ async function createGame() {
   }
 }
 
-async function joinGame(){
+async function joinGame(team){
   const url = "http://localhost:8080/game/" + $( "#gameId" ).val() + "/join";
   try {
     const response = await fetch(url,{
@@ -68,7 +68,7 @@ async function joinGame(){
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            team: "RED",
+            team: team,
             joinGameCode: null
         })
     });
@@ -149,11 +149,10 @@ function sendCard() {
 }
 
 function sendSuit() {
-    const id = Math.random() < 0.5 ? 1 : 2; // Randomly choose between 1 and 2
-    console.log("Sending suit to game with id: " + id);
+    const selectSuit = Math.random() < 0.5 ? "CLUBS" : "SWORDS"; // Randomly choose
     stompClient.publish({
-        destination: `/app/game/${id}/suit`,
-        body: JSON.stringify({'suit': "2"})
+        destination: `/app/game/${$("#gameId").val()}/suit`,
+        body: JSON.stringify({'trumpSuit': selectSuit})
     });
 }
 
@@ -167,7 +166,8 @@ $(function () {
     $( "#disconnect" ).click(() => disconnect());
     $( "#createGame" ).click(() => createGame());
     $( "#subscribeGame" ).click(() => subscribeToGame());
-    $( "#joinGame" ).click(() => joinGame());
+    $( "#joinGameRed" ).click(() => joinGame("RED"));
+    $( "#joinGameBlue" ).click(() => joinGame("BLUE"));
     $( "#startGame" ).click(() => startGame());
     $( "#sendCard" ).click(() => sendCard());
     $( "#sendSuit" ).click(() => sendSuit());

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -68,14 +69,15 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             GamePlayer gamePlayer = createGamePlayer(principalName, joinGameRequest.team);
             game.getPlayersList().add(gamePlayer);
 
-            eventPublisher.publishToLobby(gameId, new PlayersOrderState(game));
+            eventPublisher.publishToLobby(gameId, new TeamState(game));
         }
 
         return true;
     }
     /*
         Check if last action was made more than 16 sec ago and if yes then should select random card (similiar logic to selectCard)
-        but with random arguments and correct principalName.
+        but with random arguments and correct principalName. Should also check if trump suit is null and if game started more than 16 sec
+         ago.
      */
     @Override
     public void checkTimeout(Long gameId) {
@@ -131,10 +133,53 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     */
     @Override
     public void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
-
+        //if trump suit null then dont immeditly return
+        //if currentPlayer.next empty then turn ended
+        //if turn ended then check if actions.size == 40
+        //if round ended then check if points are more than 21 etc.
     }
     @Override
     public void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName) {
+        Game game = activeGameRepository.findById(gameId)
+                .orElseThrow();
 
+        synchronized (game){
+            Round currentRound = game.getRounds().getLast();
+
+            List<Action> currentActions = currentRound.getActions();
+            if(!game.hasStarted() || currentActions.size() != 0){
+                return;
+            }
+
+            for(var gamePlayer: game.getPlayersList()){
+                if(gamePlayer.getUser().getUsername().equals(principalName) && gamePlayer.hasFourOfCoins()){
+                    currentRound.setTrumpSuit(trumpSuitSelectEvent.trumpSuit);
+
+                    LinkedList<GamePlayer> enemyTeam =
+                            game.getPlayersList().stream().filter(player -> player.getTeam() != gamePlayer.getTeam())
+                                    .collect(Collectors.toCollection(LinkedList::new));
+
+                    LinkedList<GamePlayer> newOrderOfPlayers = new LinkedList<>();
+                    newOrderOfPlayers.add(gamePlayer);
+                    newOrderOfPlayers.add(Math.random() < 0.5 ? enemyTeam.removeFirst() : enemyTeam.removeLast());
+                    newOrderOfPlayers.add(game.getPlayersList().stream().filter(
+                            player -> player.getTeam() == gamePlayer.getTeam() && !player.equals(gamePlayer)
+                    ).findFirst().orElseThrow());
+                    newOrderOfPlayers.add(enemyTeam.removeFirst());
+
+                    game.setPlayersList(newOrderOfPlayers);
+                    game.setCurrentPlayer(newOrderOfPlayers.listIterator());
+
+                    List<OutEvent> outEvents = new LinkedList<>();
+                    outEvents.add(new TurnState(game));
+                    outEvents.add(new PlayersOrderState(game));
+                    outEvents.add(new TrumpSuitState(game));
+
+                    eventPublisher.publishToLobby(gameId, outEvents);
+
+                    break;
+                }
+            }
+        }
     }
 }

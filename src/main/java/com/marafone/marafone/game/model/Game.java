@@ -37,7 +37,7 @@ public class Game {
     private GamePlayer owner;
     private String joinGameCode;
     @Transient
-    private ListIterator<GamePlayer> currentPlayerTurn;
+    private ListIterator<GamePlayer> currentPlayer;
 
     public boolean hasStarted(){
         return startedAt != null;

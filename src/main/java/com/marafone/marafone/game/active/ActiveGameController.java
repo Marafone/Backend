@@ -48,13 +48,13 @@ public class ActiveGameController {
         relational db if the game ended.
     */
     @MessageMapping("/game/{id}/card")
-    public void selectCard(@DestinationVariable Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
+    public void selectCard(@DestinationVariable("id") Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
 
     }
     /* Should broadcast new TrumpSuitState */
     @MessageMapping("/game/{id}/suit")
-    public void selectSuit(@DestinationVariable Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, Principal principal){
-
+    public void selectSuit(@DestinationVariable("id") Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, Principal principal){
+        activeGameService.selectSuit(gameId, trumpSuitSelectEvent, principal.getName());
     }
 
     /*
@@ -62,7 +62,7 @@ public class ActiveGameController {
         if last action was made more than 15 seconds ago this should make a random move (acts similar to selectCard method).
      */
     @MessageMapping("/game/{id}/timeout")
-    public void checkTimeout(@DestinationVariable Long gameId){
+    public void checkTimeout(@DestinationVariable("id") Long gameId){
 
     }
 

@@ -28,4 +28,8 @@ public class GamePlayer {
     @Transient
     @JsonIgnore
     private List<Card> ownedCards;
+
+    public boolean hasFourOfCoins(){
+        return ownedCards.stream().anyMatch(card -> card.getSuit() == Suit.COINS && card.getRank() == CardRank.FOUR);
+    }
 }
