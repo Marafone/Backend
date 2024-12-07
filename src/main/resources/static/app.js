@@ -156,6 +156,13 @@ function sendSuit() {
     });
 }
 
+function reconnect() {
+    stompClient.publish({
+        destination: `/app/game/${$("#gameId").val()}/reconnect`
+    });
+}
+
+
 function showEvent(message) {
     $("#events").append("<tr><td>" + JSON.stringify(message) + "</td></tr>");
 }
@@ -173,5 +180,6 @@ $(function () {
     $( "#sendSuit" ).click(() => sendSuit());
     $( "#login" ).click(() => logIn());
     $( "#register" ).click(() => register());
+    $( "#reconnect" ).click(() => reconnect());
 });
 

@@ -182,4 +182,29 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }
         }
     }
+
+    @Override
+    public void reconnectToGame(Long gameId, String principalName) {
+        Game game = activeGameRepository.findById(gameId)
+                .orElseThrow();
+
+        synchronized (game){
+            for(var gamePlayer: game.getPlayersList()){
+                if(gamePlayer.getUser().getUsername().equals(principalName)){
+                    OutEvent cardsState = new MyCardsState(gamePlayer);
+                    eventPublisher.publishToPlayerInTheLobby(gameId, principalName, cardsState);
+
+                    List<OutEvent> outEvents = new LinkedList<>();
+                    outEvents.add(new PlayersOrderState(game));
+                    outEvents.add(new PointState(game));
+                    outEvents.add(new TeamState(game));
+                    outEvents.add(new TrumpSuitState(game));
+                    outEvents.add(new TurnState(game));
+                    eventPublisher.publishToLobby(gameId, outEvents);
+
+                    break;
+                }
+            }
+        }
+    }
 }
