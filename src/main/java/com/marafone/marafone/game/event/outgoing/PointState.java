@@ -1,13 +1,21 @@
 package com.marafone.marafone.game.event.outgoing;
 
+import com.marafone.marafone.game.model.Game;
+
+import java.util.HashMap;
 import java.util.Map;
 
 public final class PointState extends OutEvent{
 
     public Map<String, Integer> playerPointState; //username -> points
 
-    public PointState(Map<String, Integer> playerPointState){
+    public PointState(Game game){
         super("PointState");
-        this.playerPointState = playerPointState;
+
+        playerPointState = new HashMap<>();
+
+        for(var gamePlayer: game.getPlayersList()){
+            playerPointState.put(gamePlayer.getUser().getUsername(), gamePlayer.getPoints());
+        }
     }
 }

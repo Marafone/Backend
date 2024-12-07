@@ -19,7 +19,7 @@ class ActiveGameRepositoryImplTest {
     @Test
     void findByIdShouldReturnCorrectGameAfterPut() {
         //given
-        Game game = DummyData.getGameA();
+        Game game = DummyData.getGameInProgress();
 
         //when
         Long result = activeGameRepository.put(game);

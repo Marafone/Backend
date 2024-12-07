@@ -12,6 +12,7 @@ public class EventPublisherImpl implements EventPublisher{
 
     private final SimpMessagingTemplate template;
     private final String topic = "/topic/game/";
+    private final String userQueue = "/queue/game";
 
     @Override
     public void publishToLobby(Long gameId, List<OutEvent> outEvents) {
@@ -20,6 +21,6 @@ public class EventPublisherImpl implements EventPublisher{
 
     @Override
     public void publishToPlayerInTheLobby(Long gameId, String username, List<OutEvent> outEvents) {
-
+        template.convertAndSendToUser(username, userQueue, outEvents);
     }
 }

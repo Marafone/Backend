@@ -8,6 +8,7 @@ import com.marafone.marafone.user.User;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class DummyData {
 
@@ -33,7 +34,7 @@ public class DummyData {
         return new Card(1L, CardRank.FIVE, Suit.COINS);
     }
 
-    public static GamePlayer getGamePlayerA(){
+    public static GamePlayer getGamePlayerRedA(){
         return GamePlayer.builder()
                 .id(1L)
                 .user(getUserA())
@@ -43,26 +44,62 @@ public class DummyData {
                         new ArrayList<>(
                             Arrays.asList(
                                 getCardA(),
-                                new Card(2L, CardRank.C, Suit.CUPS),
-                                new Card(3L, CardRank.A, Suit.CLUBS)
+                                new Card(1L, CardRank.A, Suit.CUPS),
+                                new Card(2L, CardRank.C, Suit.CUPS)
                             )
                         )
                 )
                 .build();
     }
 
-    public static GamePlayer getGamePlayerB(){
+    public static GamePlayer getGamePlayerRedB(){
         return GamePlayer.builder()
                 .id(1L)
                 .user(getUserB())
-                .team(Team.BLUE)
+                .team(Team.RED)
                 .points(9)
                 .ownedCards(
                         new ArrayList<>(
                                 Arrays.asList(
                                         getCardA(),
-                                        new Card(2L, CardRank.FIVE, Suit.CUPS),
-                                        new Card(3L, CardRank.J, Suit.SWORDS)
+                                        new Card(3L, CardRank.A, Suit.CLUBS),
+                                        new Card(4L, CardRank.J, Suit.CLUBS)
+                                )
+                        )
+                )
+                .build();
+    }
+
+    public static GamePlayer getGamePlayerBlueA(){
+        return GamePlayer.builder()
+                .id(3L)
+                .user(getUserB())
+                .team(Team.BLUE)
+                .points(11)
+                .ownedCards(
+                        new ArrayList<>(
+                                Arrays.asList(
+                                        getCardA(),
+                                        new Card(5L, CardRank.FIVE, Suit.COINS),
+                                        new Card(6L, CardRank.J, Suit.COINS)
+                                )
+                        )
+                )
+                .build();
+    }
+
+    public static GamePlayer getGamePlayerBlueB(){
+        return GamePlayer.builder()
+                .id(4L)
+                .user(getUserB())
+                .team(Team.BLUE)
+                .points(6)
+                .ownedCards(
+                        new ArrayList<>(
+                                Arrays.asList(
+                                        getCardA(),
+                                        new Card(7L, CardRank.FIVE, Suit.SWORDS),
+                                        new Card(8L, CardRank.J, Suit.SWORDS)
                                 )
                         )
                 )
@@ -72,7 +109,7 @@ public class DummyData {
     public static Action getActionA(){
         return Action.builder()
                 .id(1L)
-                .player(getGamePlayerA())
+                .player(getGamePlayerRedA())
                 .card(getCardA())
                 .timestamp(LocalDateTime.of(2024, 2, 27, 13, 2))
                 .build();
@@ -85,15 +122,26 @@ public class DummyData {
                 .build();
     }
 
-    public static Game getGameA(){
+    public static Game getGameInProgress(){
         return Game.builder()
                 .createdAt(LocalDateTime.of(2024, 2, 27, 13, 2))
                 .startedAt(LocalDateTime.of(2024, 2, 27, 13, 3))
-                .playersList(new ArrayList<>(Arrays.asList(getGamePlayerA())))
-                .rounds(new ArrayList<>(Arrays.asList(getRoundA())))
+                .playersList(new ArrayList<>(Arrays.asList(getGamePlayerRedA())))
+                .rounds(new LinkedList<>(Arrays.asList(getRoundA())))
                 .gameType(GameType.MARAFFA)
-                .owner(getGamePlayerA())
-                .currentPlayerTurn(new ArrayList<>(Arrays.asList(getGamePlayerA())).listIterator())
+                .owner(getGamePlayerRedA())
+                .currentPlayerTurn(new ArrayList<>(Arrays.asList(getGamePlayerRedA())).listIterator())
+                .build();
+    }
+
+    public static Game getGameInLobby(){
+        return Game.builder()
+                .createdAt(LocalDateTime.of(2024, 2, 27, 13, 2))
+                .playersList(new ArrayList<>(Arrays.asList(getGamePlayerRedA())))
+                .rounds(new LinkedList<>())
+                .gameType(GameType.MARAFFA)
+                .owner(getGamePlayerRedA())
+                .currentPlayerTurn(new ArrayList<>(Arrays.asList(getGamePlayerRedA())).listIterator())
                 .build();
     }
 

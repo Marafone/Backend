@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 public class Card implements Comparable<Card>{
 
     @Id
-    @GeneratedValue
     private Long id;
     @Enumerated(EnumType.STRING)
     private CardRank rank;

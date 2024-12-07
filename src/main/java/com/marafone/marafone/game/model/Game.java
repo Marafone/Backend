@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -28,7 +29,7 @@ public class Game {
     private List<GamePlayer> playersList;
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn
-    private List<Round> rounds;
+    private LinkedList<Round> rounds;
     @Enumerated(EnumType.STRING)
     private GameType gameType;
     @ManyToOne(cascade = CascadeType.ALL)

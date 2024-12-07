@@ -5,17 +5,14 @@ import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
-import com.marafone.marafone.game.event.outgoing.PlayersOrderState;
-import com.marafone.marafone.game.model.Game;
-import com.marafone.marafone.game.model.GamePlayer;
-import com.marafone.marafone.game.model.Team;
-import com.marafone.marafone.user.User;
+import com.marafone.marafone.game.event.outgoing.*;
+import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.LinkedList;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +21,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final ActiveGameRepository activeGameRepository;
     private final EventPublisher eventPublisher;
     private final UserRepository userRepository;
+    private final List<Card> allCards;
 
     private GamePlayer createGamePlayer(String principalName, Team team){
         return GamePlayer.builder()
@@ -55,8 +53,12 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
     @Override
     public Boolean joinGame(Long gameId, JoinGameRequest joinGameRequest, String principalName) {
-        Game game = activeGameRepository.findById(gameId)
-                .orElseThrow();
+        Optional<Game> gameOptional = activeGameRepository.findById(gameId);
+
+        if(gameOptional.isEmpty())
+            return false;
+
+        Game game = gameOptional.get();
 
         synchronized (game){
             if(game.teamIsFull(joinGameRequest.team) || game.hasStarted() || !game.checkCode(joinGameRequest.joinGameCode)
@@ -66,9 +68,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             GamePlayer gamePlayer = createGamePlayer(principalName, joinGameRequest.team);
             game.getPlayersList().add(gamePlayer);
 
-            eventPublisher.publishToLobby(gameId, new PlayersOrderState(
-                    game.getPlayersList().stream().map(player -> player.getUser().getUsername()).toList()
-            ));
+            eventPublisher.publishToLobby(gameId, new PlayersOrderState(game));
         }
 
         return true;
@@ -83,6 +83,45 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
     @Override
     public void startGame(Long gameId, String principalName) {
+        Game game = activeGameRepository.findById(gameId)
+                .orElseThrow();
+
+        synchronized (game){
+            if(!game.getOwner().getUser().getUsername().equals(principalName)
+                || game.getStartedAt() != null || game.getPlayersList().size() != 4)
+                return;
+
+            game.setStartedAt(LocalDateTime.now());
+
+            List<Card> cardsInRandomOrder = new ArrayList<>(allCards);
+            Collections.shuffle(cardsInRandomOrder);
+
+            int i = 0;
+            for(var gamePlayer: game.getPlayersList()){
+
+                gamePlayer.setOwnedCards(new ArrayList<>());
+
+                for(int j = 0; j < 10; j++){
+                    gamePlayer.getOwnedCards().add(cardsInRandomOrder.get(i * 10 + j));
+                }
+                i++;
+            }
+
+            game.getRounds().add(Round.builder().actions(new ArrayList<>()).build());
+
+            List<OutEvent> outEvents = new LinkedList<>();
+            outEvents.add(new NewRound());
+            outEvents.add(new PlayersOrderState(game));
+            outEvents.add(new PointState(game));
+            outEvents.add(new TeamState(game));
+            outEvents.add(new TurnState(game));
+
+            eventPublisher.publishToLobby(gameId, outEvents);
+
+            for(var gamePlayer : game.getPlayersList()){
+                eventPublisher.publishToPlayerInTheLobby(gameId, gamePlayer.getUser().getUsername(), new MyCardsState(gamePlayer));
+            }
+        }
 
     }
     /*

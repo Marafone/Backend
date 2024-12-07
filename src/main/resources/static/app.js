@@ -30,6 +30,10 @@ function subscribeToGame(){
     stompClient.subscribe('/topic/game/' + $( "#gameId" ).val(), (event) => {
         showEvent(JSON.parse(event.body));
     });
+    stompClient.subscribe('/user/queue/game', (event) => {
+        console.log("Received private event.")
+        showEvent(JSON.parse(event.body));
+    });
 }
 
 async function createGame() {
@@ -128,12 +132,19 @@ async function register(){
   }
 }
 
-function sendCard() {
-    const id = Math.random() < 0.5 ? 1 : 2; // Randomly choose between 1 and 2 (to be sure that only people in lobby 1 get message)
-    console.log("Sending card to game with id: " + id);
+function startGame(){
+    console.log("Starting game with id: " + $("#gameId").val());
+    console.log(`/app/game/${$("#gameId").val()}/start`);
     stompClient.publish({
-        destination: `/app/game/${id}/card`,
-        body: JSON.stringify({'card': "1"})
+        destination: `/app/game/${$("#gameId").val()}/start`
+    });
+}
+
+function sendCard() {
+    console.log("Sending card to game with id: " + $("#gameId").val());
+    stompClient.publish({
+        destination: `/app/game/$("#gameId").val()/card`,
+        body: JSON.stringify({'card': $( "#gameId" ).val()})
     });
 }
 
@@ -157,6 +168,7 @@ $(function () {
     $( "#createGame" ).click(() => createGame());
     $( "#subscribeGame" ).click(() => subscribeToGame());
     $( "#joinGame" ).click(() => joinGame());
+    $( "#startGame" ).click(() => startGame());
     $( "#sendCard" ).click(() => sendCard());
     $( "#sendSuit" ).click(() => sendSuit());
     $( "#login" ).click(() => logIn());

@@ -66,13 +66,9 @@ public class ActiveGameController {
 
     }
 
-    /*
-        This should start the game if lobby is full and it is the owner of the lobby that sent the request
-        Broadcast GameState event, because we need to setup whole UI.
-     */
     @MessageMapping("/game/{id}/start")
-    public void startGame(@DestinationVariable Long gameId, Principal principal){
-
+    public void startGame(@DestinationVariable("id") Long gameId, Principal principal){
+        activeGameService.startGame(gameId, principal.getName());
     }
 
 }
