@@ -14,11 +14,11 @@ public class EndedGameServiceImpl implements EndedGameService{
 
     @Override
     public Optional<Game> getEndedGameById(Long id) {
-        return Optional.empty();
+        return endedGameRepository.findById(id);
     }
 
     @Override
     public Game saveEndedGame(Game game) {
-        return null;
+        return endedGameRepository.save(game);
     }
 }

@@ -1,6 +1,7 @@
 package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.game.broadcaster.EventPublisher;
+import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class ActiveGameServiceImpl implements ActiveGameService{
 
     private final ActiveGameRepository activeGameRepository;
+    private final EndedGameService endedGameService;
     private final EventPublisher eventPublisher;
     private final UserRepository userRepository;
     private final List<Card> allCards;
@@ -175,6 +177,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
                 if(game.setWinnersIfPossible()){
                     outEvents.add(new WinnerState(game));
+                    endedGameService.saveEndedGame(game);
                 }else{
                     int startingPlayerIndex = game.getRounds().size() % game.getPlayersList().size();
 
