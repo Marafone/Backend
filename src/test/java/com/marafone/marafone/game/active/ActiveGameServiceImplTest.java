@@ -3,9 +3,7 @@ import com.marafone.marafone.DummyData;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.config.CardConfig;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
-import com.marafone.marafone.game.model.Card;
-import com.marafone.marafone.game.model.Game;
-import com.marafone.marafone.game.model.Team;
+import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -101,7 +100,7 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(1L)).thenReturn(Optional.ofNullable(sampleGame));
 
         //when
-        activeGameServiceImpl.startGame(1L, sampleGame.getOwner().getUser().getUsername());
+        activeGameServiceImpl.startGame(1L, sampleGame.getOwner().getUsername());
 
         //then
         assertNull(sampleGame.getStartedAt());
@@ -118,7 +117,7 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(1L)).thenReturn(Optional.ofNullable(sampleGame));
 
         //when
-        activeGameServiceImpl.startGame(1L, sampleGame.getOwner().getUser().getUsername() + "123");
+        activeGameServiceImpl.startGame(1L, sampleGame.getOwner().getUsername() + "123");
 
         //then
         assertNull(sampleGame.getStartedAt());
@@ -136,10 +135,60 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(1L)).thenReturn(Optional.ofNullable(sampleGame));
 
         //when
-        activeGameServiceImpl.startGame(1L, sampleGame.getOwner().getUser().getUsername());
+        activeGameServiceImpl.startGame(1L, sampleGame.getOwner().getUsername());
 
         //then
         assertNotNull(sampleGame.getStartedAt());
+    }
+
+    @Test
+    void testWinningActionWithSameSuit(){
+        //given
+        List<Action> currentTurn = new LinkedList<>();
+        Action weakAction = Action.builder().id(1L).card(Card.builder().suit(Suit.SWORDS).rank(CardRank.K).build()).build();
+        Action strongAction = Action.builder().id(2L).card(Card.builder().suit(Suit.SWORDS).rank(CardRank.A).build()).build();
+
+        Round round = Round.builder()
+                .actions(new LinkedList<>(List.of(strongAction, weakAction)))
+                .trumpSuit(Suit.SWORDS)
+                .build();
+
+        weakAction.setRound(round);
+        strongAction.setRound(round);
+
+        currentTurn.add(weakAction);
+        currentTurn.add(strongAction);
+
+        //when
+        Action winningAction = activeGameServiceImpl.getWinningAction(currentTurn);
+
+        //then
+        assertEquals(strongAction, winningAction);
+    }
+
+    @Test
+    void testWinningActionWithDiffrentSuit(){
+        //given
+        List<Action> currentTurn = new LinkedList<>();
+        Action weakAction = Action.builder().id(1L).card(Card.builder().suit(Suit.CUPS).rank(CardRank.A).build()).build();
+        Action strongAction = Action.builder().id(2L).card(Card.builder().suit(Suit.SWORDS).rank(CardRank.THREE).build()).build();
+
+        Round round = Round.builder()
+                .actions(new LinkedList<>(List.of(strongAction, weakAction)))
+                .trumpSuit(Suit.SWORDS)
+                .build();
+
+        weakAction.setRound(round);
+        strongAction.setRound(round);
+
+        currentTurn.add(weakAction);
+        currentTurn.add(strongAction);
+
+        //when
+        Action winningAction = activeGameServiceImpl.getWinningAction(currentTurn);
+
+        //then
+        assertEquals(strongAction, winningAction);
     }
 
 }

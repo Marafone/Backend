@@ -1,16 +1,16 @@
 package com.marafone.marafone.game.model;
 
 public enum CardRank implements Comparable<CardRank>{
-    THREE(1),
-    TWO(1),
-    A(3),
-    K(1),
-    C(1),
-    J(1),
-    SEVEN(0),
-    SIX(0),
+    FOUR(0),
     FIVE(0),
-    FOUR(0);
+    SIX(0),
+    SEVEN(0),
+    J(1),
+    C(1),
+    K(1),
+    A(3),
+    TWO(1),
+    THREE(1);
 
     private final Integer points;
 

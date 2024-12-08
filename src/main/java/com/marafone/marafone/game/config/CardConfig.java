@@ -6,6 +6,7 @@ import com.marafone.marafone.game.model.Suit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,7 +15,7 @@ public class CardConfig {
 
     @Bean
     public List<Card> allCards() {
-        List<Card> allCards = new LinkedList<>();
+        List<Card> allCards = new ArrayList<>();
 
         allCards.add(new Card(1L, CardRank.THREE, Suit.SWORDS));
         allCards.add(new Card(2L, CardRank.TWO, Suit.SWORDS));

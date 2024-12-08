@@ -117,7 +117,7 @@ public class DummyData {
 
     public static Round getRoundA(){
         return Round.builder()
-                .actions(new ArrayList<>(Arrays.asList(getActionA())))
+                .actions(new LinkedList<>(Arrays.asList(getActionA())))
                 .trumpSuit(Suit.SWORDS)
                 .build();
     }
@@ -129,7 +129,7 @@ public class DummyData {
                 .playersList(new ArrayList<>(Arrays.asList(getGamePlayerRedA())))
                 .rounds(new LinkedList<>(Arrays.asList(getRoundA())))
                 .gameType(GameType.MARAFFA)
-                .owner(getGamePlayerRedA())
+                .owner(getUserA())
                 .currentPlayer(new ArrayList<>(Arrays.asList(getGamePlayerRedA())).listIterator())
                 .build();
     }
@@ -140,7 +140,7 @@ public class DummyData {
                 .playersList(new ArrayList<>(Arrays.asList(getGamePlayerRedA())))
                 .rounds(new LinkedList<>())
                 .gameType(GameType.MARAFFA)
-                .owner(getGamePlayerRedA())
+                .owner(getUserA())
                 .build();
     }
 

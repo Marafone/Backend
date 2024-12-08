@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 
 @Entity
 @Data
@@ -29,4 +30,9 @@ public class Action {
     @JoinColumn
     private Card card;
     private LocalDateTime timestamp;
+
+    @Override
+    public String toString() {
+        return "Action id: " + id;
+    }
 }

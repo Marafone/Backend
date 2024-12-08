@@ -1,5 +1,6 @@
 package com.marafone.marafone.game.model;
 
+import com.marafone.marafone.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,15 +30,17 @@ public class Game {
     private List<GamePlayer> playersList;
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn
-    private LinkedList<Round> rounds;
+    private List<Round> rounds;
     @Enumerated(EnumType.STRING)
     private GameType gameType;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn
-    private GamePlayer owner;
+    private User owner;
     private String joinGameCode;
     @Transient
     private ListIterator<GamePlayer> currentPlayer;
+    @Transient
+    private List<GamePlayer> initialPlayersList;
 
     public boolean hasStarted(){
         return startedAt != null;
@@ -54,4 +57,36 @@ public class Game {
     public boolean playerAlreadyJoined(String principalName){
         return playersList.stream().map(player -> player.getUser().getUsername()).anyMatch(username -> username.equals(principalName));
     }
+
+    public boolean turnHasEnded(){
+        return !currentPlayer.hasNext();
+    }
+
+    public boolean roundHasEnded(){
+        return playersList.getFirst().getOwnedCards().isEmpty();
+    }
+
+    public boolean setWinnersIfPossible(){
+        int blueTeamPoints = 0;
+        int redTeamPoints = 0;
+
+        for(var gamePlayer: playersList){
+            if(gamePlayer.getTeam() == Team.RED)
+                redTeamPoints += gamePlayer.getPoints();
+            else
+                blueTeamPoints += gamePlayer.getPoints();
+        }
+
+        if(blueTeamPoints != redTeamPoints && (blueTeamPoints >= 21 || redTeamPoints >= 21)){
+            if(blueTeamPoints > redTeamPoints){
+                winnerTeam = Team.BLUE;
+            }else{
+                winnerTeam = Team.RED;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
 }

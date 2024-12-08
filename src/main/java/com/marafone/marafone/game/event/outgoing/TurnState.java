@@ -18,7 +18,7 @@ public final class TurnState extends OutEvent{
 
         turn = new HashMap<>();
 
-        if(game.getRounds().size() == 0){
+        if(game.getRounds().isEmpty()){
             for(var gamePlayer: game.getPlayersList()){
                 turn.put(gamePlayer.getUser().getUsername(), null);
             }
@@ -26,7 +26,7 @@ public final class TurnState extends OutEvent{
             List<Action> actions = game.getRounds().getLast().getActions();
             ListIterator<Action> actionsBackIterator = actions.listIterator(actions.size());
 
-            int properActions = actions.size() % 4;
+            int properActions = actions.isEmpty() ? 0 : (actions.size() - 1) % 4 + 1;
             for(int i = 0; i < properActions; i++){
                 Action action = actionsBackIterator.previous();
                 turn.put(action.getPlayer().getUser().getUsername(), action.getCard());

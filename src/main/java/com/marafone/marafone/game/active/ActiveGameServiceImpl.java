@@ -7,6 +7,7 @@ import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,24 +25,18 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final UserRepository userRepository;
     private final List<Card> allCards;
 
-    private GamePlayer createGamePlayer(String principalName, Team team){
-        return GamePlayer.builder()
-                .user(userRepository.findByUsername(principalName).get())
-                .team(team)
-                .points(0)
-                .build();
-    }
-
     @Override
     public Long createGame(CreateGameRequest createGameRequest, String principalName) {
-        GamePlayer gamePlayer = createGamePlayer(principalName, Team.RED);
+        User owner = userRepository.findByUsername(principalName).get();
+
+        GamePlayer gamePlayer = createGamePlayer(owner, Team.RED);
 
         Game game = Game.builder()
                 .createdAt(LocalDateTime.now())
-                .playersList(new LinkedList<>())
+                .playersList(new ArrayList<>())
                 .rounds(new LinkedList<>())
                 .gameType(createGameRequest.getGameType())
-                .owner(gamePlayer)
+                .owner(owner)
                 .joinGameCode(createGameRequest.getJoinGameCode())
                 .build();
 
@@ -89,27 +84,13 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .orElseThrow();
 
         synchronized (game){
-            if(!game.getOwner().getUser().getUsername().equals(principalName)
+            if(!game.getOwner().getUsername().equals(principalName)
                 || game.getStartedAt() != null || game.getPlayersList().size() != 4)
                 return;
 
             game.setStartedAt(LocalDateTime.now());
 
-            List<Card> cardsInRandomOrder = new ArrayList<>(allCards);
-            Collections.shuffle(cardsInRandomOrder);
-
-            int i = 0;
-            for(var gamePlayer: game.getPlayersList()){
-
-                gamePlayer.setOwnedCards(new ArrayList<>());
-
-                for(int j = 0; j < 10; j++){
-                    gamePlayer.getOwnedCards().add(cardsInRandomOrder.get(i * 10 + j));
-                }
-                i++;
-            }
-
-            game.getRounds().add(Round.builder().actions(new ArrayList<>()).build());
+            setupNewRoundAndShuffleCards(game);
 
             List<OutEvent> outEvents = new LinkedList<>();
             outEvents.add(new NewRound());
@@ -126,18 +107,98 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
 
     }
-    /*
-        Should get game from repo, try to select a card (selecting a card is a write operation so needs to be in synchronized block),
-        then after that if the card was selected (player had the card etc.) we do a series of checks and emit events accordingly.
-        For example we need to check if the trick ended or if the round ended or if the game ended and emit proper events.
-    */
+
     @Override
     public void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
-        //if trump suit null then dont immeditly return
-        //if currentPlayer.next empty then turn ended
-        //if turn ended then check if actions.size == 40
-        //if round ended then check if points are more than 21 etc.
+        Game game = activeGameRepository.findById(gameId)
+                .orElseThrow();
+
+        synchronized (game){
+            if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext())
+                return;
+
+            Round currentRound = game.getRounds().getLast();
+            GamePlayer currentPlayer = game.getCurrentPlayer().next();
+            Card selectedCard = allCards.get(cardSelectEvent.cardId - 1);
+
+            if(!currentPlayer.getUser().getUsername().equals(principalName) || !currentPlayer.hasCard(selectedCard)
+            || (selectedCard.getSuit() != currentRound.getTrumpSuit() && currentPlayer.hasCardOfSuit(currentRound.getTrumpSuit())) ){
+                game.getCurrentPlayer().previous();
+                return;
+            }
+
+            currentRound.getActions().addLast(
+                Action.builder().player(currentPlayer).round(currentRound).card(selectedCard).timestamp(LocalDateTime.now()).build()
+            );
+
+            currentPlayer.removeCard(selectedCard);
+
+            eventPublisher.publishToPlayerInTheLobby(gameId, principalName, new MyCardsState(currentPlayer));
+            eventPublisher.publishToLobby(gameId, new TurnState(game));
+
+            if(!game.turnHasEnded()){
+                return;
+            }
+
+            List<Action> currentTurn = new LinkedList<>();
+            Iterator<Action> actionDescIterator = currentRound.getActions().reversed().iterator();
+            for(int i = 0; i < game.getPlayersList().size(); i++){
+                currentTurn.add(actionDescIterator.next());
+            }
+
+            Action winningAction = getWinningAction(currentTurn);
+
+            int earnedPoints = currentTurn.stream().mapToInt(action -> action.getCard().getRank().getPoints()).sum();
+            winningAction.getPlayer().addPoints(earnedPoints);
+
+            List<OutEvent> outEvents = new LinkedList<>();
+            outEvents.add(new PointState(game));
+
+            if(!game.roundHasEnded()){
+                List<GamePlayer> newOrder = new ArrayList<>();
+                for(var gamePlayer: game.getPlayersList()){
+                    if(gamePlayer.equals(winningAction.getPlayer()) || !newOrder.isEmpty()){
+                        newOrder.addLast(gamePlayer);
+                    }
+                }
+                for(var gamePlayer: game.getPlayersList()){
+                    if(newOrder.size() == game.getPlayersList().size())
+                        break;
+
+                    newOrder.addLast(gamePlayer);
+                }
+                game.setPlayersList(newOrder);
+                game.setCurrentPlayer(newOrder.listIterator());
+                outEvents.add(new PlayersOrderState(game));
+            }else{
+                winningAction.getPlayer().addBonusPoint();
+
+                if(game.setWinnersIfPossible()){
+                    outEvents.add(new WinnerState(game));
+                }else{
+                    int startingPlayerIndex = game.getRounds().size() % game.getPlayersList().size();
+
+                    List<GamePlayer> newOrder = new ArrayList<>();
+                    for(int i = startingPlayerIndex; i < game.getInitialPlayersList().size(); i++){
+                        newOrder.addLast(game.getInitialPlayersList().get(i));
+                    }
+                    for(int i = 0; i < startingPlayerIndex; i++){
+                        newOrder.addLast(game.getInitialPlayersList().get(i));
+                    }
+                    game.setPlayersList(newOrder);
+                    game.setCurrentPlayer(newOrder.listIterator());
+
+                    setupNewRoundAndShuffleCards(game);
+
+                    outEvents.add(new PlayersOrderState(game));
+                }
+            }
+
+            eventPublisher.publishToLobby(gameId, outEvents);
+        }
+
     }
+
     @Override
     public void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName) {
         Game game = activeGameRepository.findById(gameId)
@@ -147,7 +208,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             Round currentRound = game.getRounds().getLast();
 
             List<Action> currentActions = currentRound.getActions();
-            if(!game.hasStarted() || currentActions.size() != 0){
+            if(!game.hasStarted() || !currentActions.isEmpty()){
                 return;
             }
 
@@ -170,8 +231,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     game.setPlayersList(newOrderOfPlayers);
                     game.setCurrentPlayer(newOrderOfPlayers.listIterator());
 
+                    if(game.getRounds().size() == 1)
+                        game.setInitialPlayersList(game.getPlayersList());
+
                     List<OutEvent> outEvents = new LinkedList<>();
-                    outEvents.add(new TurnState(game));
                     outEvents.add(new PlayersOrderState(game));
                     outEvents.add(new TrumpSuitState(game));
 
@@ -191,20 +254,78 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         synchronized (game){
             for(var gamePlayer: game.getPlayersList()){
                 if(gamePlayer.getUser().getUsername().equals(principalName)){
-                    OutEvent cardsState = new MyCardsState(gamePlayer);
-                    eventPublisher.publishToPlayerInTheLobby(gameId, principalName, cardsState);
+
 
                     List<OutEvent> outEvents = new LinkedList<>();
-                    outEvents.add(new PlayersOrderState(game));
-                    outEvents.add(new PointState(game));
-                    outEvents.add(new TeamState(game));
-                    outEvents.add(new TrumpSuitState(game));
-                    outEvents.add(new TurnState(game));
+                    if(game.hasStarted()){
+                        OutEvent cardsState = new MyCardsState(gamePlayer);
+                        eventPublisher.publishToPlayerInTheLobby(gameId, principalName, cardsState);
+
+                        outEvents.add(new PlayersOrderState(game));
+                        outEvents.add(new PointState(game));
+                        outEvents.add(new TeamState(game));
+                        outEvents.add(new TrumpSuitState(game));
+                        outEvents.add(new TurnState(game));
+
+                        if(game.getWinnerTeam() != null)
+                            outEvents.add(new WinnerState(game));
+                    }else
+                        outEvents.add(new TeamState(game));
+
                     eventPublisher.publishToLobby(gameId, outEvents);
 
                     break;
                 }
             }
         }
+    }
+
+    private GamePlayer createGamePlayer(User user, Team team){
+        return GamePlayer.builder()
+                .user(user)
+                .team(team)
+                .points(0)
+                .build();
+    }
+
+    private GamePlayer createGamePlayer(String principalName, Team team){
+        return createGamePlayer(userRepository.findByUsername(principalName).get(), team);
+    }
+
+    private void setupNewRoundAndShuffleCards(Game game){
+        List<Card> cardsInRandomOrder = new ArrayList<>(allCards);
+        Collections.shuffle(cardsInRandomOrder);
+
+        int i = 0;
+        for(var gamePlayer: game.getPlayersList()){
+
+            gamePlayer.setOwnedCards(new LinkedList<>());
+
+            for(int j = 0; j < 10; j++){
+                gamePlayer.getOwnedCards().add(cardsInRandomOrder.get(i * 10 + j));
+            }
+            i++;
+        }
+
+        game.getRounds().add(Round.builder().actions(new LinkedList<>()).build());
+    }
+
+    public Action getWinningAction(List<Action> currentTurn){
+        return currentTurn.stream().max((a, b) -> {
+            Suit trumpSuit = a.getRound().getTrumpSuit();
+            Suit aSuit = a.getCard().getSuit();
+            Suit bSuit = b.getCard().getSuit();
+            if (aSuit != bSuit && (aSuit == trumpSuit || bSuit == trumpSuit)) {
+                if (aSuit == trumpSuit) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            } else {
+                CardRank aRank = a.getCard().getRank();
+                CardRank bRank = b.getCard().getRank();
+                return aRank.compareTo(bRank);
+            }
+        }).orElseThrow();
     }
 }

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Card implements Comparable<Card>{
+public class Card{
 
     @Id
     private Long id;
@@ -21,7 +21,15 @@ public class Card implements Comparable<Card>{
     private Suit suit;
 
     @Override
-    public int compareTo(Card o) {
-        return 0;
+    public boolean equals(Object obj){
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof Card card)) {
+            return false;
+        }
+
+        return this.rank == card.rank && this.suit == card.suit;
     }
 }

@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,16 +42,11 @@ public class ActiveGameController {
         }
     }
 
-    /*
-        Should select card. Broadcast new MyCardsState to principal. Broadcast new TurnState to everyone.
-        Broadcast new GameState with 0.5s delay if round ended. Broadcast WinnerNotification with 0.5s delay and save the game to
-        relational db if the game ended.
-    */
     @MessageMapping("/game/{id}/card")
     public void selectCard(@DestinationVariable("id") Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
-
+        activeGameService.selectCard(gameId, cardSelectEvent, principal.getName());
     }
-    /* Should broadcast new TrumpSuitState */
+
     @MessageMapping("/game/{id}/suit")
     public void selectSuit(@DestinationVariable("id") Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, Principal principal){
         activeGameService.selectSuit(gameId, trumpSuitSelectEvent, principal.getName());

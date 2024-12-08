@@ -143,8 +143,8 @@ function startGame(){
 function sendCard() {
     console.log("Sending card to game with id: " + $("#gameId").val());
     stompClient.publish({
-        destination: `/app/game/$("#gameId").val()/card`,
-        body: JSON.stringify({'card': $( "#gameId" ).val()})
+        destination: `/app/game/${$("#gameId").val()}/card`,
+        body: JSON.stringify({'cardId': $( "#cardId" ).val()})
     });
 }
 

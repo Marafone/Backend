@@ -1,6 +1,7 @@
 package com.marafone.marafone.game.event.outgoing;
 
 import com.marafone.marafone.game.model.Game;
+import com.marafone.marafone.game.model.Round;
 import com.marafone.marafone.game.model.Suit;
 
 public final class TrumpSuitState extends OutEvent{
@@ -10,6 +11,10 @@ public final class TrumpSuitState extends OutEvent{
     public TrumpSuitState(Game game){
         super("TrumpSuitState");
 
-        trumpSuit = game.getRounds().getLast().getTrumpSuit();
+        Round currentRound = game.getRounds().getLast();
+        if(currentRound != null)
+            trumpSuit = game.getRounds().getLast().getTrumpSuit();
+        else
+            trumpSuit = null;
     }
 }

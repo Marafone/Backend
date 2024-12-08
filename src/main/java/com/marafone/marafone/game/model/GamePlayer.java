@@ -20,7 +20,7 @@ public class GamePlayer {
     @GeneratedValue
     private Long id;
     @JoinColumn
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private User user;
     @Enumerated(EnumType.STRING)
     private Team team;
@@ -31,5 +31,25 @@ public class GamePlayer {
 
     public boolean hasFourOfCoins(){
         return ownedCards.stream().anyMatch(card -> card.getSuit() == Suit.COINS && card.getRank() == CardRank.FOUR);
+    }
+
+    public boolean hasCard(Card card){
+        return ownedCards.stream().anyMatch(iterCard -> iterCard.equals(card));
+    }
+
+    public void addPoints(int points){
+        this.points += points;
+    }
+
+    public void addBonusPoint(){
+        addPoints(1);
+    }
+
+    public boolean hasCardOfSuit(Suit wantedSuit){
+        return ownedCards.stream().map(Card::getSuit).anyMatch(suit -> suit == wantedSuit);
+    }
+
+    public void removeCard(Card toBeRemoved){
+        ownedCards.removeIf(card -> card.equals(toBeRemoved));
     }
 }
