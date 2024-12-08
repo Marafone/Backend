@@ -9,7 +9,6 @@ import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.User;
-import com.marafone.marafone.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,21 +23,18 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final ActiveGameRepository activeGameRepository;
     private final EndedGameService endedGameService;
     private final EventPublisher eventPublisher;
-    private final UserRepository userRepository;
     private final List<Card> allCards;
 
     @Override
-    public Long createGame(CreateGameRequest createGameRequest, String principalName) {
-        User owner = userRepository.findByUsername(principalName).get();
-
-        GamePlayer gamePlayer = createGamePlayer(owner, Team.RED);
+    public Long createGame(CreateGameRequest createGameRequest, User user) {
+        GamePlayer gamePlayer = createGamePlayer(user, Team.RED);
 
         Game game = Game.builder()
                 .createdAt(LocalDateTime.now())
-                .playersList(new ArrayList<>())
+                .playersList(new ArrayList<>(List.of(gamePlayer)))
                 .rounds(new LinkedList<>())
                 .gameType(createGameRequest.getGameType())
-                .owner(owner)
+                .owner(user)
                 .joinGameCode(createGameRequest.getJoinGameCode())
                 .build();
 
@@ -50,7 +46,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
-    public Boolean joinGame(Long gameId, JoinGameRequest joinGameRequest, String principalName) {
+    public Boolean joinGame(Long gameId, JoinGameRequest joinGameRequest, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
 
         if(gameOptional.isEmpty())
@@ -60,10 +56,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         synchronized (game){
             if(game.teamIsFull(joinGameRequest.team) || game.hasStarted() || !game.checkCode(joinGameRequest.joinGameCode)
-            || game.playerAlreadyJoined(principalName)){
+            || game.playerAlreadyJoined(user.getUsername())){
                 return false;
             }
-            GamePlayer gamePlayer = createGamePlayer(principalName, joinGameRequest.team);
+            GamePlayer gamePlayer = createGamePlayer(user, joinGameRequest.team);
             game.getPlayersList().add(gamePlayer);
 
             eventPublisher.publishToLobby(gameId, new TeamState(game));
@@ -92,7 +88,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             game.setStartedAt(LocalDateTime.now());
 
-            setupNewRoundAndShuffleCards(game);
+            ShuffleCards(game);
+            game.getRounds().add(Round.builder().actions(new LinkedList<>()).build());
 
             List<OutEvent> outEvents = new LinkedList<>();
             outEvents.add(new NewRound());
@@ -191,7 +188,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     game.setPlayersList(newOrder);
                     game.setCurrentPlayer(newOrder.listIterator());
 
-                    setupNewRoundAndShuffleCards(game);
+                    ShuffleCards(game);
+                    game.getRounds().add(Round.builder().actions(new LinkedList<>()).build());
+
 
                     outEvents.add(new PlayersOrderState(game));
                 }
@@ -291,11 +290,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .build();
     }
 
-    private GamePlayer createGamePlayer(String principalName, Team team){
-        return createGamePlayer(userRepository.findByUsername(principalName).get(), team);
-    }
-
-    private void setupNewRoundAndShuffleCards(Game game){
+    private void ShuffleCards(Game game){
         List<Card> cardsInRandomOrder = new ArrayList<>(allCards);
         Collections.shuffle(cardsInRandomOrder);
 
@@ -309,8 +304,6 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }
             i++;
         }
-
-        game.getRounds().add(Round.builder().actions(new LinkedList<>()).build());
     }
 
     public Action getWinningAction(List<Action> currentTurn){

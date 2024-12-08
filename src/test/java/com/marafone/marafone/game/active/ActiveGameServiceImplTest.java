@@ -2,6 +2,7 @@ package com.marafone.marafone.game.active;
 import com.marafone.marafone.DummyData;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.config.CardConfig;
+import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.UserRepository;
@@ -29,15 +30,15 @@ class ActiveGameServiceImplTest {
     @Mock
     private ActiveGameRepository activeGameRepository;
     @Mock
-    private EventPublisher eventPublisher;
+    private EndedGameService endedGameService;
     @Mock
-    private UserRepository userRepository;
+    private EventPublisher eventPublisher;
     @Mock
     private List<Card> allCards;
 
     @BeforeEach
     void setUp(){
-        activeGameServiceImpl = new ActiveGameServiceImpl(activeGameRepository, eventPublisher, userRepository,
+        activeGameServiceImpl = new ActiveGameServiceImpl(activeGameRepository, endedGameService, eventPublisher,
                 new CardConfig().allCards());
     }
 
@@ -45,10 +46,9 @@ class ActiveGameServiceImplTest {
     void createGame() {
         //given
         Mockito.when(activeGameRepository.put(any())).thenReturn(2L);
-        Mockito.when(userRepository.findByUsername(any())).thenReturn(Optional.ofNullable(DummyData.getUserA()));
 
         //when
-        Long gameId = activeGameServiceImpl.createGame(DummyData.getCreateGameRequestA(), DummyData.getUserA().getUsername());
+        Long gameId = activeGameServiceImpl.createGame(DummyData.getCreateGameRequestA(), DummyData.getUserA());
 
         //then
         assertEquals(2L, gameId);
@@ -60,10 +60,8 @@ class ActiveGameServiceImplTest {
         var game = DummyData.getGameInProgress();
         game.setStartedAt(null);
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.ofNullable(game));
-        Mockito.when(userRepository.findByUsername(any())).thenReturn(Optional.ofNullable(DummyData.getUserB()));
-
         //when
-        Boolean joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB().getUsername());
+        Boolean joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
 
         //then
         assertEquals(true, joined);

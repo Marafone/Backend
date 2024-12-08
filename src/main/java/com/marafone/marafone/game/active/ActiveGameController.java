@@ -1,14 +1,17 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
+import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,16 +26,16 @@ public class ActiveGameController {
 
     @PostMapping("/game/create")
     @ResponseBody
-    public String createGame(@RequestBody CreateGameRequest createGameRequest, Principal principal){
-        Long gameId = activeGameService.createGame(createGameRequest, principal.getName());
+    public String createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
+        Long gameId = activeGameService.createGame(createGameRequest, user);
         return String.valueOf(gameId);
     }
 
     @PostMapping("/game/{id}/join")
     @ResponseBody
-    public ResponseEntity<Void> joinGame(@PathVariable("id") Long gameId, @RequestBody JoinGameRequest joinGameRequest, Principal principal){
+    public ResponseEntity<Void> joinGame(@PathVariable("id") Long gameId, @RequestBody JoinGameRequest joinGameRequest, @AuthenticationPrincipal User user){
         try {
-            boolean joined = activeGameService.joinGame(gameId, joinGameRequest, principal.getName());
+            boolean joined = activeGameService.joinGame(gameId, joinGameRequest, user);
             if(joined)
                 return new ResponseEntity<>(HttpStatus.OK);
             else
@@ -70,5 +73,15 @@ public class ActiveGameController {
     public void reconnectToGame(@DestinationVariable("id") Long gameId, Principal principal){
         activeGameService.reconnectToGame(gameId, principal.getName());
     }
+
+    //WILL REMOVE IT LATER only for debugging/testing hibernate
+    private final EndedGameService endedGameService;
+    private final ActiveGameRepository activeGameRepository;
+
+    @MessageMapping("/game/{id}/save")
+    public void save(@DestinationVariable("id") Long gameId){
+        endedGameService.saveEndedGame(activeGameRepository.findById(gameId).get());
+    }
+
 
 }
