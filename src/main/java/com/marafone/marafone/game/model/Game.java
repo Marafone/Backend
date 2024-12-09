@@ -61,7 +61,11 @@ public class Game {
     }
 
     public boolean roundHasEnded(){
-        return playersList.getFirst().getOwnedCards().isEmpty();
+        for(var gamePlayer: playersList){
+            if(!gamePlayer.getOwnedCards().isEmpty())
+                return false;
+        }
+        return true;
     }
 
     public boolean setWinnersIfPossible(){

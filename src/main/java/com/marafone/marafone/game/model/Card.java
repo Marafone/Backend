@@ -32,4 +32,19 @@ public class Card{
 
         return this.rank == card.rank && this.suit == card.suit;
     }
+
+    @Override
+    public int hashCode() {
+        int a;
+        if(suit == Suit.SWORDS)
+            a = 2;
+        else if(suit == Suit.COINS)
+            a = 3;
+        else if(suit == Suit.CLUBS)
+            a = 4;
+        else
+            a = 5;
+
+        return 11 * rank.getPoints() + a;
+    }
 }

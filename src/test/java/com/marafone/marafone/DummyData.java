@@ -39,6 +39,15 @@ public class DummyData {
                 .build();
     }
 
+    public static User getUserD(){
+        return User.builder()
+                .id(4L)
+                .username("Will")
+                .email("Sick")
+                .password("sosafe")
+                .build();
+    }
+
     public static Card getCardA(){
         return new Card(1L, CardRank.FIVE, Suit.COINS);
     }
@@ -82,7 +91,7 @@ public class DummyData {
     public static GamePlayer getGamePlayerBlueA(){
         return GamePlayer.builder()
                 .id(3L)
-                .user(getUserB())
+                .user(getUserC())
                 .team(Team.BLUE)
                 .points(11)
                 .ownedCards(
@@ -100,7 +109,7 @@ public class DummyData {
     public static GamePlayer getGamePlayerBlueB(){
         return GamePlayer.builder()
                 .id(4L)
-                .user(getUserB())
+                .user(getUserD())
                 .team(Team.BLUE)
                 .points(6)
                 .ownedCards(
