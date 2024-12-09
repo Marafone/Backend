@@ -23,7 +23,7 @@ jobs:
         java-version: '21'
 
     - name: Start up dependencies
-      run: docker compose up -d
+      run: docker compose --profile test up -d
 
     - name: Wait for dependencies to start up
       run: sleep 30s

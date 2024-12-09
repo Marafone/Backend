@@ -1,5 +1,6 @@
 package com.marafone.marafone.game.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.marafone.marafone.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -39,6 +40,11 @@ public class Game {
     private ListIterator<GamePlayer> currentPlayer;
     @Transient
     private List<GamePlayer> initialPlayersList;
+
+    @Transient
+    @JsonIgnore
+    @Builder.Default
+    public int pointsToWinGame = 63;
 
     public boolean hasStarted(){
         return startedAt != null;
@@ -87,7 +93,7 @@ public class Game {
                 blueTeamPoints += gamePlayer.getPoints();
         }
 
-        if(blueTeamPoints != redTeamPoints && (blueTeamPoints >= 63 || redTeamPoints >= 63)){
+        if(blueTeamPoints != redTeamPoints && (blueTeamPoints >= pointsToWinGame || redTeamPoints >= pointsToWinGame)){
             if(blueTeamPoints > redTeamPoints){
                 winnerTeam = Team.BLUE;
             }else{

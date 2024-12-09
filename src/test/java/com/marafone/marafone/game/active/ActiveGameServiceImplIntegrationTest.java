@@ -7,9 +7,12 @@ import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.User;
+import com.marafone.marafone.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,19 +21,28 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@ActiveProfiles("test")
+@DirtiesContext
 public class ActiveGameServiceImplIntegrationTest {
 
     private final ActiveGameService activeGameService;
     private final ActiveGameRepository activeGameRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public ActiveGameServiceImplIntegrationTest(ActiveGameService activeGameService, ActiveGameRepository activeGameRepository) {
+    public ActiveGameServiceImplIntegrationTest(ActiveGameService activeGameService, ActiveGameRepository activeGameRepository, UserRepository userRepository) {
         this.activeGameService = activeGameService;
         this.activeGameRepository = activeGameRepository;
+        this.userRepository = userRepository;
     }
 
     @Test
     void fullGameFlowTest(){
+        userRepository.save(DummyData.getUserA());
+        userRepository.save(DummyData.getUserB());
+        userRepository.save(DummyData.getUserC());
+        userRepository.save(DummyData.getUserD());
+
         //CREATE GAME
         CreateGameRequest createGameRequest = new CreateGameRequest(GameType.MARAFFA, "ABC");
         User owner = DummyData.getUserA();
@@ -120,7 +132,7 @@ public class ActiveGameServiceImplIntegrationTest {
         playerIterator.next().setOwnedCards(
                 new LinkedList<>(
                     List.of(
-                        new Card(30L, CardRank.FOUR, Suit.COINS), new Card(18L, CardRank.SIX, Suit.CUPS)
+                            new Card(30L, CardRank.FOUR, Suit.COINS), new Card(18L, CardRank.SIX, Suit.CUPS)
                     )
                 )
         );
@@ -151,18 +163,18 @@ public class ActiveGameServiceImplIntegrationTest {
         playerIterator = game.getPlayersList().iterator();
         activeGameService.selectCard(gameId, new CardSelectEvent(30), playerIterator.next().getUser().getUsername());
         activeGameService.selectCard(gameId, new CardSelectEvent(35), playerIterator.next().getUser().getUsername());
-        GamePlayer shouldWin = playerIterator.next();
-        activeGameService.selectCard(gameId, new CardSelectEvent(24), shouldWin.getUser().getUsername());//should be ignored
-        activeGameService.selectCard(gameId, new CardSelectEvent(7), shouldWin.getUser().getUsername());
+        GamePlayer shouldWinThisTurn = playerIterator.next();
+        activeGameService.selectCard(gameId, new CardSelectEvent(24), shouldWinThisTurn.getUser().getUsername());//should be ignored
+        activeGameService.selectCard(gameId, new CardSelectEvent(7), shouldWinThisTurn.getUser().getUsername());
         activeGameService.selectCard(gameId, new CardSelectEvent(31), playerIterator.next().getUser().getUsername());
 
         assertEquals(4, game.getRounds().getLast().getActions().size());
-        assertEquals(2, shouldWin.getPoints());
+        assertEquals(2, shouldWinThisTurn.getPoints());
 
         //ASSERT EVERYONE LOST ONE CARD AND HAVE CORRECT AMOUNT OF POINTS
         for(var gamePlayer: game.getPlayersList()){
             assertEquals(1, gamePlayer.getOwnedCards().size());
-            if(!gamePlayer.equals(shouldWin)){
+            if(!gamePlayer.equals(shouldWinThisTurn)){
                 assertEquals(0, gamePlayer.getPoints());
             }
         }
@@ -172,10 +184,12 @@ public class ActiveGameServiceImplIntegrationTest {
         activeGameService.selectCard(gameId, new CardSelectEvent(24), playerIterator.next().getUser().getUsername());
         activeGameService.selectCard(gameId, new CardSelectEvent(15), playerIterator.next().getUser().getUsername());
         activeGameService.selectCard(gameId, new CardSelectEvent(18), playerIterator.next().getUser().getUsername());
-        activeGameService.selectCard(gameId, new CardSelectEvent(13), playerIterator.next().getUser().getUsername());
+        GamePlayer shouldGain8Points = playerIterator.next();
+        activeGameService.selectCard(gameId, new CardSelectEvent(13), shouldGain8Points.getUser().getUsername());
 
         assertEquals(2, game.getRounds().size());
         assertEquals(8, game.getRounds().getFirst().getActions().size());
+        assertEquals(8, shouldGain8Points.getPoints());
 
         //ASSERT CORRECT ORDER AFTER ROUND END
         playerIterator = game.getPlayersList().iterator();
@@ -184,9 +198,47 @@ public class ActiveGameServiceImplIntegrationTest {
         assertNotEquals(team, playerIterator.next().getTeam());
         assertEquals(hasFourOfCoins, playerIterator.next()); // person who was first is now last
 
-        //ASSERT EACH PLAYER GETS NEW CARDS AFTER NEW ROUND STARTS
+        //ASSERT EACH PLAYER HAS 10 CARDS AFTER NEW ROUND STARTS
         for(var gamePlayer: game.getPlayersList())
             assertEquals(10, gamePlayer.getOwnedCards().size());
+
+        //ASSERT SELECTING CARD BEFORE SELECTING TRUMP SUIT DOES NOT WORK
+
+        List<GamePlayer> curPlayersList = List.copyOf(game.getPlayersList());
+        for(var gamePlayer: curPlayersList){
+            List<Card> curOwnedCards = List.copyOf(gamePlayer.getOwnedCards());
+            for(var card: curOwnedCards){
+                activeGameService.selectCard(gameId, new CardSelectEvent(card.getId().intValue()), gamePlayer.getUser().getUsername());
+            }
+        }
+
+        for(var gamePlayer: game.getPlayersList())
+            assertEquals(10, gamePlayer.getOwnedCards().size());
+
+        //MOCK CARDS
+        List<Card> assignCards = List.of(
+                new Card(7L, CardRank.SEVEN, Suit.SWORDS), new Card(24L, CardRank.K, Suit.COINS),
+                new Card(30L, CardRank.FOUR, Suit.COINS), new Card(21L, CardRank.THREE, Suit.COINS)
+        );
+        Iterator<Card> cardIterator = assignCards.iterator();
+        for(var gamePlayer: game.getPlayersList())
+            gamePlayer.setOwnedCards(new LinkedList<>(List.of(cardIterator.next())));
+
+        //SELECT TRUMP SUIT
+        activeGameService.selectSuit(gameId, new TrumpSuitSelectEvent(Suit.COINS), game.getPlayersList().get(2).getUser().getUsername());
+
+        //MOCK AMOUNT OF POINTS TO WIN
+        game.pointsToWinGame = 3;
+
+        //SELECT CARDS
+        for(var gamePlayer: game.getPlayersList())
+            activeGameService.selectCard(gameId,
+                    new CardSelectEvent(gamePlayer.getOwnedCards().stream().map(Card::getId).findFirst().get().intValue()),
+                    gamePlayer.getUser().getUsername()
+            );
+
+        //ASSERT THAT GAME WAS WON BY CORRECT TEAM
+        assertEquals(shouldGain8Points.getTeam(), game.getWinnerTeam());
     }
 
 }

@@ -26,7 +26,7 @@ public class Action {
     @JoinColumn
     @JsonIgnore
     private Round round;
-    @OneToOne
+    @ManyToOne
     @JoinColumn
     private Card card;
     private LocalDateTime timestamp;

@@ -122,7 +122,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             GamePlayer currentPlayer = game.getCurrentPlayer().next();
             Card selectedCard = allCards.get(cardSelectEvent.cardId - 1);
 
-            if(!currentPlayer.getUser().getUsername().equals(principalName) || !currentPlayer.hasCard(selectedCard)
+            if(!currentPlayer.getUser().getUsername().equals(principalName) || !currentPlayer.hasCard(selectedCard) || currentRound.getTrumpSuit() == null
             || (selectedCard.getSuit() != currentRound.getTrumpSuit() && currentPlayer.hasCardOfSuit(currentRound.getTrumpSuit())) ){
                 game.getCurrentPlayer().previous();
                 return;
