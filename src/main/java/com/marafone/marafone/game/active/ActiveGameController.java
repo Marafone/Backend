@@ -5,6 +5,7 @@ import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
+import com.marafone.marafone.game.model.Game;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Controller
@@ -23,6 +25,12 @@ import java.util.NoSuchElementException;
 public class ActiveGameController {
 
     private final ActiveGameService activeGameService;
+
+    @GetMapping("/game/public")
+    @ResponseBody
+    public List<Game> getPublicGames(){
+        return activeGameService.getPublicGames();
+    }
 
     @PostMapping("/game/create")
     @ResponseBody

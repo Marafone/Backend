@@ -1,5 +1,6 @@
 package com.marafone.marafone.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -28,6 +29,7 @@ public class User implements UserDetails {
     private Long id;
     private String username;
     private String email;
+    @JsonIgnore
     private String password;
 
     @Override

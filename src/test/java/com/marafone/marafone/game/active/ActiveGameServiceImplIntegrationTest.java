@@ -183,6 +183,10 @@ public class ActiveGameServiceImplIntegrationTest {
         assertEquals(team, playerIterator.next().getTeam());
         assertNotEquals(team, playerIterator.next().getTeam());
         assertEquals(hasFourOfCoins, playerIterator.next()); // person who was first is now last
+
+        //ASSERT EACH PLAYER GETS NEW CARDS AFTER NEW ROUND STARTS
+        for(var gamePlayer: game.getPlayersList())
+            assertEquals(10, gamePlayer.getOwnedCards().size());
     }
 
 }

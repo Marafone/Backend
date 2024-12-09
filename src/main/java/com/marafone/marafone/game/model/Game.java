@@ -68,6 +68,14 @@ public class Game {
         return true;
     }
 
+    public boolean isPublic(){
+        return joinGameCode == null || joinGameCode.isEmpty();
+    }
+
+    public boolean anyTeamNotFull(){
+        return playersList.size() < 4;
+    }
+
     public boolean setWinnersIfPossible(){
         int blueTeamPoints = 0;
         int redTeamPoints = 0;

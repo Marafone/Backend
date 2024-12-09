@@ -3,10 +3,14 @@ import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
+import com.marafone.marafone.game.model.Game;
 import com.marafone.marafone.user.User;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 
+import java.util.List;
+
 public interface ActiveGameService {
+    List<Game> getPublicGames();
     Long createGame(CreateGameRequest createGameRequest, User user);
     Boolean joinGame(Long gameId, JoinGameRequest joinGameRequest, User user);
     void checkTimeout(@DestinationVariable Long gameId);

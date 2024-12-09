@@ -26,6 +26,11 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final List<Card> allCards;
 
     @Override
+    public List<Game> getPublicGames() {
+        return activeGameRepository.getPublicGames();
+    }
+
+    @Override
     public Long createGame(CreateGameRequest createGameRequest, User user) {
         GamePlayer gamePlayer = createGamePlayer(user, Team.RED);
 
