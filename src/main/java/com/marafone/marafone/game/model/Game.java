@@ -8,9 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 @Entity
 @Data
@@ -77,7 +75,7 @@ public class Game {
                 blueTeamPoints += gamePlayer.getPoints();
         }
 
-        if(blueTeamPoints != redTeamPoints && (blueTeamPoints >= 21 || redTeamPoints >= 21)){
+        if(blueTeamPoints != redTeamPoints && (blueTeamPoints >= 63 || redTeamPoints >= 63)){
             if(blueTeamPoints > redTeamPoints){
                 winnerTeam = Team.BLUE;
             }else{
@@ -87,6 +85,47 @@ public class Game {
         }
 
         return false;
+    }
+
+    public void addRound(){
+        rounds.add(Round.builder().actions(new LinkedList<>()).build());
+    }
+
+    public GamePlayer findGamePlayerByUsername(String username){
+        return playersList.stream()
+                .filter(player -> player.getUser().getUsername().equals(username)).findFirst()
+                .orElse(null);
+    }
+
+    public void setNewOrderAfterTurnEnd(GamePlayer winner){
+        List<GamePlayer> newOrder = new ArrayList<>();
+        for(var gamePlayer: playersList){
+            if(gamePlayer.equals(winner) || !newOrder.isEmpty()){
+                newOrder.addLast(gamePlayer);
+            }
+        }
+        for(var gamePlayer: playersList){
+            if(newOrder.size() == playersList.size())
+                break;
+
+            newOrder.addLast(gamePlayer);
+        }
+        playersList = newOrder;
+        currentPlayer = newOrder.listIterator();
+    }
+
+    public void setNewOrderAfterRoundEnd(){
+        int startingPlayerIndex = rounds.size() % playersList.size();
+
+        List<GamePlayer> newOrder = new ArrayList<>();
+        for(int i = startingPlayerIndex; i < initialPlayersList.size(); i++){
+            newOrder.addLast(initialPlayersList.get(i));
+        }
+        for(int i = 0; i < startingPlayerIndex; i++){
+            newOrder.addLast(initialPlayersList.get(i));
+        }
+        playersList = newOrder;
+        currentPlayer = newOrder.listIterator();
     }
 
 }

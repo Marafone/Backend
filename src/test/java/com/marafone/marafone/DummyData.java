@@ -30,6 +30,15 @@ public class DummyData {
                 .build();
     }
 
+    public static User getUserC(){
+        return User.builder()
+                .id(3L)
+                .username("Johny")
+                .email("Wick")
+                .password("qwerty!!!")
+                .build();
+    }
+
     public static Card getCardA(){
         return new Card(1L, CardRank.FIVE, Suit.COINS);
     }

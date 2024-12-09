@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,4 +23,13 @@ public class Round {
     private List<Action> actions;
     @Enumerated(EnumType.STRING)
     private Suit trumpSuit;
+
+    public List<Action> getLastNActions(int N){
+        List<Action> currentTurn = new LinkedList<>();
+        Iterator<Action> actionDescIterator = actions.reversed().iterator();
+        for(int i = 0; i < N; i++){
+            currentTurn.add(actionDescIterator.next());
+        }
+        return currentTurn;
+    }
 }

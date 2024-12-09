@@ -42,7 +42,7 @@ public class GamePlayer {
     }
 
     public void addBonusPoint(){
-        addPoints(1);
+        addPoints(3);
     }
 
     public boolean hasCardOfSuit(Suit wantedSuit){
