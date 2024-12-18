@@ -146,4 +146,8 @@ public class Game {
         currentPlayer = newOrder.listIterator();
     }
 
+    public int getPlayersAmount() {
+        return playersList.size();
+    }
+
 }
