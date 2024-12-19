@@ -43,9 +43,13 @@ public class ActiveGameController {
 
     @PostMapping("/game/create")
     @ResponseBody
-    public String createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
+    public ResponseEntity<String> createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
+        if (activeGameService.doesNotStartedGameAlreadyExist(createGameRequest.getGameName()))
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("The game name already exists. Please choose a different name.");
+
         Long gameId = activeGameService.createGame(createGameRequest, user);
-        return String.valueOf(gameId);
+        return ResponseEntity.ok(String.valueOf(gameId));
     }
 
     @PostMapping("/game/{id}/join")
