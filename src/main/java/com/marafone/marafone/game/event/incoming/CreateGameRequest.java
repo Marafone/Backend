@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CreateGameRequest {
+    String gameName;
     GameType gameType;
     String joinGameCode;
 }

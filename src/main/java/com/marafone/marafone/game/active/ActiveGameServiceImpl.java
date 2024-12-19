@@ -8,6 +8,7 @@ import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,19 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EndedGameService endedGameService;
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
+    private final GameMapper gameMapper;
 
     @Override
     public List<Game> getPublicGames() {
         return activeGameRepository.getPublicGames();
+    }
+
+    @Override
+    public List<GameDTO> getWaitingGames() {
+        List<Game> allPublicGames = activeGameRepository.getPublicGames();
+        return allPublicGames.stream()
+                        .map(gameMapper::toGameDTO)
+                        .toList();
     }
 
     @Override
@@ -38,16 +48,22 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .createdAt(LocalDateTime.now())
                 .playersList(new ArrayList<>(List.of(gamePlayer)))
                 .rounds(new LinkedList<>())
+                .name(createGameRequest.getGameName())
                 .gameType(createGameRequest.getGameType())
                 .owner(user)
                 .joinGameCode(createGameRequest.getJoinGameCode())
                 .build();
 
-        Long id = activeGameRepository.put(game);
+        return activeGameRepository.put(game);
+    }
 
-        game.setName(String.valueOf(id));
+    // checks if game with arg name already exists
+    // among games waiting for players to join
 
-        return id;
+    public boolean doesNotStartedGameAlreadyExist(String name) {
+        return getPublicGames().stream()
+                        .map(Game::getName)
+                        .anyMatch(gameName -> gameName.equals(name));
     }
 
     @Override

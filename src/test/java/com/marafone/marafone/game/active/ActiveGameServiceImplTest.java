@@ -1,4 +1,5 @@
 package com.marafone.marafone.game.active;
+
 import com.marafone.marafone.DummyData;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.config.CardConfig;
@@ -6,7 +7,7 @@ import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
-import com.marafone.marafone.user.User;
+import com.marafone.marafone.mappers.GameMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -33,11 +35,13 @@ class ActiveGameServiceImplTest {
     private EventPublisher eventPublisher;
     @Mock
     private List<Card> allCards;
+    @Mock
+    private GameMapper gameMapper;
 
     @BeforeEach
     void setUp(){
         activeGameServiceImpl = new ActiveGameServiceImpl(activeGameRepository, endedGameService, eventPublisher,
-                new CardConfig().allCards());
+                new CardConfig().allCards(), gameMapper);
     }
 
     // Create game tests
@@ -222,6 +226,38 @@ class ActiveGameServiceImplTest {
 
         //then
         assertEquals(strongAction, winningAction);
+    }
+
+    @Test
+    void testGameExistenceWhenGameAlreadyExist() {
+        // given
+        Game queuedGame = new Game();
+        queuedGame.setName("game");
+        List<Game> queuedGames = List.of(queuedGame);
+        String newGameToAddName = "game";
+        Mockito.when(activeGameServiceImpl.getPublicGames()).thenReturn(queuedGames);
+
+        // when
+        boolean result = activeGameServiceImpl.doesNotStartedGameAlreadyExist(newGameToAddName);
+
+        // then
+        assertTrue(result);
+    }
+
+    @Test
+    void testGameExistenceWhenGameDoesNotExist() {
+        // given
+        Game queuedGame = new Game();
+        queuedGame.setName("game");
+        List<Game> queuedGames = List.of(queuedGame);
+        String newGameToAddName = "otherGame";
+        Mockito.when(activeGameServiceImpl.getPublicGames()).thenReturn(queuedGames);
+
+        // when
+        boolean result = activeGameServiceImpl.doesNotStartedGameAlreadyExist(newGameToAddName);
+
+        // then
+        assertFalse(result);
     }
 
 }

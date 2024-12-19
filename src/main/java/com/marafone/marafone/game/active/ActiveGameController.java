@@ -6,6 +6,7 @@ import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.Game;
+import com.marafone.marafone.game.model.GameDTO;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,11 +33,23 @@ public class ActiveGameController {
         return activeGameService.getPublicGames();
     }
 
+    // get all games to display them to user at landing page as lobbies
+    // it does same thing as getPublicGames() but transforms it into GameDTO
+    @GetMapping("/game/waiting")
+    @ResponseBody
+    public List<GameDTO> getWaitingGames() {
+        return activeGameService.getWaitingGames();
+    }
+
     @PostMapping("/game/create")
     @ResponseBody
-    public String createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
+    public ResponseEntity<String> createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
+        if (activeGameService.doesNotStartedGameAlreadyExist(createGameRequest.getGameName()))
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("The game name already exists. Please choose a different name.");
+
         Long gameId = activeGameService.createGame(createGameRequest, user);
-        return String.valueOf(gameId);
+        return ResponseEntity.ok(String.valueOf(gameId));
     }
 
     @PostMapping("/game/{id}/join")
