@@ -48,16 +48,22 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .createdAt(LocalDateTime.now())
                 .playersList(new ArrayList<>(List.of(gamePlayer)))
                 .rounds(new LinkedList<>())
+                .name(createGameRequest.getGameName())
                 .gameType(createGameRequest.getGameType())
                 .owner(user)
                 .joinGameCode(createGameRequest.getJoinGameCode())
                 .build();
 
-        Long id = activeGameRepository.put(game);
+        return activeGameRepository.put(game);
+    }
 
-        game.setName(String.valueOf(id));
+    // checks if game with arg name already exists
+    // among games waiting for players to join
 
-        return id;
+    public boolean doesNotStartedGameAlreadyExist(String name) {
+        return getPublicGames().stream()
+                        .map(Game::getName)
+                        .anyMatch(gameName -> gameName.equals(name));
     }
 
     @Override
