@@ -6,6 +6,7 @@ import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.Game;
+import com.marafone.marafone.game.model.GameDTO;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,10 +27,10 @@ public class ActiveGameController {
 
     private final ActiveGameService activeGameService;
 
-    @GetMapping("/game/public")
+    @GetMapping("/game/waiting")
     @ResponseBody
-    public List<Game> getPublicGames(){
-        return activeGameService.getPublicGames();
+    public List<GameDTO> getWaitingGames() {
+        return activeGameService.getWaitingGames();
     }
 
     @PostMapping("/game/create")

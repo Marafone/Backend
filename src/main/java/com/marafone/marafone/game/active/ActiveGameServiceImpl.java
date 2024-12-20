@@ -8,6 +8,7 @@ import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,14 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EndedGameService endedGameService;
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
+    private final GameMapper gameMapper;
 
     @Override
-    public List<Game> getPublicGames() {
-        return activeGameRepository.getPublicGames();
+    public List<GameDTO> getWaitingGames() {
+        List<Game> allPublicGames = activeGameRepository.getWaitingGames();
+        return allPublicGames.stream()
+                        .map(gameMapper::toGameDTO)
+                        .toList();
     }
 
     @Override
