@@ -34,7 +34,7 @@ public class ActiveGameRepositoryImpl implements ActiveGameRepository{
     }
 
     @Override
-    public List<Game> getPublicGames() {
+    public List<Game> getWaitingGames() {
         return activeGames.values().stream()
                 .filter(game -> !game.hasStarted() && game.isPublic() && game.anyTeamNotFull())
                 .toList();

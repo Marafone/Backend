@@ -11,7 +11,6 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import java.util.List;
 
 public interface ActiveGameService {
-    List<Game> getPublicGames();
     List<GameDTO> getWaitingGames();
     Long createGame(CreateGameRequest createGameRequest, User user);
     Boolean joinGame(Long gameId, JoinGameRequest joinGameRequest, User user);

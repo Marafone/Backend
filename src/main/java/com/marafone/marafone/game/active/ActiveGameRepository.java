@@ -8,5 +8,5 @@ import java.util.Optional;
 public interface ActiveGameRepository {
     Optional<Game> findById(Long id);
     Long put(Game game);
-    List<Game> getPublicGames();
+    List<Game> getWaitingGames();
 }
