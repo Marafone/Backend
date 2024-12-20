@@ -27,14 +27,6 @@ public class ActiveGameController {
 
     private final ActiveGameService activeGameService;
 
-    @GetMapping("/game/public")
-    @ResponseBody
-    public List<Game> getPublicGames(){
-        return activeGameService.getPublicGames();
-    }
-
-    // get all games to display them to user at landing page as lobbies
-    // it does same thing as getPublicGames() but transforms it into GameDTO
     @GetMapping("/game/waiting")
     @ResponseBody
     public List<GameDTO> getWaitingGames() {

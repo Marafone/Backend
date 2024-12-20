@@ -28,13 +28,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final GameMapper gameMapper;
 
     @Override
-    public List<Game> getPublicGames() {
-        return activeGameRepository.getPublicGames();
-    }
-
-    @Override
     public List<GameDTO> getWaitingGames() {
-        List<Game> allPublicGames = activeGameRepository.getPublicGames();
+        List<Game> allPublicGames = activeGameRepository.getWaitingGames();
         return allPublicGames.stream()
                         .map(gameMapper::toGameDTO)
                         .toList();
