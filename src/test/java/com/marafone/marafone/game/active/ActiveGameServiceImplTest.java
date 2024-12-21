@@ -235,7 +235,7 @@ class ActiveGameServiceImplTest {
         queuedGame.setName("game");
         List<Game> queuedGames = List.of(queuedGame);
         String newGameToAddName = "game";
-        Mockito.when(activeGameServiceImpl.getPublicGames()).thenReturn(queuedGames);
+        Mockito.when(activeGameRepository.getWaitingGames()).thenReturn(queuedGames);
 
         // when
         boolean result = activeGameServiceImpl.doesNotStartedGameAlreadyExist(newGameToAddName);
@@ -251,7 +251,7 @@ class ActiveGameServiceImplTest {
         queuedGame.setName("game");
         List<Game> queuedGames = List.of(queuedGame);
         String newGameToAddName = "otherGame";
-        Mockito.when(activeGameServiceImpl.getPublicGames()).thenReturn(queuedGames);
+        Mockito.when(activeGameRepository.getWaitingGames()).thenReturn(queuedGames);
 
         // when
         boolean result = activeGameServiceImpl.doesNotStartedGameAlreadyExist(newGameToAddName);

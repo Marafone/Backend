@@ -22,12 +22,15 @@ public class ActiveGameRepositoryImpl implements ActiveGameRepository{
     @Override
     public Long put(Game game) {
         var uuid = UUID.randomUUID().getMostSignificantBits();
+        Game hashMapGame;
 
         while(true){
-            game = activeGames.putIfAbsent(uuid, game);
+            hashMapGame = activeGames.putIfAbsent(uuid, game);
 
-            if(game == null)
+            if(hashMapGame == null) {
+                game.setId(uuid);
                 return uuid;
+            }
 
             uuid = UUID.randomUUID().getMostSignificantBits();
         }

@@ -35,10 +35,10 @@ public class ActiveGameController {
 
     @PostMapping("/game/create")
     @ResponseBody
-    public ResponseEntity<String> createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
+    public synchronized ResponseEntity<String> createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
         if (activeGameService.doesNotStartedGameAlreadyExist(createGameRequest.getGameName()))
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("The game name already exists. Please choose a different name.");
+                    .body("GAME_NAME_TAKEN");
 
         Long gameId = activeGameService.createGame(createGameRequest, user);
         return ResponseEntity.ok(String.valueOf(gameId));

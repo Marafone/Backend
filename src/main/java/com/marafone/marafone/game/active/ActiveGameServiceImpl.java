@@ -56,7 +56,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     // among games waiting for players to join
 
     public boolean doesNotStartedGameAlreadyExist(String name) {
-        return getPublicGames().stream()
+        return activeGameRepository.getWaitingGames()
+                        .stream()
                         .map(Game::getName)
                         .anyMatch(gameName -> gameName.equals(name));
     }
