@@ -7,6 +7,8 @@ import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.Game;
 import com.marafone.marafone.game.model.GameDTO;
+import com.marafone.marafone.game.model.JoinGameResult;
+import com.marafone.marafone.game.response.JoinGameResponse;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import static com.marafone.marafone.game.model.JoinGameResult.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -46,16 +50,13 @@ public class ActiveGameController {
 
     @PostMapping("/game/{id}/join")
     @ResponseBody
-    public ResponseEntity<Void> joinGame(@PathVariable("id") Long gameId, @RequestBody JoinGameRequest joinGameRequest, @AuthenticationPrincipal User user){
-        try {
-            boolean joined = activeGameService.joinGame(gameId, joinGameRequest, user);
-            if(joined)
-                return new ResponseEntity<>(HttpStatus.OK);
-            else
-                return new ResponseEntity<>(HttpStatus.CONFLICT);
-        }catch (NoSuchElementException e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<JoinGameResponse> joinGame(@PathVariable("id") Long gameId, @RequestBody JoinGameRequest joinGameRequest, @AuthenticationPrincipal User user){
+        JoinGameResult result = activeGameService.joinGame(gameId, joinGameRequest, user);
+        JoinGameResponse joinGameResponse = new JoinGameResponse(result, result.getMessage());
+        if (result == SUCCESS)
+            return ResponseEntity.ok().body(joinGameResponse);
+        else
+            return ResponseEntity.badRequest().body(joinGameResponse);
     }
 
     @MessageMapping("/game/{id}/card")

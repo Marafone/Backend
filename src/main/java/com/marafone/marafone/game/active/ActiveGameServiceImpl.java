@@ -17,6 +17,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.marafone.marafone.game.model.JoinGameResult.*;
+
 @Service
 @RequiredArgsConstructor
 public class ActiveGameServiceImpl implements ActiveGameService{
@@ -63,26 +65,37 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
-    public Boolean joinGame(Long gameId, JoinGameRequest joinGameRequest, User user) {
+    public JoinGameResult joinGame(Long gameId, JoinGameRequest joinGameRequest, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
 
         if(gameOptional.isEmpty())
-            return false;
+            return GAME_NOT_FOUND;
 
         Game game = gameOptional.get();
 
         synchronized (game){
-            if(game.teamIsFull(joinGameRequest.team) || game.hasStarted() || !game.checkCode(joinGameRequest.joinGameCode)
-            || game.playerAlreadyJoined(user.getUsername())){
-                return false;
-            }
-            GamePlayer gamePlayer = createGamePlayer(user, joinGameRequest.team);
+
+            if (!game.anyTeamNotFull())
+                return TEAMS_FULL;
+            else if (game.hasStarted())
+                return GAME_ALREADY_STARTED;
+            else if (!game.checkCode(joinGameRequest.joinGameCode))
+                return INCORRECT_PASSWORD;
+            else if (game.playerAlreadyJoined(user.getUsername()))
+                return PLAYER_ALREADY_JOINED;
+
+            GamePlayer gamePlayer;
+            if (!game.teamIsFull(Team.RED))
+                gamePlayer = createGamePlayer(user, Team.RED);
+            else // we are sure that second team is not full because of validation
+                gamePlayer = createGamePlayer(user, Team.BLUE);
+
             game.getPlayersList().add(gamePlayer);
 
             eventPublisher.publishToLobby(gameId, new TeamState(game));
         }
 
-        return true;
+        return SUCCESS;
     }
 
     @Override
