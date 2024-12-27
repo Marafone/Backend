@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.marafone.marafone.game.model.JoinGameResult.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -61,69 +62,72 @@ class ActiveGameServiceImplTest {
     //Join game tests
 
     @Test
-    void joiningNotFullTeamShouldReturnTrue(){
+    void joiningNotFullTeamShouldReturnSuccess(){
         //given
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(DummyData.getGameInLobby()));
 
         //when
-        Boolean joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
 
         //then
-        assertTrue(joined);
+        assertSame(JoinGameResult.SUCCESS, joined);
     }
 
     @Test
-    void joiningFullTeamShouldReturnFalse(){
+    void joiningFullTeamsShouldReturnTeamsFullMsg(){
         //given
         Game sampleGame = DummyData.getGameInLobby();
         sampleGame.getPlayersList().add(DummyData.getGamePlayerRedB());
+        sampleGame.getPlayersList().add(DummyData.getGamePlayerRedA());
+        sampleGame.getPlayersList().add(DummyData.getGamePlayerBlueA());
+        sampleGame.getPlayersList().add(DummyData.getGamePlayerBlueB());
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(sampleGame));
 
         //when
-        Boolean joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserC());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserC());
 
         //then
-        assertFalse(joined);
+        assertEquals(TEAMS_FULL, joined);
     }
 
     @Test
-    void joiningNotExistentGameShouldReturnFalse(){
+    void joiningNotExistentGameShouldReturnGameNotFoundMsg(){
         //given
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.empty());
 
         //when
-        Boolean joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserA());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserA());
 
         //then
-        assertFalse(joined);
+        assertEquals(GAME_NOT_FOUND, joined);
     }
 
     @Test
-    void joiningGameWithBadJoinCodeShouldReturnFalse(){
+    void joiningGameWithBadJoinCodeShouldReturnIncorrectPasswordMsg(){
         //given
         Game sampleGame = DummyData.getGameInLobby();
         sampleGame.setJoinGameCode("123");
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(sampleGame));
 
         //when
-        Boolean joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, "ABC"), DummyData.getUserB());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, "ABC"), DummyData.getUserB());
 
         //then
-        assertFalse(joined);
+        assertEquals(INCORRECT_PASSWORD, joined);
     }
 
     @Test
-    void joiningSameGameTwoTimesShouldReturnFalse(){
+    void joiningSameGameTwoTimesShouldReturnPlayerAlreadyJoinedMsg(){
         //given
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(DummyData.getGameInLobby()));
 
         //when
-        Boolean joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
-        Boolean joinedAgain = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
+        JoinGameResult joinedAgain = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
 
         //then
-        assertTrue(joined);
-        assertFalse(joinedAgain);
+        assertEquals(SUCCESS, joined);
+        assertEquals(PLAYER_ALREADY_JOINED, joinedAgain);
     }
 
     //Starting game tests

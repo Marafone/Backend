@@ -18,6 +18,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.marafone.marafone.game.model.JoinGameResult.INCORRECT_PASSWORD;
+import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -57,16 +59,16 @@ public class ActiveGameServiceImplIntegrationTest {
         User ownerTeamMate = DummyData.getUserB();
         JoinGameRequest joinRedWrongCode = new JoinGameRequest(Team.RED, "123");
 
-        Boolean joined = activeGameService.joinGame(gameId, joinRedWrongCode, ownerTeamMate);
+        JoinGameResult joined = activeGameService.joinGame(gameId, joinRedWrongCode, ownerTeamMate);
 
-        assertFalse(joined);
+        assertEquals(INCORRECT_PASSWORD, joined);
 
         //JOIN GAME - should join
         JoinGameRequest joinRedGoodCode = new JoinGameRequest(Team.RED, "ABC");
 
         joined = activeGameService.joinGame(gameId, joinRedGoodCode, ownerTeamMate);
 
-        assertTrue(joined);
+        assertEquals(SUCCESS, joined);
 
         //JOIN ENEMY TEAM
         User firstEnemy = DummyData.getUserC();
