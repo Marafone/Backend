@@ -12,7 +12,7 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/game");
+        registry.addEndpoint("/game").setAllowedOrigins("http://localhost:5173");
     }
 
     @Override

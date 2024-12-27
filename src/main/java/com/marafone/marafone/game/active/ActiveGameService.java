@@ -19,5 +19,5 @@ public interface ActiveGameService {
     void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);
     void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName);
     void reconnectToGame(Long gameId, String principalName);
-
+    boolean doesNotStartedGameAlreadyExist(String name);
 }
