@@ -5,9 +5,10 @@ import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
-import com.marafone.marafone.game.model.Game;
 import com.marafone.marafone.game.model.GameDTO;
+import com.marafone.marafone.game.model.GamePlayer;
 import com.marafone.marafone.game.model.JoinGameResult;
+import com.marafone.marafone.game.model.Team;
 import com.marafone.marafone.game.response.JoinGameResponse;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Map;
 
-import static com.marafone.marafone.game.model.JoinGameResult.*;
+import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
 
 @Controller
 @RequiredArgsConstructor
@@ -57,6 +58,16 @@ public class ActiveGameController {
             return ResponseEntity.ok().body(joinGameResponse);
         else
             return ResponseEntity.badRequest().body(joinGameResponse);
+    }
+
+    @PostMapping("/game/{id}/teams")
+    @ResponseBody
+    public ResponseEntity<Map<Team, List<GamePlayer>>> getGameTeams(@PathVariable("id") Long gameId) {
+        Map<Team, List<GamePlayer>> teams = activeGameService.getGameTeams(gameId);
+        if (teams == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        else
+            return ResponseEntity.ok(teams);
     }
 
     @MessageMapping("/game/{id}/card")
