@@ -238,7 +238,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             if(
                 gamePlayer == null
                 || (game.getRounds().size() == 1 && !gamePlayer.hasFourOfCoins()) //only in first round
-                || (game.getRounds().size() != 1 && !gamePlayer.getUser().getUsername().equals(playerToMove.getUser().getUsername()))
+                || (game.getRounds().size() != 1 && !gamePlayer.equals(playerToMove))
             )
                 return;
 
