@@ -116,6 +116,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             game.setStartedAt(LocalDateTime.now());
 
             ShuffleCards(game);
+
+            setInitialOrder(game);
+
             game.addRound();
 
             List<OutEvent> outEvents = new LinkedList<>();
@@ -210,32 +213,18 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }
 
             GamePlayer gamePlayer = game.findGamePlayerByUsername(principalName);
-
-            if(gamePlayer == null || !gamePlayer.hasFourOfCoins())
+            GamePlayer playerToMove = game.getCurrentPlayer().next();
+            game.getCurrentPlayer().previous();
+            if(
+                gamePlayer == null
+                || (game.getRounds().size() == 1 && !gamePlayer.hasFourOfCoins()) //only in first round
+                || (game.getRounds().size() != 1 && !gamePlayer.getUser().getUsername().equals(playerToMove.getUser().getUsername()))
+            )
                 return;
 
             currentRound.setTrumpSuit(trumpSuitSelectEvent.trumpSuit);
 
-            LinkedList<GamePlayer> enemyTeam =
-                    game.getPlayersList().stream().filter(player -> player.getTeam() != gamePlayer.getTeam())
-                            .collect(Collectors.toCollection(LinkedList::new));
-
-            LinkedList<GamePlayer> newOrderOfPlayers = new LinkedList<>();
-            newOrderOfPlayers.add(gamePlayer);
-            newOrderOfPlayers.add(Math.random() < 0.5 ? enemyTeam.removeFirst() : enemyTeam.removeLast());
-            newOrderOfPlayers.add(game.getPlayersList().stream().filter(
-                    player -> player.getTeam() == gamePlayer.getTeam() && !player.equals(gamePlayer)
-            ).findFirst().orElseThrow());
-            newOrderOfPlayers.add(enemyTeam.removeFirst());
-
-            game.setPlayersList(newOrderOfPlayers);
-            game.setCurrentPlayer(newOrderOfPlayers.listIterator());
-
-            if(game.getRounds().size() == 1)
-                game.setInitialPlayersList(new ArrayList<>(game.getPlayersList()));
-
             List<OutEvent> outEvents = new LinkedList<>();
-            outEvents.add(new PlayersOrderState(game));
             outEvents.add(new TrumpSuitState(game));
 
             eventPublisher.publishToLobby(gameId, outEvents);
@@ -314,5 +303,24 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 return aRank.compareTo(bRank);
             }
         }).orElseThrow();
+    }
+
+    private void setInitialOrder(Game game){
+        GamePlayer gamePlayer = game.getPlayersList().stream().filter(GamePlayer::hasFourOfCoins).findFirst().orElseThrow();
+
+        LinkedList<GamePlayer> enemyTeam = game.getPlayersList().stream().filter(player -> player.getTeam() != gamePlayer.getTeam())
+                .collect(Collectors.toCollection(LinkedList::new));
+
+        LinkedList<GamePlayer> startingOrderOfPlayers = new LinkedList<>();
+        startingOrderOfPlayers.add(gamePlayer);
+        startingOrderOfPlayers.add(Math.random() < 0.5 ? enemyTeam.removeFirst() : enemyTeam.removeLast());
+        startingOrderOfPlayers.add(game.getPlayersList().stream().filter(
+                player -> player.getTeam() == gamePlayer.getTeam() && !player.equals(gamePlayer)
+        ).findFirst().orElseThrow());
+        startingOrderOfPlayers.add(enemyTeam.removeFirst());
+
+        game.setPlayersList(startingOrderOfPlayers);
+        game.setCurrentPlayer(startingOrderOfPlayers.listIterator());
+        game.setInitialPlayersList(new ArrayList<>(game.getPlayersList()));
     }
 }
