@@ -92,10 +92,30 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             game.getPlayersList().add(gamePlayer);
 
-            eventPublisher.publishToLobby(gameId, new TeamState(game));
+            eventPublisher.publishToLobby(gameId, new PlayerJoinedEvent(user.getUsername(), gamePlayer.getTeam()));
         }
 
         return SUCCESS;
+    }
+
+    public Map<Team, List<GamePlayer>> getGameTeams(Long gameId) {
+        Game game = findGameById(gameId).orElse(null);
+        if (game == null)
+            return null; // this game does not exist
+
+        synchronized (game){
+            Map<Team, List<GamePlayer>> output = new EnumMap<>(Team.class);
+            output.put(Team.RED, new ArrayList<>());
+            output.put(Team.BLUE, new ArrayList<>());
+            for (var player: game.getPlayersList()) {
+                output.get(player.getTeam()).add(player);
+            }
+            return output;
+        }
+    }
+
+    private Optional<Game> findGameById(Long gameId) {
+        return activeGameRepository.findById(gameId);
     }
 
     @Override

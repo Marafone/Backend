@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.marafone.marafone.game.model.JoinGameResult.*;
@@ -262,6 +263,84 @@ class ActiveGameServiceImplTest {
 
         // then
         assertFalse(result);
+    }
+
+    @Test
+    void getGameTeams_WhenGameDoesNotExist_ShouldReturnNull() {
+        // given
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.empty());
+
+        // when
+        Map<Team, List<GamePlayer>> result = activeGameServiceImpl.getGameTeams(1L);
+
+        // then
+        assertNull(result);
+    }
+
+    @Test
+    void getGameTeams_WhenGameExistsWithTwoPlayers_ShouldReturnMapWithTwoPlayers() {
+        // given
+        GamePlayer gp1 = GamePlayer.builder()
+                .id(1L)
+                .team(Team.RED)
+                .build();
+        GamePlayer gp2 = GamePlayer.builder()
+                .id(2L)
+                .team(Team.BLUE)
+                .build();
+        Game game = Game.builder()
+                .id(1L)
+                .playersList(List.of(gp1, gp2))
+                .build();
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        Map<Team, List<GamePlayer>> result = activeGameServiceImpl.getGameTeams(1L);
+
+        // then
+        assertNotNull(result);
+        assertNotNull(result.get(Team.RED));
+        assertNotNull(result.get(Team.BLUE));
+        assertEquals(1, result.get(Team.RED).size());
+        assertEquals(1, result.get(Team.BLUE).size());
+        assertEquals(gp1.getId(), result.get(Team.RED).getFirst().getId());
+        assertEquals(gp2.getId(), result.get(Team.BLUE).getFirst().getId());
+    }
+
+    @Test
+    void getGameTeams_WhenGameIsFull_ShouldReturnMapWithAllPlayers() {
+        // given
+        GamePlayer gp1 = GamePlayer.builder()
+                .id(1L)
+                .team(Team.RED)
+                .build();
+        GamePlayer gp2 = GamePlayer.builder()
+                .id(2L)
+                .team(Team.BLUE)
+                .build();
+        GamePlayer gp3 = GamePlayer.builder()
+                .id(3L)
+                .team(Team.RED)
+                .build();
+        GamePlayer gp4 = GamePlayer.builder()
+                .id(4L)
+                .team(Team.BLUE)
+                .build();
+        Game game = Game.builder()
+                .id(1L)
+                .playersList(List.of(gp1, gp2, gp3, gp4))
+                .build();
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        Map<Team, List<GamePlayer>> result = activeGameServiceImpl.getGameTeams(1L);
+
+        // then
+        assertNotNull(result);
+        assertNotNull(result.get(Team.RED));
+        assertNotNull(result.get(Team.BLUE));
+        assertEquals(2, result.get(Team.RED).size());
+        assertEquals(2, result.get(Team.BLUE).size());
     }
 
 }

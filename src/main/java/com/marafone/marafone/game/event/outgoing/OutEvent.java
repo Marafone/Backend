@@ -2,7 +2,8 @@ package com.marafone.marafone.game.event.outgoing;
 
 public sealed abstract class OutEvent permits
         MyCardsState, NewRound, PlayersOrderState, PointState,
-        TeamState, TrumpSuitState, TurnState, WinnerState {
+        TeamState, TrumpSuitState, TurnState, WinnerState,
+        PlayerJoinedEvent {
 
     public final String eventType;
 
