@@ -102,13 +102,16 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         Game game = findGameById(gameId).orElse(null);
         if (game == null)
             return null; // this game does not exist
-        Map<Team, List<GamePlayer>> output = new EnumMap<>(Team.class);
-        output.put(Team.RED, new ArrayList<>());
-        output.put(Team.BLUE, new ArrayList<>());
-        for (var player: game.getPlayersList()) {
-            output.get(player.getTeam()).add(player);
+
+        synchronized (game){
+            Map<Team, List<GamePlayer>> output = new EnumMap<>(Team.class);
+            output.put(Team.RED, new ArrayList<>());
+            output.put(Team.BLUE, new ArrayList<>());
+            for (var player: game.getPlayersList()) {
+                output.get(player.getTeam()).add(player);
+            }
+            return output;
         }
-        return output;
     }
 
     private Optional<Game> findGameById(Long gameId) {
