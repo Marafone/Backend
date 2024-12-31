@@ -69,7 +69,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
 
         if(gameOptional.isEmpty())
-            return GAME_NOT_FOUND;
+            return JoinGameResult.GAME_NOT_FOUND;
 
         Game game = gameOptional.get();
 
@@ -95,7 +95,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             eventPublisher.publishToLobby(gameId, new PlayerJoinedEvent(user.getUsername(), gamePlayer.getTeam()));
         }
 
-        return SUCCESS;
+        return JoinGameResult.SUCCESS;
     }
 
     public Map<Team, List<GamePlayer>> getGameTeams(Long gameId) {
@@ -122,12 +122,19 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
     @Override
     public void startGame(Long gameId, String principalName) {
-        Game game = activeGameRepository.findById(gameId)
-                .orElseThrow();
+        Optional<Game> gameOptional = activeGameRepository.findById(gameId);
+        if (gameOptional.isEmpty())
+            return;
+
+        Game game = gameOptional.get();
 
         synchronized (game){
-            if(!game.getOwner().getUsername().equals(principalName)
-                || game.getStartedAt() != null || game.getPlayersList().size() != 4)
+            // will be replaced with proper events sending in future
+            if(!game.getOwner().getUsername().equals(principalName))
+                return;
+            else if (game.getStartedAt() != null)
+                return;
+            else if (game.anyTeamNotFull())
                 return;
 
             game.setStartedAt(LocalDateTime.now());
@@ -136,19 +143,36 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             game.addRound();
 
             List<OutEvent> outEvents = new LinkedList<>();
-            outEvents.add(new NewRound());
-            outEvents.add(new PlayersOrderState(game));
-            outEvents.add(new PointState(game));
-            outEvents.add(new TeamState(game));
-            outEvents.add(new TurnState(game));
+            outEvents.add(new GameStartedEvent());
 
             eventPublisher.publishToLobby(gameId, outEvents);
-
-            for(var gamePlayer : game.getPlayersList()){
-                eventPublisher.publishToPlayerInTheLobby(gameId, gamePlayer.getUser().getUsername(), new MyCardsState(gamePlayer));
-            }
         }
+    }
 
+    public List<Card> getGamePlayerCards(Long gameId, String principalName) {
+        Optional<Game> gameOptional = findGameById(gameId);
+        if (gameOptional.isEmpty())
+            return null;
+
+        GamePlayer gamePlayer = gameOptional.get()
+                .getPlayersList()
+                .stream()
+                .filter(player -> player.getUser().getUsername().equals(principalName))
+                .findFirst()
+                .orElse(null);
+        if (gamePlayer == null)
+            return null;
+
+        return gamePlayer.getOwnedCards();
+    }
+
+    public List<String> getPlayersOrder(Long gameId) {
+        Optional<Game> optionalGame = activeGameRepository.findById(gameId);
+        if (optionalGame.isEmpty())
+            return Collections.emptyList();
+
+        Game game = optionalGame.get();
+        return game.getPlayersList().stream().map(player -> player.getUser().getUsername()).toList();
     }
 
     @Override
@@ -197,12 +221,15 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 if(game.setWinnersIfPossible()){
                     outEvents.add(new WinnerState(game));
                     endedGameService.saveEndedGame(game);
+                    eventPublisher.publishToLobby(gameId, outEvents);
                     return;
                 }else{
                     game.setNewOrderAfterRoundEnd();
 
                     ShuffleCards(game);
                     game.addRound();
+
+                    outEvents.add(new NewRound());
                 }
             }else{
                 game.setNewOrderAfterTurnEnd(winningAction.getPlayer());
