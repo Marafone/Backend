@@ -5,10 +5,7 @@ import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
-import com.marafone.marafone.game.model.GameDTO;
-import com.marafone.marafone.game.model.GamePlayer;
-import com.marafone.marafone.game.model.JoinGameResult;
-import com.marafone.marafone.game.model.Team;
+import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.game.response.JoinGameResponse;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +57,7 @@ public class ActiveGameController {
             return ResponseEntity.badRequest().body(joinGameResponse);
     }
 
-    @PostMapping("/game/{id}/teams")
+    @GetMapping("/game/{id}/teams")
     @ResponseBody
     public ResponseEntity<Map<Team, List<GamePlayer>>> getGameTeams(@PathVariable("id") Long gameId) {
         Map<Team, List<GamePlayer>> teams = activeGameService.getGameTeams(gameId);
@@ -68,6 +65,26 @@ public class ActiveGameController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         else
             return ResponseEntity.ok(teams);
+    }
+
+    @GetMapping("/gameplayer/{gameId}/cards")
+    @ResponseBody
+    public ResponseEntity<List<Card>> getGamePlayerCards(@PathVariable("gameId") Long gameId, Principal principal) {
+        List<Card> result = activeGameService.getGamePlayerCards(gameId, principal.getName());
+        if (result == null)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        else
+            return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/game/{id}/players/order")
+    @ResponseBody
+    public ResponseEntity<List<String>> getPlayersOrder(@PathVariable("id") Long gameId) {
+        List<String> result = activeGameService.getPlayersOrder(gameId);
+        if (result.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+        else
+            return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @MessageMapping("/game/{id}/card")

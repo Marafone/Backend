@@ -17,6 +17,8 @@ public interface ActiveGameService {
     public Map<Team, List<GamePlayer>> getGameTeams(Long gameId);
     void checkTimeout(@DestinationVariable Long gameId);
     void startGame(@DestinationVariable Long gameId, String principalName);
+    List<Card> getGamePlayerCards(Long gameId, String principalName);
+    List<String> getPlayersOrder(Long gameId);
     void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);
     void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName);
     void reconnectToGame(Long gameId, String principalName);
