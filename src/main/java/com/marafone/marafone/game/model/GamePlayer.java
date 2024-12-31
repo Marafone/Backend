@@ -29,6 +29,20 @@ public class GamePlayer {
     @JsonIgnore
     private List<Card> ownedCards;
 
+    @Override
+    public boolean equals(Object o){
+        if (o == this)
+            return true;
+
+        if (!(o instanceof GamePlayer other))
+            return false;
+
+        if(this.getUser() == null || other.getUser() == null)
+            return false;
+
+        return other.getUser().getUsername().equals(this.getUser().getUsername());
+    }
+
     public boolean hasFourOfCoins(){
         return ownedCards.stream().anyMatch(card -> card.getSuit() == Suit.COINS && card.getRank() == CardRank.FOUR);
     }

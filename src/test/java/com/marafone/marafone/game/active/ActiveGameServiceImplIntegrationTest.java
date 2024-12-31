@@ -129,6 +129,10 @@ public class ActiveGameServiceImplIntegrationTest {
         assertEquals(team, playerIterator.next().getTeam());
         assertNotEquals(team, playerIterator.next().getTeam());
 
+        //SAVE FIRST ORDER TO COMPARE IN SECOND ROUND
+        List<GamePlayer> secondRoundOrder = new LinkedList<>(List.copyOf(game.getPlayersList()));
+        secondRoundOrder.addLast(secondRoundOrder.removeFirst());
+
         //MOCK CARDS FOR EASIER TESTING
         playerIterator = game.getPlayersList().iterator();
         playerIterator.next().setOwnedCards(
@@ -162,6 +166,8 @@ public class ActiveGameServiceImplIntegrationTest {
                         )
                 )
         );
+
+        //FIRST TURN
         playerIterator = game.getPlayersList().iterator();
         activeGameService.selectCard(gameId, new CardSelectEvent(30), playerIterator.next().getUser().getUsername());
         activeGameService.selectCard(gameId, new CardSelectEvent(35), playerIterator.next().getUser().getUsername());
@@ -227,13 +233,13 @@ public class ActiveGameServiceImplIntegrationTest {
             gamePlayer.setOwnedCards(new LinkedList<>(List.of(cardIterator.next())));
 
         //SELECT TRUMP SUIT
-        activeGameService.selectSuit(gameId, new TrumpSuitSelectEvent(Suit.COINS), game.getPlayersList().get(2).getUser().getUsername());
+        activeGameService.selectSuit(gameId, new TrumpSuitSelectEvent(Suit.COINS), secondRoundOrder.getFirst().getUser().getUsername());
 
         //MOCK AMOUNT OF POINTS TO WIN
         game.pointsToWinGame = 3;
 
         //SELECT CARDS
-        for(var gamePlayer: game.getPlayersList())
+        for(var gamePlayer: secondRoundOrder)
             activeGameService.selectCard(gameId,
                     new CardSelectEvent(gamePlayer.getOwnedCards().stream().map(Card::getId).findFirst().get().intValue()),
                     gamePlayer.getUser().getUsername()
