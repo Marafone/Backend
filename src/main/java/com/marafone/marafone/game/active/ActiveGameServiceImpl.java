@@ -99,7 +99,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         return JoinGameResult.SUCCESS;
     }
-
+    // TODO when owner leaves - make other player the owner
+    // TODO when last person leaves - remove the game
     public void leaveGame(Long gameId, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
         if (gameOptional.isEmpty()) return;
@@ -119,6 +120,30 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
 
         eventPublisher.publishToLobby(gameId, new PlayerLeftEvent(user.getUsername()));
+
+    }
+
+    public void changeTeam(Long gameId, Team team, User user) {
+        Optional<Game> gameOptional = activeGameRepository.findById(gameId);
+        if (gameOptional.isEmpty())
+            return;
+
+        Game game = gameOptional.get();
+
+        synchronized (game) {
+
+            if (game.teamIsFull(team))
+                return;
+
+            GamePlayer gamePlayer = game.findGamePlayerByUsername(user.getUsername());
+            if (gamePlayer == null || gamePlayer.getTeam() == team)
+                return;
+
+            gamePlayer.setTeam(team);
+
+        }
+
+        eventPublisher.publishToLobby(gameId, new TeamState(game));
 
     }
 

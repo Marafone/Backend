@@ -63,6 +63,12 @@ public class ActiveGameController {
         activeGameService.leaveGame(gameId, user);
     }
 
+    @PostMapping("/game/{id}/team/change")
+    @ResponseBody
+    public void changeTeam(@PathVariable("id") Long gameId, @RequestBody String teamName, @AuthenticationPrincipal User user) {
+        activeGameService.changeTeam(gameId, Team.valueOf(teamName), user);
+    }
+
     @GetMapping("/game/{id}/teams")
     @ResponseBody
     public ResponseEntity<Map<Team, List<GamePlayer>>> getGameTeams(@PathVariable("id") Long gameId) {

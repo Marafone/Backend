@@ -15,6 +15,7 @@ public interface ActiveGameService {
     Long createGame(CreateGameRequest createGameRequest, User user);
     JoinGameResult joinGame(Long gameId, JoinGameRequest joinGameRequest, User user);
     void leaveGame(Long gameId, User user);
+    void changeTeam(Long gameId, Team team, User user);
     public Map<Team, List<GamePlayer>> getGameTeams(Long gameId);
     void checkTimeout(@DestinationVariable Long gameId);
     void startGame(@DestinationVariable Long gameId, String principalName);
