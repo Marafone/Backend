@@ -7,6 +7,8 @@ import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.random.RandomCardsAssigner;
+import com.marafone.marafone.game.random.RandomCardsAssignerImpl;
 import com.marafone.marafone.mappers.GameMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +45,7 @@ class ActiveGameServiceImplTest {
     @BeforeEach
     void setUp(){
         activeGameServiceImpl = new ActiveGameServiceImpl(activeGameRepository, endedGameService, eventPublisher,
-                new CardConfig().allCards(), gameMapper);
+                new CardConfig().allCards(), gameMapper, new RandomCardsAssignerImpl(new CardConfig().allCards()));
     }
 
     // Create game tests
