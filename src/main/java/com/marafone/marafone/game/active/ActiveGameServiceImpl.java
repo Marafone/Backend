@@ -1,6 +1,5 @@
 package com.marafone.marafone.game.active;
 
-import com.marafone.marafone.errors.SelectCardErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
@@ -30,6 +29,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
+    private final Random r = new Random();
 
     @Override
     public List<GameDTO> getWaitingGames() {
@@ -337,6 +337,35 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             eventPublisher.publishToLobby(gameId, outEvents);
         }
+    }
+
+    @Override
+    public void selectRandomCard(Long gameId, String principalName) {
+
+        Optional<Game> gameOptional = activeGameRepository.findById(gameId);
+        if (gameOptional.isEmpty())
+            return;
+
+        Game game = gameOptional.get();
+        Suit currentTrumpSuit = game.getRounds().getLast().getTrumpSuit();
+        List<Card> playerCards = getGamePlayerCards(gameId, principalName);
+
+        int selectedCardIndex = r.nextInt(playerCards.size());
+        Card cardToRemove = playerCards.get(selectedCardIndex);
+
+        // check if card with selected trump suit exist
+
+        Optional<Card> result = playerCards.stream()
+                .filter(card -> card.getSuit() == currentTrumpSuit)
+                .findAny();
+
+        if (result.isPresent()) // roll until we get card with current round trump suit
+            while (cardToRemove.getSuit() != currentTrumpSuit) {
+                selectedCardIndex = r.nextInt(playerCards.size());
+                cardToRemove = playerCards.get(selectedCardIndex);
+            }
+
+        selectCard(gameId, new CardSelectEvent(Math.toIntExact(cardToRemove.getId())), principalName);
     }
 
     @Override
