@@ -7,6 +7,7 @@ import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
+import com.marafone.marafone.game.random.RandomCardsAssigner;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
@@ -28,6 +29,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
+    private final RandomCardsAssigner randomCardsAssigner;
 
     @Override
     public List<GameDTO> getWaitingGames() {
@@ -135,7 +137,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             game.setStartedAt(LocalDateTime.now());
 
-            ShuffleCards(game);
+            randomCardsAssigner.AssignRandomCardsToPlayers(game.getPlayersList());
 
             setInitialOrder(game);
 
@@ -207,7 +209,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 }else{
                     game.setNewOrderAfterRoundEnd();
 
-                    ShuffleCards(game);
+                    randomCardsAssigner.AssignRandomCardsToPlayers(game.getPlayersList());
                     game.addRound();
                 }
             }else{
@@ -288,22 +290,6 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .team(team)
                 .points(0)
                 .build();
-    }
-
-    private void ShuffleCards(Game game){
-        List<Card> cardsInRandomOrder = new ArrayList<>(allCards);
-        Collections.shuffle(cardsInRandomOrder);
-
-        int i = 0;
-        for(var gamePlayer: game.getPlayersList()){
-
-            gamePlayer.setOwnedCards(new LinkedList<>());
-
-            for(int j = 0; j < 10; j++){
-                gamePlayer.getOwnedCards().add(cardsInRandomOrder.get(i * 10 + j));
-            }
-            i++;
-        }
     }
 
     public Action getWinningAction(List<Action> currentTurn){
