@@ -57,6 +57,12 @@ public class ActiveGameController {
             return ResponseEntity.badRequest().body(joinGameResponse);
     }
 
+    @PostMapping("/game/{id}/leave")
+    @ResponseBody
+    public void leaveGame(@PathVariable("id") Long gameId, @AuthenticationPrincipal User user) {
+        activeGameService.leaveGame(gameId, user);
+    }
+
     @GetMapping("/game/{id}/teams")
     @ResponseBody
     public ResponseEntity<Map<Team, List<GamePlayer>>> getGameTeams(@PathVariable("id") Long gameId) {

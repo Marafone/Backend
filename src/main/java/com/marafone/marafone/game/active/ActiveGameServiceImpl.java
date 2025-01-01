@@ -100,6 +100,28 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         return JoinGameResult.SUCCESS;
     }
 
+    public void leaveGame(Long gameId, User user) {
+        Optional<Game> gameOptional = activeGameRepository.findById(gameId);
+        if (gameOptional.isEmpty()) return;
+
+        Game game = gameOptional.get();
+        Optional<GamePlayer> optionalGamePlayer;
+        synchronized (game) {
+             optionalGamePlayer = game
+                    .getPlayersList()
+                    .stream()
+                    .filter(player -> player.getUser().getUsername().equals(user.getUsername()))
+                    .findFirst();
+            if (optionalGamePlayer.isEmpty()) return;
+
+            GamePlayer gamePlayerToRemove = optionalGamePlayer.get();
+            game.getPlayersList().remove(gamePlayerToRemove);
+        }
+
+        eventPublisher.publishToLobby(gameId, new PlayerLeftEvent(user.getUsername()));
+
+    }
+
     public Map<Team, List<GamePlayer>> getGameTeams(Long gameId) {
         Game game = findGameById(gameId).orElse(null);
         if (game == null)
