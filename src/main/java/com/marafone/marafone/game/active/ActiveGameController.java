@@ -109,13 +109,9 @@ public class ActiveGameController {
         activeGameService.selectSuit(gameId, trumpSuitSelectEvent, principal.getName());
     }
 
-    /*
-        Frontend sends request to this endpoint after 16 seconds of not changing the state of the game,
-        if last action was made more than 15 seconds ago this should make a random move (acts similar to selectCard method).
-     */
     @MessageMapping("/game/{id}/timeout")
-    public void checkTimeout(@DestinationVariable("id") Long gameId){
-
+    public void selectRandomCard(@DestinationVariable("id") Long gameId, Principal principal){
+        activeGameService.selectRandomCard(gameId, principal.getName());
     }
 
     @MessageMapping("/game/{id}/start")

@@ -23,6 +23,7 @@ public interface ActiveGameService {
     List<String> getPlayersOrder(Long gameId);
     void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);
     void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName);
+    void selectRandomCard(Long gameId, String principalName);
     void reconnectToGame(Long gameId, String principalName);
     boolean doesNotStartedGameAlreadyExist(String name);
 }
