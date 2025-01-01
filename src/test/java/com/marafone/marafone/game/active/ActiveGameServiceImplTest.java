@@ -8,6 +8,7 @@ import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.mappers.GameMapper;
+import com.marafone.marafone.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,10 +17,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.marafone.marafone.game.model.JoinGameResult.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -263,6 +261,66 @@ class ActiveGameServiceImplTest {
 
         // then
         assertFalse(result);
+    }
+
+    @Test
+    void leaveGame_WhenUserInGame_ShouldRemoveUserFromGamePlayersList() {
+        // given
+        User user = new User(1L, "user1", "", "user1");
+        GamePlayer gp1 = GamePlayer
+                .builder()
+                .user(new User(2L, "user2", "", "user2"))
+                .build();
+        GamePlayer gp2 = GamePlayer
+                .builder()
+                .user(user)
+                .build();
+        GamePlayer gp3 = GamePlayer
+                .builder()
+                .user(new User(3L, "user3", "", "user3"))
+                .build();
+
+        List<GamePlayer> playersList = new ArrayList<>();
+        playersList.add(gp1);
+        playersList.add(gp2);
+        playersList.add(gp3);
+
+        Game game = Game.builder().playersList(playersList).id(1L).build();
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.leaveGame(1L, user);
+
+        // then
+        assertEquals(2, game.getPlayersList().size());
+        assertFalse(game.getPlayersList().contains(gp2));
+    }
+
+    @Test
+    void leaveGame_WhenUserNotInGame_ShouldNotDoAnything() {
+        // given
+        User user = new User(1L, "user1", "", "user1");
+        GamePlayer gp1 = GamePlayer
+                .builder()
+                .user(new User(2L, "user2", "", "user2"))
+                .build();
+        GamePlayer gp2 = GamePlayer
+                .builder()
+                .user(new User(3L, "user3", "", "user3"))
+                .build();
+
+        List<GamePlayer> playersList = new ArrayList<>();
+        playersList.add(gp1);
+        playersList.add(gp2);
+
+        Game game = Game.builder().playersList(playersList).id(1L).build();
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.leaveGame(1L, user);
+
+        // then
+        assertEquals(2, game.getPlayersList().size());
     }
 
     @Test
