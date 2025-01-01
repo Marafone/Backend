@@ -1,5 +1,6 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.marafone.errors.SelectCardErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.marafone.marafone.errors.SelectCardErrorMessages.*;
 import static com.marafone.marafone.game.model.JoinGameResult.*;
 
 @Service
@@ -187,16 +189,28 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .orElseThrow();
 
         synchronized (game){
-            if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext())
+            if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext()) {
                 return;
+            }
 
             Round currentRound = game.getRounds().getLast();
             GamePlayer currentPlayer = game.getCurrentPlayer().next();
             Card selectedCard = allCards.get(cardSelectEvent.cardId - 1);
+            ErrorEvent errorEvent = null;
 
-            if(!currentPlayer.getUser().getUsername().equals(principalName) || !currentPlayer.hasCard(selectedCard) || currentRound.getTrumpSuit() == null
-            || (selectedCard.getSuit() != currentRound.getTrumpSuit() && currentPlayer.hasCardOfSuit(currentRound.getTrumpSuit())) ){
+            if (!currentPlayer.getUser().getUsername().equals(principalName))
+                errorEvent = new ErrorEvent(NOT_YOUR_TURN.formatMessage(currentPlayer.getUser().getUsername()));
+            else if (!currentPlayer.hasCard(selectedCard))
+                errorEvent = new ErrorEvent(CARD_NOT_IN_HAND.getMessage());
+            else if (currentRound.getTrumpSuit() == null)
+                errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
+            else if (selectedCard.getSuit() != currentRound.getTrumpSuit()
+                    && currentPlayer.hasCardOfSuit(currentRound.getTrumpSuit()))
+                errorEvent = new ErrorEvent(INVALID_TRUMP_SUIT_PLAY.formatMessage(currentRound.getTrumpSuit()));
+
+            if (errorEvent != null) {
                 game.getCurrentPlayer().previous();
+                eventPublisher.publishToPlayerInTheLobby(gameId, principalName, errorEvent);
                 return;
             }
 
