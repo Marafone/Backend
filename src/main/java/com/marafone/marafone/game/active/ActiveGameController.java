@@ -79,26 +79,6 @@ public class ActiveGameController {
             return ResponseEntity.ok(teams);
     }
 
-    @GetMapping("/gameplayer/{gameId}/cards")
-    @ResponseBody
-    public ResponseEntity<List<Card>> getGamePlayerCards(@PathVariable("gameId") Long gameId, Principal principal) {
-        List<Card> result = activeGameService.getGamePlayerCards(gameId, principal.getName());
-        if (result == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        else
-            return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/game/{id}/players/order")
-    @ResponseBody
-    public ResponseEntity<List<String>> getPlayersOrder(@PathVariable("id") Long gameId) {
-        List<String> result = activeGameService.getPlayersOrder(gameId);
-        if (result.isEmpty())
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
-        else
-            return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
     @MessageMapping("/game/{id}/card")
     public void selectCard(@DestinationVariable("id") Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
         activeGameService.selectCard(gameId, cardSelectEvent, principal.getName());
