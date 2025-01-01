@@ -204,32 +204,6 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
     }
 
-    public List<Card> getGamePlayerCards(Long gameId, String principalName) {
-        Optional<Game> gameOptional = findGameById(gameId);
-        if (gameOptional.isEmpty())
-            return null;
-
-        GamePlayer gamePlayer = gameOptional.get()
-                .getPlayersList()
-                .stream()
-                .filter(player -> player.getUser().getUsername().equals(principalName))
-                .findFirst()
-                .orElse(null);
-        if (gamePlayer == null)
-            return null;
-
-        return gamePlayer.getOwnedCards();
-    }
-
-    public List<String> getPlayersOrder(Long gameId) {
-        Optional<Game> optionalGame = activeGameRepository.findById(gameId);
-        if (optionalGame.isEmpty())
-            return Collections.emptyList();
-
-        Game game = optionalGame.get();
-        return game.getPlayersList().stream().map(player -> player.getUser().getUsername()).toList();
-    }
-
     @Override
     public void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
         Game game = activeGameRepository.findById(gameId)
@@ -297,6 +271,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     game.addRound();
 
                     outEvents.add(new NewRound());
+                    outEvents.add(new MyCardsState(currentPlayer));
                 }
             }else{
                 game.setNewOrderAfterTurnEnd(winningAction.getPlayer());
@@ -385,8 +360,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 eventPublisher.publishToPlayerInTheLobby(gameId, principalName, cardsState);
 
                 outEvents.add(new PlayersOrderState(game));
-                outEvents.add(new PointState(game));
                 outEvents.add(new TeamState(game));
+                outEvents.add(new PointState(game));
                 outEvents.add(new TrumpSuitState(game));
                 outEvents.add(new TurnState(game));
 
@@ -459,5 +434,22 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         game.setPlayersList(startingOrderOfPlayers);
         game.setCurrentPlayer(startingOrderOfPlayers.listIterator());
         game.setInitialPlayersList(new ArrayList<>(game.getPlayersList()));
+    }
+
+    private List<Card> getGamePlayerCards(Long gameId, String principalName) {
+        Optional<Game> gameOptional = findGameById(gameId);
+        if (gameOptional.isEmpty())
+            return null;
+
+        GamePlayer gamePlayer = gameOptional.get()
+                .getPlayersList()
+                .stream()
+                .filter(player -> player.getUser().getUsername().equals(principalName))
+                .findFirst()
+                .orElse(null);
+        if (gamePlayer == null)
+            return null;
+
+        return gamePlayer.getOwnedCards();
     }
 }
