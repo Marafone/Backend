@@ -297,7 +297,7 @@ class ActiveGameServiceImplTest {
     }
 
     @Test
-    void leaveGame_WhenUserNotInGame_ShouldNotDoAnything() {
+    void leaveGame_WhenUserNotInGame_ShouldDoNothing() {
         // given
         User user = new User(1L, "user1", "", "user1");
         GamePlayer gp1 = GamePlayer
@@ -321,6 +321,80 @@ class ActiveGameServiceImplTest {
 
         // then
         assertEquals(2, game.getPlayersList().size());
+    }
+
+    @Test
+    void changeTeam_WhenTeamNotFull_ShouldChangeTeams() {
+        // given
+        List<User> users = Arrays.asList(
+                new User(1L, "user1", "", "user1"),
+                new User(2L, "user2", "", "user2"),
+                new User(3L, "user3", "", "user3")
+        );
+        List<GamePlayer> gamePlayersList = Arrays.asList(
+            new GamePlayer(1L, users.get(0), Team.RED, null, null),
+            new GamePlayer(2L, users.get(1), Team.RED, null, null),
+            new GamePlayer(3L, users.get(2), Team.BLUE, null, null)
+        );
+        Game game = Game.builder().id(1L).playersList(gamePlayersList).build();
+
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.changeTeam(1L, Team.BLUE, users.getFirst());
+
+        // then
+        assertEquals(Team.BLUE, gamePlayersList.getFirst().getTeam());
+        assertTrue(game.teamIsFull(Team.BLUE));
+        assertFalse(game.teamIsFull(Team.RED));
+    }
+
+    @Test
+    void changeTeam_WhenTeamFull_ShouldNotAllowUserToChangeTeam() {
+        // given
+        List<User> users = Arrays.asList(
+                new User(1L, "user1", "", "user1"),
+                new User(2L, "user2", "", "user2"),
+                new User(3L, "user3", "", "user3"),
+                new User(4L, "user4", "", "user4")
+        );
+        List<GamePlayer> gamePlayersList = Arrays.asList(
+                new GamePlayer(1L, users.get(0), Team.RED, null, null),
+                new GamePlayer(2L, users.get(1), Team.RED, null, null),
+                new GamePlayer(3L, users.get(2), Team.BLUE, null, null),
+                new GamePlayer(4L, users.get(3), Team.BLUE, null, null)
+        );
+        Game game = Game.builder().id(1L).playersList(gamePlayersList).build();
+
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.changeTeam(1L, Team.BLUE, users.get(1));
+
+        // then
+        assertEquals(Team.RED, gamePlayersList.get(1).getTeam());
+    }
+
+    @Test
+    void changeTeam_WhenTargetTeamIsSameAsCurrentTeam_ShouldNotChangeTeams() {
+        // given
+        List<User> users = Arrays.asList(
+                new User(1L, "user1", "", "user1"),
+                new User(2L, "user2", "", "user2")
+        );
+        List<GamePlayer> gamePlayersList = Arrays.asList(
+                new GamePlayer(1L, users.get(0), Team.RED, null, null),
+                new GamePlayer(2L, users.get(1), Team.BLUE, null, null)
+        );
+        Game game = Game.builder().id(1L).playersList(gamePlayersList).build();
+
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.changeTeam(1L, Team.BLUE, users.getLast());
+
+        // then
+        assertEquals(Team.BLUE, gamePlayersList.getLast().getTeam());
     }
 
     @Test
