@@ -7,9 +7,8 @@ import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
-import com.marafone.marafone.game.random.cards.RandomCardsAssigner;
+import com.marafone.marafone.game.random.RandomAssigner;
 import com.marafone.marafone.game.model.*;
-import com.marafone.marafone.game.random.order.RandomInitialOrderAssigner;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +29,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
-    private final RandomCardsAssigner randomCardsAssigner;
-    private final RandomInitialOrderAssigner randomInitialOrderAssigner;
+
+    private final RandomAssigner randomAssigner;
 
     @Override
     public List<GameDTO> getWaitingGames() {
@@ -124,7 +123,37 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
     @Override
     public void checkTimeout(Long gameId) {
+        Game game = findGameById(gameId).orElseThrow();
 
+        synchronized (game){
+            if(!game.hasStarted() || game.hasEnded())
+                return;
+
+            Round lastRound = game.getRounds().getLast();
+
+            if(lastRound.isTrumpSuitSelected()){//check cards
+                LocalDateTime lastAction = !lastRound.getActions().isEmpty() ? lastRound.getActions().getLast().getTimestamp()
+                    : game.getStartedAt();
+
+                if(!LocalDateTime.now().isAfter(lastAction.plusSeconds(15)))
+                    return;
+
+                GamePlayer currentPlayer = game.getCurrentPlayerWithoutIterating();
+                Card randomCard = randomAssigner.getRandomCorrectCard(currentPlayer.getOwnedCards(), lastRound.getTrumpSuit());
+
+                selectCard(gameId, new CardSelectEvent(randomCard.getId()), currentPlayer.getUser().getUsername());
+            }else{//check trump suit
+
+                if(!LocalDateTime.now().isAfter(game.getStartedAt().plusSeconds(15)))
+                    return;
+
+                Suit randomSuit = randomAssigner.getRandomTrumpSuit();
+                String username = game.getRounds().size() != 1 ? game.getCurrentPlayerWithoutIterating().getUser().getUsername()
+                    : game.getPlayersList().stream().filter(GamePlayer::hasFourOfCoins).findFirst().get().getUser().getUsername();
+
+                selectSuit(gameId, new TrumpSuitSelectEvent(randomSuit), username);
+            }
+        }
     }
 
     @Override
@@ -139,9 +168,12 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             game.setStartedAt(LocalDateTime.now());
 
-            randomCardsAssigner.assignRandomCardsToPlayers(game.getPlayersList());
+            randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
 
-            randomInitialOrderAssigner.assignRandomInitialOrder(game);
+            List<GamePlayer> startingOrderOfPlayers = randomAssigner.assignRandomInitialOrder(game.getPlayersList());
+            game.setPlayersList(startingOrderOfPlayers);
+            game.setCurrentPlayer(startingOrderOfPlayers.listIterator());
+            game.setInitialPlayersList(new ArrayList<>(game.getPlayersList()));
 
             game.addRound();
 
@@ -172,7 +204,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             Round currentRound = game.getRounds().getLast();
             GamePlayer currentPlayer = game.getCurrentPlayer().next();
-            Card selectedCard = allCards.get(cardSelectEvent.cardId - 1);
+            Card selectedCard = allCards.get((int) (cardSelectEvent.cardId - 1));
 
             if(!currentPlayer.getUser().getUsername().equals(principalName) || !currentPlayer.hasCard(selectedCard) || currentRound.getTrumpSuit() == null
             || (selectedCard.getSuit() != currentRound.getTrumpSuit() && currentPlayer.hasCardOfSuit(currentRound.getTrumpSuit())) ){
@@ -211,7 +243,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 }else{
                     game.setNewOrderAfterRoundEnd();
 
-                    randomCardsAssigner.assignRandomCardsToPlayers(game.getPlayersList());
+                    randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
                     game.addRound();
                 }
             }else{
@@ -237,8 +269,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }
 
             GamePlayer gamePlayer = game.findGamePlayerByUsername(principalName);
-            GamePlayer playerToMove = game.getCurrentPlayer().next();
-            game.getCurrentPlayer().previous();
+            GamePlayer playerToMove = game.getCurrentPlayerWithoutIterating();
             if(
                 gamePlayer == null
                 || (game.getRounds().size() == 1 && !gamePlayer.hasFourOfCoins()) //only in first round

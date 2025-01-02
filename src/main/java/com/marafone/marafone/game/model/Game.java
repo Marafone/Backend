@@ -74,6 +74,10 @@ public class Game {
         return true;
     }
 
+    public boolean hasEnded(){
+        return winnerTeam != null;
+    }
+
     public boolean isPublic(){
         return joinGameCode == null || joinGameCode.isEmpty();
     }
@@ -148,6 +152,15 @@ public class Game {
 
     public int getPlayersAmount() {
         return playersList.size();
+    }
+
+    public GamePlayer getCurrentPlayerWithoutIterating(){
+        if(!currentPlayer.hasNext())
+            return null;
+
+        GamePlayer gamePlayer = currentPlayer.next();
+        currentPlayer.previous();
+        return gamePlayer;
     }
 
 }
