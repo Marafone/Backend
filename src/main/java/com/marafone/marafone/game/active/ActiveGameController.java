@@ -69,16 +69,6 @@ public class ActiveGameController {
         activeGameService.changeTeam(gameId, Team.valueOf(teamName), user);
     }
 
-    @GetMapping("/game/{id}/teams")
-    @ResponseBody
-    public ResponseEntity<Map<Team, List<GamePlayer>>> getGameTeams(@PathVariable("id") Long gameId) {
-        Map<Team, List<GamePlayer>> teams = activeGameService.getGameTeams(gameId);
-        if (teams == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        else
-            return ResponseEntity.ok(teams);
-    }
-
     @MessageMapping("/game/{id}/card")
     public void selectCard(@DestinationVariable("id") Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
         activeGameService.selectCard(gameId, cardSelectEvent, principal.getName());
