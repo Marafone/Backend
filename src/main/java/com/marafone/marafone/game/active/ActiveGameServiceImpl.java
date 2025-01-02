@@ -349,9 +349,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             List<OutEvent> outEvents = new LinkedList<>();
             if(game.hasStarted()){
-                OutEvent cardsState = new MyCardsState(gamePlayer);
-                eventPublisher.publishToPlayerInTheLobby(gameId, principalName, cardsState);
 
+                outEvents.add(new MyCardsState(gamePlayer));
                 outEvents.add(new PlayersOrderState(game));
                 outEvents.add(new TeamState(game));
                 outEvents.add(new PointState(game));
@@ -363,7 +362,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }else
                 outEvents.add(new TeamState(game));
 
-            eventPublisher.publishToLobby(gameId, outEvents);
+            eventPublisher.publishToPlayerInTheLobby(gameId, principalName, outEvents);
         }
     }
 
