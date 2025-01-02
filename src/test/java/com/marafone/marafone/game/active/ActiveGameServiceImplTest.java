@@ -8,12 +8,16 @@ import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.game.random.MarafoneRandomAssigner;
 import com.marafone.marafone.mappers.GameMapper;
+import com.marafone.marafone.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+
+import java.time.LocalDateTime;
 
 import java.util.*;
 
@@ -262,81 +266,137 @@ class ActiveGameServiceImplTest {
     }
 
     @Test
-    void getGameTeams_WhenGameDoesNotExist_ShouldReturnNull() {
+    void leaveGame_WhenUserInGame_ShouldRemoveUserFromGamePlayersList() {
         // given
-        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.empty());
-
-        // when
-        Map<Team, List<GamePlayer>> result = activeGameServiceImpl.getGameTeams(1L);
-
-        // then
-        assertNull(result);
-    }
-
-    @Test
-    void getGameTeams_WhenGameExistsWithTwoPlayers_ShouldReturnMapWithTwoPlayers() {
-        // given
-        GamePlayer gp1 = GamePlayer.builder()
-                .id(1L)
-                .team(Team.RED)
+        User user = new User(1L, "user1", "", "user1");
+        GamePlayer gp1 = GamePlayer
+                .builder()
+                .user(new User(2L, "user2", "", "user2"))
                 .build();
-        GamePlayer gp2 = GamePlayer.builder()
-                .id(2L)
-                .team(Team.BLUE)
+        GamePlayer gp2 = GamePlayer
+                .builder()
+                .user(user)
                 .build();
-        Game game = Game.builder()
-                .id(1L)
-                .playersList(List.of(gp1, gp2))
+        GamePlayer gp3 = GamePlayer
+                .builder()
+                .user(new User(3L, "user3", "", "user3"))
                 .build();
+
+        List<GamePlayer> playersList = new ArrayList<>();
+        playersList.add(gp1);
+        playersList.add(gp2);
+        playersList.add(gp3);
+
+        Game game = Game.builder().playersList(playersList).id(1L).build();
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
 
         // when
-        Map<Team, List<GamePlayer>> result = activeGameServiceImpl.getGameTeams(1L);
+        activeGameServiceImpl.leaveGame(1L, user);
 
         // then
-        assertNotNull(result);
-        assertNotNull(result.get(Team.RED));
-        assertNotNull(result.get(Team.BLUE));
-        assertEquals(1, result.get(Team.RED).size());
-        assertEquals(1, result.get(Team.BLUE).size());
-        assertEquals(gp1.getId(), result.get(Team.RED).getFirst().getId());
-        assertEquals(gp2.getId(), result.get(Team.BLUE).getFirst().getId());
+        assertEquals(2, game.getPlayersList().size());
+        assertFalse(game.getPlayersList().contains(gp2));
     }
 
     @Test
-    void getGameTeams_WhenGameIsFull_ShouldReturnMapWithAllPlayers() {
+    void leaveGame_WhenUserNotInGame_ShouldDoNothing() {
         // given
-        GamePlayer gp1 = GamePlayer.builder()
-                .id(1L)
-                .team(Team.RED)
+        User user = new User(1L, "user1", "", "user1");
+        GamePlayer gp1 = GamePlayer
+                .builder()
+                .user(new User(2L, "user2", "", "user2"))
                 .build();
-        GamePlayer gp2 = GamePlayer.builder()
-                .id(2L)
-                .team(Team.BLUE)
+        GamePlayer gp2 = GamePlayer
+                .builder()
+                .user(new User(3L, "user3", "", "user3"))
                 .build();
-        GamePlayer gp3 = GamePlayer.builder()
-                .id(3L)
-                .team(Team.RED)
-                .build();
-        GamePlayer gp4 = GamePlayer.builder()
-                .id(4L)
-                .team(Team.BLUE)
-                .build();
-        Game game = Game.builder()
-                .id(1L)
-                .playersList(List.of(gp1, gp2, gp3, gp4))
-                .build();
+
+        List<GamePlayer> playersList = new ArrayList<>();
+        playersList.add(gp1);
+        playersList.add(gp2);
+
+        Game game = Game.builder().playersList(playersList).id(1L).build();
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
 
         // when
-        Map<Team, List<GamePlayer>> result = activeGameServiceImpl.getGameTeams(1L);
+        activeGameServiceImpl.leaveGame(1L, user);
 
         // then
-        assertNotNull(result);
-        assertNotNull(result.get(Team.RED));
-        assertNotNull(result.get(Team.BLUE));
-        assertEquals(2, result.get(Team.RED).size());
-        assertEquals(2, result.get(Team.BLUE).size());
+        assertEquals(2, game.getPlayersList().size());
+    }
+
+    @Test
+    void changeTeam_WhenTeamNotFull_ShouldChangeTeams() {
+        // given
+        List<User> users = Arrays.asList(
+                new User(1L, "user1", "", "user1"),
+                new User(2L, "user2", "", "user2"),
+                new User(3L, "user3", "", "user3")
+        );
+        List<GamePlayer> gamePlayersList = Arrays.asList(
+            new GamePlayer(1L, users.get(0), Team.RED, null, null),
+            new GamePlayer(2L, users.get(1), Team.RED, null, null),
+            new GamePlayer(3L, users.get(2), Team.BLUE, null, null)
+        );
+        Game game = Game.builder().id(1L).playersList(gamePlayersList).build();
+
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.changeTeam(1L, Team.BLUE, users.getFirst());
+
+        // then
+        assertEquals(Team.BLUE, gamePlayersList.getFirst().getTeam());
+        assertTrue(game.teamIsFull(Team.BLUE));
+        assertFalse(game.teamIsFull(Team.RED));
+    }
+
+    @Test
+    void changeTeam_WhenTeamFull_ShouldNotAllowUserToChangeTeam() {
+        // given
+        List<User> users = Arrays.asList(
+                new User(1L, "user1", "", "user1"),
+                new User(2L, "user2", "", "user2"),
+                new User(3L, "user3", "", "user3"),
+                new User(4L, "user4", "", "user4")
+        );
+        List<GamePlayer> gamePlayersList = Arrays.asList(
+                new GamePlayer(1L, users.get(0), Team.RED, null, null),
+                new GamePlayer(2L, users.get(1), Team.RED, null, null),
+                new GamePlayer(3L, users.get(2), Team.BLUE, null, null),
+                new GamePlayer(4L, users.get(3), Team.BLUE, null, null)
+        );
+        Game game = Game.builder().id(1L).playersList(gamePlayersList).build();
+
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.changeTeam(1L, Team.BLUE, users.get(1));
+
+        // then
+        assertEquals(Team.RED, gamePlayersList.get(1).getTeam());
+    }
+
+    @Test
+    void changeTeam_WhenTargetTeamIsSameAsCurrentTeam_ShouldNotChangeTeams() {
+        // given
+        List<User> users = Arrays.asList(
+                new User(1L, "user1", "", "user1"),
+                new User(2L, "user2", "", "user2")
+        );
+        List<GamePlayer> gamePlayersList = Arrays.asList(
+                new GamePlayer(1L, users.get(0), Team.RED, null, null),
+                new GamePlayer(2L, users.get(1), Team.BLUE, null, null)
+        );
+        Game game = Game.builder().id(1L).playersList(gamePlayersList).build();
+
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.changeTeam(1L, Team.BLUE, users.getLast());
+
+        // then
+        assertEquals(Team.BLUE, gamePlayersList.getLast().getTeam());
     }
 
 }

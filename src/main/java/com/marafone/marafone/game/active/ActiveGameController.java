@@ -5,10 +5,7 @@ import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
-import com.marafone.marafone.game.model.GameDTO;
-import com.marafone.marafone.game.model.GamePlayer;
-import com.marafone.marafone.game.model.JoinGameResult;
-import com.marafone.marafone.game.model.Team;
+import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.game.response.JoinGameResponse;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
@@ -60,14 +57,16 @@ public class ActiveGameController {
             return ResponseEntity.badRequest().body(joinGameResponse);
     }
 
-    @PostMapping("/game/{id}/teams")
+    @PostMapping("/game/{id}/leave")
     @ResponseBody
-    public ResponseEntity<Map<Team, List<GamePlayer>>> getGameTeams(@PathVariable("id") Long gameId) {
-        Map<Team, List<GamePlayer>> teams = activeGameService.getGameTeams(gameId);
-        if (teams == null)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        else
-            return ResponseEntity.ok(teams);
+    public void leaveGame(@PathVariable("id") Long gameId, @AuthenticationPrincipal User user) {
+        activeGameService.leaveGame(gameId, user);
+    }
+
+    @PostMapping("/game/{id}/team/change")
+    @ResponseBody
+    public void changeTeam(@PathVariable("id") Long gameId, @RequestBody String teamName, @AuthenticationPrincipal User user) {
+        activeGameService.changeTeam(gameId, Team.valueOf(teamName), user);
     }
 
     @MessageMapping("/game/{id}/card")
@@ -80,10 +79,6 @@ public class ActiveGameController {
         activeGameService.selectSuit(gameId, trumpSuitSelectEvent, principal.getName());
     }
 
-    /*
-        Frontend sends request to this endpoint after 16 seconds of not changing the state of the game,
-        if last action was made more than 15 seconds ago this should make a random move (acts similar to selectCard method).
-     */
     @MessageMapping("/game/{id}/timeout")
     public void checkTimeout(@DestinationVariable("id") Long gameId){
         activeGameService.checkTimeout(gameId);
