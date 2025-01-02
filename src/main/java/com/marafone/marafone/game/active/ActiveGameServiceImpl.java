@@ -145,22 +145,6 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
     }
 
-    public Map<Team, List<GamePlayer>> getGameTeams(Long gameId) {
-        Game game = findGameById(gameId).orElse(null);
-        if (game == null)
-            return null; // this game does not exist
-
-        synchronized (game){
-            Map<Team, List<GamePlayer>> output = new EnumMap<>(Team.class);
-            output.put(Team.RED, new ArrayList<>());
-            output.put(Team.BLUE, new ArrayList<>());
-            for (var player: game.getPlayersList()) {
-                output.get(player.getTeam()).add(player);
-            }
-            return output;
-        }
-    }
-
     private Optional<Game> findGameById(Long gameId) {
         return activeGameRepository.findById(gameId);
     }
@@ -230,8 +214,16 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             List<OutEvent> outEvents = new LinkedList<>();
             outEvents.add(new GameStartedEvent());
+            outEvents.add(new PlayersOrderState(game));
+            outEvents.add(new PointState(game));
+            outEvents.add(new TeamState(game));
+            outEvents.add(new TurnState(game));
 
             eventPublisher.publishToLobby(gameId, outEvents);
+
+            for(var gamePlayer : game.getPlayersList()){
+                eventPublisher.publishToPlayerInTheLobby(gameId, gamePlayer.getUser().getUsername(), new MyCardsState(gamePlayer));
+            }
         }
     }
 
@@ -241,9 +233,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .orElseThrow();
 
         synchronized (game){
-            if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext()) {
+            if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext())
                 return;
-            }
 
             Round currentRound = game.getRounds().getLast();
             GamePlayer currentPlayer = game.getCurrentPlayer().next();
