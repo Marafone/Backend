@@ -90,8 +90,8 @@ public class ActiveGameController {
     }
 
     @MessageMapping("/game/{id}/timeout")
-    public void selectRandomCard(@DestinationVariable("id") Long gameId, Principal principal){
-        activeGameService.selectRandomCard(gameId, principal.getName());
+    public void checkTimeout(@DestinationVariable("id") Long gameId){
+        activeGameService.checkTimeout(gameId);
     }
 
     @MessageMapping("/game/{id}/start")
@@ -104,7 +104,7 @@ public class ActiveGameController {
         activeGameService.reconnectToGame(gameId, principal.getName());
     }
 
-    //WILL REMOVE IT LATER only for debugging/testing hibernate
+    //TODO WILL REMOVE IT LATER only for debugging/testing hibernate
     private final EndedGameService endedGameService;
     private final ActiveGameRepository activeGameRepository;
 

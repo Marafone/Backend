@@ -2,11 +2,11 @@ package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.DummyData;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
-import com.marafone.marafone.game.config.CardConfig;
+import com.marafone.marafone.game.config.GameConfig;
 import com.marafone.marafone.game.ended.EndedGameService;
-import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.random.MarafoneRandomAssigner;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +16,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+
 import java.time.LocalDateTime;
+
 import java.util.*;
 
 import static com.marafone.marafone.game.model.JoinGameResult.*;
@@ -41,7 +43,7 @@ class ActiveGameServiceImplTest {
     @BeforeEach
     void setUp(){
         activeGameServiceImpl = new ActiveGameServiceImpl(activeGameRepository, endedGameService, eventPublisher,
-                new CardConfig().allCards(), gameMapper);
+                new GameConfig().allCards(), gameMapper, new MarafoneRandomAssigner(new GameConfig().allCards(), new GameConfig().random()));
     }
 
     // Create game tests
