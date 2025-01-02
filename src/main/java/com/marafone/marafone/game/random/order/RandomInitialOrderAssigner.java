@@ -1,6 +1,8 @@
 package com.marafone.marafone.game.random.order;
 
-import com.marafone.marafone.game.model.Game;
+import com.marafone.marafone.game.model.GamePlayer;
+
+import java.util.List;
 public interface RandomInitialOrderAssigner {
-    void assignRandomInitialOrder(Game game);
+    List<GamePlayer> assignRandomInitialOrder(List<GamePlayer> gamePlayers);
 }

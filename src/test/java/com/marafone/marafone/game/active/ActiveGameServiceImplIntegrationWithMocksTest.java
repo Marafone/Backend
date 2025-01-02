@@ -83,29 +83,33 @@ public class ActiveGameServiceImplIntegrationWithMocksTest {
         activeGameService.joinGame(gameId, joinBlueTeam, firstEnemy);
         activeGameService.joinGame(gameId, joinBlueTeam, secondEnemy);
 
+        //GETTERS USED IN MOCKS
+
         Game game = activeGameRepository.findById(gameId).get();
+        GamePlayer ownerPlayer = game.getPlayersList().stream().filter(player -> player.getUser().equals(owner)).findFirst().get();
+        GamePlayer teamMatePlayer = game.getPlayersList().stream().filter(player -> player.getUser().equals(ownerTeamMate)).findFirst().get();
+        GamePlayer firstEnemyPlayer = game.getPlayersList().stream().filter(player -> player.getUser().equals(firstEnemy)).findFirst().get();
+        GamePlayer secondEnemyPlayer = game.getPlayersList().stream().filter(player -> player.getUser().equals(secondEnemy)).findFirst().get();
 
         //MOCK ASSIGNING CARDS
         doAnswer(invocationOnMock -> {
 
-            List<GamePlayer> players = game.getPlayersList();
-
-            players.get(0).setOwnedCards(new LinkedList<>(List.of(
+            ownerPlayer.setOwnedCards(new LinkedList<>(List.of(
                     allCards.get(3), allCards.get(7), allCards.get(15), allCards.get(20), allCards.get(25),
                     allCards.get(28), allCards.get(30), allCards.get(32), allCards.get(36), allCards.get(39)
             )));
 
-            players.get(1).setOwnedCards(new LinkedList<>(List.of(
+            teamMatePlayer.setOwnedCards(new LinkedList<>(List.of(
                     allCards.get(0), allCards.get(5), allCards.get(9), allCards.get(14), allCards.get(18),
                     allCards.get(22), allCards.get(26), allCards.get(31), allCards.get(34), allCards.get(38)
             )));
 
-            players.get(2).setOwnedCards(new LinkedList<>(List.of(
+            firstEnemyPlayer.setOwnedCards(new LinkedList<>(List.of(
                     allCards.get(1), allCards.get(4), allCards.get(8), allCards.get(11), allCards.get(17),
                     allCards.get(19), allCards.get(24), allCards.get(27), allCards.get(33), allCards.get(35)
             )));
 
-            players.get(3).setOwnedCards(new LinkedList<>(List.of(
+            secondEnemyPlayer.setOwnedCards(new LinkedList<>(List.of(
                     allCards.get(2), allCards.get(6), allCards.get(10), allCards.get(13), allCards.get(16),
                     allCards.get(21), allCards.get(23), allCards.get(29), allCards.get(37), allCards.get(12)
             )));
@@ -113,24 +117,29 @@ public class ActiveGameServiceImplIntegrationWithMocksTest {
         })
         .when(randomCardsAssigner).assignRandomCardsToPlayers(ArgumentMatchers.anyList());
 
-        //TODO - MOCK ASSIGNING ORDER
+        //MOCK ASSIGNING ORDER
+
+        doAnswer(invocationOnMock -> new LinkedList<>(List.of(ownerPlayer, firstEnemyPlayer, teamMatePlayer, secondEnemyPlayer)))
+        .when(randomInitialOrderAssigner).assignRandomInitialOrder(ArgumentMatchers.anyList());
 
         //START GAME
         activeGameService.startGame(gameId, owner.getUsername());
         assertTrue(game.hasStarted());
 
         //ASSERT CORRECT CARDS WERE GIVEN
-        GamePlayer ownerGamePlayer = game.getPlayersList().stream().filter(GamePlayer::hasFourOfCoins).findFirst().get();
-
         assertIterableEquals(
                 List.of(
-                    allCards.get(2), allCards.get(6), allCards.get(10), allCards.get(13), allCards.get(16),
-                    allCards.get(21), allCards.get(23), allCards.get(29), allCards.get(37), allCards.get(12)
+                    allCards.get(1), allCards.get(4), allCards.get(8), allCards.get(11), allCards.get(17),
+                    allCards.get(19), allCards.get(24), allCards.get(27), allCards.get(33), allCards.get(35)
                 ),
-                ownerGamePlayer.getOwnedCards()
+                firstEnemyPlayer.getOwnedCards()
         );
 
         //ASSERT PROPER ORDER OF PLAYERS
+        assertIterableEquals(
+                List.of(ownerPlayer, firstEnemyPlayer, teamMatePlayer, secondEnemyPlayer),
+                game.getPlayersList()
+        );
     }
 
 }

@@ -141,7 +141,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             randomCardsAssigner.assignRandomCardsToPlayers(game.getPlayersList());
 
-            randomInitialOrderAssigner.assignRandomInitialOrder(game);
+            List<GamePlayer> startingOrderOfPlayers = randomInitialOrderAssigner.assignRandomInitialOrder(game.getPlayersList());
+            game.setPlayersList(startingOrderOfPlayers);
+            game.setCurrentPlayer(startingOrderOfPlayers.listIterator());
+            game.setInitialPlayersList(new ArrayList<>(game.getPlayersList()));
 
             game.addRound();
 
