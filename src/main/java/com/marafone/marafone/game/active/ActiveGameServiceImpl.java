@@ -106,9 +106,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         if (gameOptional.isEmpty()) return;
 
         Game game = gameOptional.get();
-        Optional<GamePlayer> optionalGamePlayer;
+
         synchronized (game) {
-             optionalGamePlayer = game
+            Optional<GamePlayer> optionalGamePlayer = game
                     .getPlayersList()
                     .stream()
                     .filter(player -> player.getUser().getUsername().equals(user.getUsername()))
