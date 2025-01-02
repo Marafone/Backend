@@ -7,11 +7,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 @Configuration
-public class CardConfig {
+public class GameConfig {
 
     @Bean
     public List<Card> allCards() {
@@ -62,6 +62,11 @@ public class CardConfig {
         allCards.add(new Card(40L, CardRank.FOUR, Suit.CLUBS));
 
         return allCards;
+    }
+
+    @Bean
+    public Random random() {
+        return new Random();
     }
 
 }

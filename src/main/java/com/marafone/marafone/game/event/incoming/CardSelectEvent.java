@@ -5,5 +5,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CardSelectEvent {
-    public int cardId;
+    public long cardId;
 }

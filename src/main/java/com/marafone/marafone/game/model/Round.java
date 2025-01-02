@@ -32,4 +32,8 @@ public class Round {
         }
         return currentTurn;
     }
+
+    public boolean isTrumpSuitSelected(){
+        return trumpSuit != null;
+    }
 }

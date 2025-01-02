@@ -5,29 +5,28 @@ import com.marafone.marafone.game.config.GameConfig;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
-import com.marafone.marafone.game.random.RandomAssigner;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext
-public class ActiveGameServiceImplIntegrationWithMocksTest {
+public class ActiveGameServiceImplIntegrationWithSeedTests {
 
     private final ActiveGameService activeGameService;
     private final ActiveGameRepository activeGameRepository;
@@ -35,20 +34,25 @@ public class ActiveGameServiceImplIntegrationWithMocksTest {
     @Autowired
     private List<Card> allCards;
 
-    @MockBean
-    private RandomAssigner randomAssigner;
+    @TestConfiguration
+    static class ContextConfiguration {
+        @Bean
+        @Primary
+        public Random randomWithSeed () {
+            return new Random(100);
+        }
+    }
 
     @Autowired
-    public ActiveGameServiceImplIntegrationWithMocksTest(ActiveGameService activeGameService, ActiveGameRepository activeGameRepository,
-                                                 UserRepository userRepository) {
+    public ActiveGameServiceImplIntegrationWithSeedTests(ActiveGameService activeGameService, ActiveGameRepository activeGameRepository,
+                                                         UserRepository userRepository){
         this.activeGameService = activeGameService;
         this.activeGameRepository = activeGameRepository;
         this.userRepository = userRepository;
     }
 
     @Test
-    void fullGameFlowTestWithMockedCards(){
-
+    void testThatSeedWorks(){
         userRepository.save(DummyData.getUserA());
         userRepository.save(DummyData.getUserB());
         userRepository.save(DummyData.getUserC());
@@ -75,44 +79,12 @@ public class ActiveGameServiceImplIntegrationWithMocksTest {
         activeGameService.joinGame(gameId, joinBlueTeam, firstEnemy);
         activeGameService.joinGame(gameId, joinBlueTeam, secondEnemy);
 
-        //GETTERS USED IN MOCKS
-
+        //GETTERS FOR ASSERTING
         Game game = activeGameRepository.findById(gameId).get();
         GamePlayer ownerPlayer = game.getPlayersList().stream().filter(player -> player.getUser().equals(owner)).findFirst().get();
         GamePlayer teamMatePlayer = game.getPlayersList().stream().filter(player -> player.getUser().equals(ownerTeamMate)).findFirst().get();
         GamePlayer firstEnemyPlayer = game.getPlayersList().stream().filter(player -> player.getUser().equals(firstEnemy)).findFirst().get();
         GamePlayer secondEnemyPlayer = game.getPlayersList().stream().filter(player -> player.getUser().equals(secondEnemy)).findFirst().get();
-
-        //MOCK ASSIGNING CARDS
-        doAnswer(invocationOnMock -> {
-
-            ownerPlayer.setOwnedCards(new LinkedList<>(List.of(
-                    allCards.get(3), allCards.get(7), allCards.get(15), allCards.get(20), allCards.get(25),
-                    allCards.get(28), allCards.get(30), allCards.get(32), allCards.get(36), allCards.get(39)
-            )));
-
-            teamMatePlayer.setOwnedCards(new LinkedList<>(List.of(
-                    allCards.get(0), allCards.get(5), allCards.get(9), allCards.get(14), allCards.get(18),
-                    allCards.get(22), allCards.get(26), allCards.get(31), allCards.get(34), allCards.get(38)
-            )));
-
-            firstEnemyPlayer.setOwnedCards(new LinkedList<>(List.of(
-                    allCards.get(1), allCards.get(4), allCards.get(8), allCards.get(11), allCards.get(17),
-                    allCards.get(19), allCards.get(24), allCards.get(27), allCards.get(33), allCards.get(35)
-            )));
-
-            secondEnemyPlayer.setOwnedCards(new LinkedList<>(List.of(
-                    allCards.get(2), allCards.get(6), allCards.get(10), allCards.get(13), allCards.get(16),
-                    allCards.get(21), allCards.get(23), allCards.get(29), allCards.get(37), allCards.get(12)
-            )));
-            return null;
-        })
-        .when(randomAssigner).assignRandomCardsToPlayers(ArgumentMatchers.anyList());
-
-        //MOCK ASSIGNING ORDER
-
-        doAnswer(invocationOnMock -> new LinkedList<>(List.of(ownerPlayer, firstEnemyPlayer, teamMatePlayer, secondEnemyPlayer)))
-        .when(randomAssigner).assignRandomInitialOrder(ArgumentMatchers.anyList());
 
         //START GAME
         activeGameService.startGame(gameId, owner.getUsername());
@@ -121,17 +93,16 @@ public class ActiveGameServiceImplIntegrationWithMocksTest {
         //ASSERT CORRECT CARDS WERE GIVEN
         assertIterableEquals(
                 List.of(
-                    allCards.get(1), allCards.get(4), allCards.get(8), allCards.get(11), allCards.get(17),
-                    allCards.get(19), allCards.get(24), allCards.get(27), allCards.get(33), allCards.get(35)
+                        allCards.get(12), allCards.get(3), allCards.get(30), allCards.get(0), allCards.get(29),
+                        allCards.get(32), allCards.get(26), allCards.get(23), allCards.get(15), allCards.get(21)
                 ),
-                firstEnemyPlayer.getOwnedCards()
+                ownerPlayer.getOwnedCards()
         );
 
         //ASSERT PROPER ORDER OF PLAYERS
         assertIterableEquals(
-                List.of(ownerPlayer, firstEnemyPlayer, teamMatePlayer, secondEnemyPlayer),
+                List.of(ownerPlayer, secondEnemyPlayer, teamMatePlayer, firstEnemyPlayer),
                 game.getPlayersList()
         );
     }
-
 }
