@@ -30,7 +30,6 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
-    private final Random r = new Random();
 
     private final RandomAssigner randomAssigner;
 
@@ -59,9 +58,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         return activeGameRepository.put(game);
     }
 
-    // checks if game with arg name already exists
-    // among games waiting for players to join
-
+    /** checks if game with arg name already exists among games waiting for players to join */
     public boolean doesNotStartedGameAlreadyExist(String name) {
         return activeGameRepository.getWaitingGames()
                         .stream()
@@ -120,10 +117,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             GamePlayer gamePlayerToRemove = optionalGamePlayer.get();
             game.getPlayersList().remove(gamePlayerToRemove);
+
+            eventPublisher.publishToLobby(gameId, new PlayerLeftEvent(user.getUsername()));
         }
-
-        eventPublisher.publishToLobby(gameId, new PlayerLeftEvent(user.getUsername()));
-
     }
 
     public void changeTeam(Long gameId, Team team, User user) {
@@ -144,10 +140,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             gamePlayer.setTeam(team);
 
+            eventPublisher.publishToLobby(gameId, new TeamState(game));
+
         }
-
-        eventPublisher.publishToLobby(gameId, new TeamState(game));
-
     }
 
     public Map<Team, List<GamePlayer>> getGameTeams(Long gameId) {
@@ -348,35 +343,6 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             eventPublisher.publishToLobby(gameId, outEvents);
         }
-    }
-
-    @Override
-    public void selectRandomCard(Long gameId, String principalName) {
-
-        Optional<Game> gameOptional = activeGameRepository.findById(gameId);
-        if (gameOptional.isEmpty())
-            return;
-
-        Game game = gameOptional.get();
-        Suit currentTrumpSuit = game.getRounds().getLast().getTrumpSuit();
-        List<Card> playerCards = getGamePlayerCards(gameId, principalName);
-
-        int selectedCardIndex = r.nextInt(playerCards.size());
-        Card cardToRemove = playerCards.get(selectedCardIndex);
-
-        // check if card with selected trump suit exist
-
-        Optional<Card> result = playerCards.stream()
-                .filter(card -> card.getSuit() == currentTrumpSuit)
-                .findAny();
-
-        if (result.isPresent()) // roll until we get card with current round trump suit
-            while (cardToRemove.getSuit() != currentTrumpSuit) {
-                selectedCardIndex = r.nextInt(playerCards.size());
-                cardToRemove = playerCards.get(selectedCardIndex);
-            }
-
-        selectCard(gameId, new CardSelectEvent(Math.toIntExact(cardToRemove.getId())), principalName);
     }
 
     @Override
