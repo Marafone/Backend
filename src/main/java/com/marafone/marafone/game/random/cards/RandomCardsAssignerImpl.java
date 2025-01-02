@@ -1,4 +1,4 @@
-package com.marafone.marafone.game.random;
+package com.marafone.marafone.game.random.cards;
 
 import com.marafone.marafone.game.model.Card;
 import com.marafone.marafone.game.model.GamePlayer;
@@ -17,7 +17,7 @@ public class RandomCardsAssignerImpl implements RandomCardsAssigner{
     private final List<Card> allCards;
 
     @Override
-    public void AssignRandomCardsToPlayers(List<GamePlayer> gamePlayers) {
+    public void assignRandomCardsToPlayers(List<GamePlayer> gamePlayers) {
         if(gamePlayers.size() > 4)
             throw new IllegalArgumentException("Expected at most 4 players");
 
