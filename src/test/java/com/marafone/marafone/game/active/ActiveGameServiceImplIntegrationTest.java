@@ -1,16 +1,22 @@
 package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.DummyData;
+import com.marafone.marafone.game.config.CardConfig;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.random.cards.RandomCardsAssigner;
+import com.marafone.marafone.game.random.order.RandomInitialOrderAssigner;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -21,6 +27,8 @@ import java.util.List;
 import static com.marafone.marafone.game.model.JoinGameResult.INCORRECT_PASSWORD;
 import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 
 @SpringBootTest
 @ActiveProfiles("test")

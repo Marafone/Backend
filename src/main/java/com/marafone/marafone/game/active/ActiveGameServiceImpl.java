@@ -7,8 +7,9 @@ import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
-import com.marafone.marafone.game.random.RandomCardsAssigner;
+import com.marafone.marafone.game.random.cards.RandomCardsAssigner;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.random.order.RandomInitialOrderAssigner;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final List<Card> allCards;
     private final GameMapper gameMapper;
     private final RandomCardsAssigner randomCardsAssigner;
+    private final RandomInitialOrderAssigner randomInitialOrderAssigner;
 
     @Override
     public List<GameDTO> getWaitingGames() {
@@ -137,9 +139,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             game.setStartedAt(LocalDateTime.now());
 
-            randomCardsAssigner.AssignRandomCardsToPlayers(game.getPlayersList());
+            randomCardsAssigner.assignRandomCardsToPlayers(game.getPlayersList());
 
-            setInitialOrder(game);
+            randomInitialOrderAssigner.assignRandomInitialOrder(game);
 
             game.addRound();
 
@@ -209,7 +211,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 }else{
                     game.setNewOrderAfterRoundEnd();
 
-                    randomCardsAssigner.AssignRandomCardsToPlayers(game.getPlayersList());
+                    randomCardsAssigner.assignRandomCardsToPlayers(game.getPlayersList());
                     game.addRound();
                 }
             }else{
@@ -309,24 +311,5 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 return aRank.compareTo(bRank);
             }
         }).orElseThrow();
-    }
-
-    private void setInitialOrder(Game game){
-        GamePlayer gamePlayer = game.getPlayersList().stream().filter(GamePlayer::hasFourOfCoins).findFirst().orElseThrow();
-
-        LinkedList<GamePlayer> enemyTeam = game.getPlayersList().stream().filter(player -> player.getTeam() != gamePlayer.getTeam())
-                .collect(Collectors.toCollection(LinkedList::new));
-
-        LinkedList<GamePlayer> startingOrderOfPlayers = new LinkedList<>();
-        startingOrderOfPlayers.add(gamePlayer);
-        startingOrderOfPlayers.add(Math.random() < 0.5 ? enemyTeam.removeFirst() : enemyTeam.removeLast());
-        startingOrderOfPlayers.add(game.getPlayersList().stream().filter(
-                player -> player.getTeam() == gamePlayer.getTeam() && !player.equals(gamePlayer)
-        ).findFirst().orElseThrow());
-        startingOrderOfPlayers.add(enemyTeam.removeFirst());
-
-        game.setPlayersList(startingOrderOfPlayers);
-        game.setCurrentPlayer(startingOrderOfPlayers.listIterator());
-        game.setInitialPlayersList(new ArrayList<>(game.getPlayersList()));
     }
 }
