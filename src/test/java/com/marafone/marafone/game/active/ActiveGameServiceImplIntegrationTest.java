@@ -41,7 +41,7 @@ public class ActiveGameServiceImplIntegrationTest {
     }
 
     @Test
-    void fullGameFlowTest(){
+    void gameFlowTestWithoutMocking(){
         userRepository.save(DummyData.getUserA());
         userRepository.save(DummyData.getUserB());
         userRepository.save(DummyData.getUserC());
@@ -130,125 +130,6 @@ public class ActiveGameServiceImplIntegrationTest {
         assertNotEquals(team, playerIterator.next().getTeam());
         assertEquals(team, playerIterator.next().getTeam());
         assertNotEquals(team, playerIterator.next().getTeam());
-
-        //SAVE FIRST ORDER TO COMPARE IN SECOND ROUND
-        List<GamePlayer> secondRoundOrder = new LinkedList<>(List.copyOf(game.getPlayersList()));
-        secondRoundOrder.addLast(secondRoundOrder.removeFirst());
-
-        //MOCK CARDS FOR EASIER TESTING
-        playerIterator = game.getPlayersList().iterator();
-        playerIterator.next().setOwnedCards(
-                new LinkedList<>(
-                    List.of(
-                            new Card(30L, CardRank.FOUR, Suit.COINS), new Card(18L, CardRank.SIX, Suit.CUPS)
-                    )
-                )
-        );
-
-        playerIterator.next().setOwnedCards(
-                new LinkedList<>(
-                        List.of(
-                                new Card(35L, CardRank.C, Suit.CLUBS), new Card(13L, CardRank.A, Suit.CUPS)
-                        )
-                )
-        );
-
-        playerIterator.next().setOwnedCards(
-                new LinkedList<>(
-                        List.of(
-                                new Card(7L, CardRank.SEVEN, Suit.SWORDS), new Card(24L, CardRank.K, Suit.COINS)
-                        )
-                )
-        );
-
-        playerIterator.next().setOwnedCards(
-                new LinkedList<>(
-                        List.of(
-                                new Card(31L, CardRank.THREE, Suit.CLUBS), new Card(15L, CardRank.C, Suit.CUPS)
-                        )
-                )
-        );
-
-        //FIRST TURN
-        playerIterator = game.getPlayersList().iterator();
-        activeGameService.selectCard(gameId, new CardSelectEvent(30), playerIterator.next().getUser().getUsername());
-        activeGameService.selectCard(gameId, new CardSelectEvent(35), playerIterator.next().getUser().getUsername());
-        GamePlayer shouldWinThisTurn = playerIterator.next();
-        activeGameService.selectCard(gameId, new CardSelectEvent(24), shouldWinThisTurn.getUser().getUsername());//should be ignored
-        activeGameService.selectCard(gameId, new CardSelectEvent(7), shouldWinThisTurn.getUser().getUsername());
-        activeGameService.selectCard(gameId, new CardSelectEvent(31), playerIterator.next().getUser().getUsername());
-
-        assertEquals(4, game.getRounds().getLast().getActions().size());
-        assertEquals(2, shouldWinThisTurn.getPoints());
-
-        //ASSERT EVERYONE LOST ONE CARD AND HAVE CORRECT AMOUNT OF POINTS
-        for(var gamePlayer: game.getPlayersList()){
-            assertEquals(1, gamePlayer.getOwnedCards().size());
-            if(!gamePlayer.equals(shouldWinThisTurn)){
-                assertEquals(0, gamePlayer.getPoints());
-            }
-        }
-
-        //NEXT TURN
-        playerIterator = game.getPlayersList().iterator();
-        activeGameService.selectCard(gameId, new CardSelectEvent(24), playerIterator.next().getUser().getUsername());
-        activeGameService.selectCard(gameId, new CardSelectEvent(15), playerIterator.next().getUser().getUsername());
-        activeGameService.selectCard(gameId, new CardSelectEvent(18), playerIterator.next().getUser().getUsername());
-        GamePlayer shouldGain8Points = playerIterator.next();
-        activeGameService.selectCard(gameId, new CardSelectEvent(13), shouldGain8Points.getUser().getUsername());
-
-        assertEquals(2, game.getRounds().size());
-        assertEquals(8, game.getRounds().getFirst().getActions().size());
-        assertEquals(8, shouldGain8Points.getPoints());
-
-        //ASSERT CORRECT ORDER AFTER ROUND END
-        playerIterator = game.getPlayersList().iterator();
-        assertNotEquals(team, playerIterator.next().getTeam());//now enemy team is starting
-        assertEquals(team, playerIterator.next().getTeam());
-        assertNotEquals(team, playerIterator.next().getTeam());
-        assertEquals(hasFourOfCoins, playerIterator.next()); // person who was first is now last
-
-        //ASSERT EACH PLAYER HAS 10 CARDS AFTER NEW ROUND STARTS
-        for(var gamePlayer: game.getPlayersList())
-            assertEquals(10, gamePlayer.getOwnedCards().size());
-
-        //ASSERT SELECTING CARD BEFORE SELECTING TRUMP SUIT DOES NOT WORK
-
-        List<GamePlayer> curPlayersList = List.copyOf(game.getPlayersList());
-        for(var gamePlayer: curPlayersList){
-            List<Card> curOwnedCards = List.copyOf(gamePlayer.getOwnedCards());
-            for(var card: curOwnedCards){
-                activeGameService.selectCard(gameId, new CardSelectEvent(card.getId().intValue()), gamePlayer.getUser().getUsername());
-            }
-        }
-
-        for(var gamePlayer: game.getPlayersList())
-            assertEquals(10, gamePlayer.getOwnedCards().size());
-
-        //MOCK CARDS
-        List<Card> assignCards = List.of(
-                new Card(7L, CardRank.SEVEN, Suit.SWORDS), new Card(24L, CardRank.K, Suit.COINS),
-                new Card(30L, CardRank.FOUR, Suit.COINS), new Card(21L, CardRank.THREE, Suit.COINS)
-        );
-        Iterator<Card> cardIterator = assignCards.iterator();
-        for(var gamePlayer: game.getPlayersList())
-            gamePlayer.setOwnedCards(new LinkedList<>(List.of(cardIterator.next())));
-
-        //SELECT TRUMP SUIT
-        activeGameService.selectSuit(gameId, new TrumpSuitSelectEvent(Suit.COINS), secondRoundOrder.getFirst().getUser().getUsername());
-
-        //MOCK AMOUNT OF POINTS TO WIN
-        game.pointsToWinGame = 3;
-
-        //SELECT CARDS
-        for(var gamePlayer: secondRoundOrder)
-            activeGameService.selectCard(gameId,
-                    new CardSelectEvent(gamePlayer.getOwnedCards().stream().map(Card::getId).findFirst().get().intValue()),
-                    gamePlayer.getUser().getUsername()
-            );
-
-        //ASSERT THAT GAME WAS WON BY CORRECT TEAM
-        assertEquals(shouldGain8Points.getTeam(), game.getWinnerTeam());
     }
 
 }
