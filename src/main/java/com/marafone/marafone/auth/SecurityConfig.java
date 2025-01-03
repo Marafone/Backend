@@ -52,19 +52,19 @@ public class SecurityConfig {
         return new ProviderManager(authenticationProvider);
     }
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // Allow all endpoints
-                        .allowedOrigins(frontendUrl)
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*") // allow any headers
-                        .allowCredentials(true); // cookies or authorization headers are also allowed
-            }
-        };
-    }
+//    @Bean
+//    public WebMvcConfigurer corsConfigurer() {
+//        return new WebMvcConfigurer() {
+//            @Override
+//            public void addCorsMappings(CorsRegistry registry) {
+//                registry.addMapping("/**") // Allow all endpoints
+//                        .allowedOrigins(frontendUrl)
+//                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+//                        .allowedHeaders("*") // allow any headers
+//                        .allowCredentials(true); // cookies or authorization headers are also allowed
+//            }
+//        };
+//    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -75,6 +75,7 @@ public class SecurityConfig {
                 .csrf((csrf) -> csrf
                         .csrfTokenRepository(httpSessionCsrfTokenRepository)
                 )
+                .cors(cors -> cors.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().permitAll()
                 )
