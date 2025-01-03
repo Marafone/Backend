@@ -40,6 +40,8 @@ public class Game {
     private ListIterator<GamePlayer> currentPlayer;
     @Transient
     private List<GamePlayer> initialPlayersList;
+    @Transient
+    private Suit leadingSuit;
 
     @Transient
     @JsonIgnore

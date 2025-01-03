@@ -60,6 +60,11 @@ public class MarafoneRandomAssigner implements RandomAssigner {
     }
 
     @Override
+    public Card getRandomCorrectCard(List<Card> cards) {
+            return cards.get(random.nextInt(cards.size()));
+    }
+
+    @Override
     public Card getRandomCorrectCard(List<Card> cards, Suit trumpSuit) {
         List<Card> cardsWithTrumpSuit = cards.stream().filter(card -> card.getSuit() == trumpSuit)
                 .collect(Collectors.toCollection(ArrayList::new));

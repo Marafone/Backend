@@ -11,6 +11,7 @@ import java.util.List;
 public interface RandomAssigner {
     Suit getRandomTrumpSuit();
     void assignRandomCardsToPlayers(List<GamePlayer> gamePlayers);
+    Card getRandomCorrectCard(List<Card> cards);
     Card getRandomCorrectCard(List<Card> cards, Suit trumpSuit);
     List<GamePlayer> assignRandomInitialOrder(List<GamePlayer> gamePlayers);
 }
