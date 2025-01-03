@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debuging</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+    <script src="/app.js"></script>
+</head>
+<body>
+<div id="main-content" class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="gameId">GameId:</label>
+                    <input id="gameId" type="number" placeholder="Game id">
+                    <label for="username">Username:</label>
+                    <input id="username" placeholder="Username">
+                    <label for="password">Password:</label>
+                    <input id="password" placeholder="Password">
+                    <label for="cardId">CardID of selected card</label>
+                    <input id="cardId" placeholder="CardID of selected card">
+                    <button id="connect" class="btn btn-default" type="submit">Connect to websockets</button>
+                    <button id="disconnect" class="btn btn-default" type="submit">Disconnect from websockets</button>
+                    <button id="login" class="btn btn-default" type="submit">Log In</button>
+                    <button id="register" class="btn btn-default" type="submit">Register</button>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <form class="form-inline">
+                <button id="createGame" class="btn btn-default" type="submit">Create game</button>
+                <button id="subscribeGame" class="btn btn-default" type="submit">Subscribe to events</button>
+                <button id="joinGameRed" class="btn btn-default" type="submit">Join game - Red team</button>
+                <button id="joinGameBlue" class="btn btn-default" type="submit">Join game - Blue team</button>
+                <button id="startGame" class="btn btn-default" type="submit">Start game</button>
+                <button id="sendCard" class="btn btn-default" type="submit">Send card</button>
+                <button id="sendSuit" class="btn btn-default" type="submit">Send trump suit</button>
+                <button id="reconnect" class="btn btn-default" type="submit">Get game state (e.g. after accidental page refresh)</button>
+                <button id="save" class="btn btn-default" type="submit">Save game to database</button>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <table id="conversation" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>All events</th>
+                </tr>
+                </thead>
+                <tbody id="events">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
