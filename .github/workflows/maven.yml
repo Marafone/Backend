@@ -14,6 +14,11 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      MARAFONE_DATABASE_URL: jdbc:postgresql://localhost:5432/Marafone
+      MARAFONE_DATABASE_USERNAME: myuser
+      MARAFONE_DATABASE_PASSWORD: secret
+      MARAFONE_FRONTEND_URL: http://localhost:5173
 
     steps:
     - uses: actions/checkout@v4
