@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.marafone.marafone.errors.SelectCardErrorMessages.*;
 import static com.marafone.marafone.game.model.JoinGameResult.*;
@@ -167,7 +166,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     return;
 
                 GamePlayer currentPlayer = game.getCurrentPlayerWithoutIterating();
-                Card randomCard = randomAssigner.getRandomCorrectCard(currentPlayer.getOwnedCards(), lastRound.getTrumpSuit());
+                Card randomCard = game.getLeadingSuit() == null ?
+                        randomAssigner.getRandomCorrectCard(currentPlayer.getOwnedCards()) :
+                        randomAssigner.getRandomCorrectCard(currentPlayer.getOwnedCards(), game.getLeadingSuit());
 
                 selectCard(gameId, new CardSelectEvent(randomCard.getId()), currentPlayer.getUser().getUsername());
             }else{//check trump suit
@@ -248,9 +249,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 errorEvent = new ErrorEvent(CARD_NOT_IN_HAND.getMessage());
             else if (currentRound.getTrumpSuit() == null)
                 errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
-            else if (selectedCard.getSuit() != currentRound.getTrumpSuit()
-                    && currentPlayer.hasCardOfSuit(currentRound.getTrumpSuit()))
-                errorEvent = new ErrorEvent(INVALID_TRUMP_SUIT_PLAY.formatMessage(currentRound.getTrumpSuit()));
+            else if (game.getLeadingSuit() != null && selectedCard.getSuit() != game.getLeadingSuit()
+                    && currentPlayer.hasCardOfSuit(game.getLeadingSuit()))
+                errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(currentRound.getTrumpSuit()));
 
             if (errorEvent != null) {
                 game.getCurrentPlayer().previous();
@@ -262,6 +263,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 Action.builder().player(currentPlayer).round(currentRound).card(selectedCard).timestamp(LocalDateTime.now()).build()
             );
 
+            if(game.getLeadingSuit() == null)
+                game.setLeadingSuit(selectedCard.getSuit());
+
             currentPlayer.removeCard(selectedCard);
 
             eventPublisher.publishToPlayerInTheLobby(gameId, principalName, new MyCardsState(currentPlayer));
@@ -272,6 +276,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             List<Action> currentTurn = currentRound.getLastNActions(4);
 
             Action winningAction = getWinningAction(currentTurn);
+
+            game.setLeadingSuit(null);
 
             int earnedPoints = currentTurn.stream().mapToInt(action -> action.getCard().getRank().getPoints()).sum();
             winningAction.getPlayer().addPoints(earnedPoints);
@@ -377,14 +383,18 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     public Action getWinningAction(List<Action> currentTurn){
         return currentTurn.stream().max((a, b) -> {
             Suit trumpSuit = a.getRound().getTrumpSuit();
+            Suit leadingSuit = currentTurn.getFirst().getCard().getSuit();
             Suit aSuit = a.getCard().getSuit();
             Suit bSuit = b.getCard().getSuit();
-            if (aSuit != bSuit && (aSuit == trumpSuit || bSuit == trumpSuit)) {
+            if (aSuit != bSuit && (aSuit == trumpSuit || bSuit == trumpSuit || aSuit == leadingSuit || bSuit == leadingSuit)) {
                 if (aSuit == trumpSuit) {
                     return 1;
-                } else {
+                } else if(bSuit == trumpSuit){
                     return -1;
-                }
+                }else if(aSuit == leadingSuit)
+                    return 1;
+                else//bSuit == leadingSuit
+                    return -1;
             } else {
                 CardRank aRank = a.getCard().getRank();
                 CardRank bRank = b.getCard().getRank();
