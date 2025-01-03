@@ -30,6 +30,14 @@ public class GamePlayer {
     private List<Card> ownedCards;
 
     @Override
+    public int hashCode() {
+        if(user == null)
+            return super.hashCode();
+
+        return user.getUsername().length() * user.getUsername().charAt(0);
+    }
+
+    @Override
     public boolean equals(Object o){
         if (o == this)
             return true;
