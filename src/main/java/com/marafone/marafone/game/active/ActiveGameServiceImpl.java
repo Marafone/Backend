@@ -1,5 +1,7 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.marafone.errors.ChangeTeamErrorMessages;
+import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
@@ -130,12 +132,25 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         synchronized (game) {
 
-            if (game.teamIsFull(team))
-                return;
-
             GamePlayer gamePlayer = game.findGamePlayerByUsername(user.getUsername());
-            if (gamePlayer == null || gamePlayer.getTeam() == team)
+
+            if (gamePlayer == null) {
                 return;
+            } else if (gamePlayer.getTeam() == team) {
+                eventPublisher.publishToPlayerInTheLobby(
+                        gameId,
+                        user.getUsername(),
+                        new ErrorEvent(ChangeTeamErrorMessages.SAME_TEAM.getMessage())
+                );
+                return;
+            } else if (game.teamIsFull(team)) {
+                eventPublisher.publishToPlayerInTheLobby(
+                        gameId,
+                        user.getUsername(),
+                        new ErrorEvent(ChangeTeamErrorMessages.TEAM_IS_FULL.getMessage())
+                );
+                return;
+            }
 
             gamePlayer.setTeam(team);
 
@@ -194,13 +209,28 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         Game game = gameOptional.get();
 
         synchronized (game){
-            // will be replaced with proper events sending in future
-            if(!game.getOwner().getUsername().equals(principalName))
+            if(!game.getOwner().getUsername().equals(principalName)) {
+                eventPublisher.publishToPlayerInTheLobby(
+                        gameId,
+                        principalName,
+                        new ErrorEvent(StartGameErrorMessages.OWNER_MISMATCH.getMessage())
+                );
                 return;
-            else if (game.getStartedAt() != null)
+            } else if (game.getStartedAt() != null) {
+                eventPublisher.publishToPlayerInTheLobby(
+                    gameId,
+                    principalName,
+                    new ErrorEvent(StartGameErrorMessages.GAME_ALREADY_STARTED.getMessage())
+                );
                 return;
-            else if (game.anyTeamNotFull())
+            } else if (game.anyTeamNotFull()) {
+                eventPublisher.publishToPlayerInTheLobby(
+                        gameId,
+                        principalName,
+                        new ErrorEvent(StartGameErrorMessages.TEAMS_NOT_FULL.getMessage())
+                );
                 return;
+            }
 
             game.setStartedAt(LocalDateTime.now());
 
