@@ -287,7 +287,7 @@ class ActiveGameServiceImplTest {
         playersList.add(gp2);
         playersList.add(gp3);
 
-        Game game = Game.builder().playersList(playersList).id(1L).build();
+        Game game = Game.builder().playersList(playersList).owner(user).id(1L).build();
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
 
         // when
