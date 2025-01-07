@@ -20,6 +20,11 @@ public class ActiveGameRepositoryImpl implements ActiveGameRepository{
     }
 
     @Override
+    public void removeById(Long id) {
+        activeGames.remove(id);
+    }
+
+    @Override
     public Long put(Game game) {
         var uuid = UUID.randomUUID().getMostSignificantBits();
         Game hashMapGame;
