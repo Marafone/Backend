@@ -100,8 +100,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         return JoinGameResult.SUCCESS;
     }
-    // TODO when owner leaves - make other player the owner
-    // TODO when last person leaves - remove the game
+
+    @Override
     public void leaveGame(Long gameId, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
         if (gameOptional.isEmpty()) return;
@@ -119,10 +119,24 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             GamePlayer gamePlayerToRemove = optionalGamePlayer.get();
             game.getPlayersList().remove(gamePlayerToRemove);
 
+            // if last person left - remove the game
+            if (game.getPlayersList().isEmpty()) {
+                activeGameRepository.removeById(gameId);
+                return;
+            }
+
             eventPublisher.publishToLobby(gameId, new PlayerLeftEvent(user.getUsername()));
+
+            // when owner leaves, first player of players list becomes new owner
+            if (user.getUsername().equals(game.getOwner().getUsername())) {
+                User newOwner = game.getPlayersList().getFirst().getUser();
+                game.setOwner(newOwner);
+                eventPublisher.publishToLobby(gameId, new OwnerEvent(newOwner.getUsername(), true));
+            }
         }
     }
 
+    @Override
     public void changeTeam(Long gameId, Team team, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
         if (gameOptional.isEmpty())
@@ -395,8 +409,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
                 if(game.getWinnerTeam() != null)
                     outEvents.add(new WinnerState(game));
-            }else
+            }else {
                 outEvents.add(new TeamState(game));
+                outEvents.add(new OwnerEvent(game.getOwner().getUsername(), false));
+            }
 
             eventPublisher.publishToPlayerInTheLobby(gameId, principalName, outEvents);
         }
