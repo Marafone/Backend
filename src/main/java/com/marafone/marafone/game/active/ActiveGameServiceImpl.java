@@ -270,12 +270,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             if(!game.turnHasEnded()) {
                 eventPublisher.publishToLobby(
                         gameId,
-                        new NextPlayerState(game.getCurrentPlayer()
-                                .next()
+                        new NextPlayerState(game.getCurrentPlayerWithoutIterating()
                                 .getUser()
                                 .getUsername(), false)
                 );
-                game.getCurrentPlayer().previous();
                 return;
             }
 
