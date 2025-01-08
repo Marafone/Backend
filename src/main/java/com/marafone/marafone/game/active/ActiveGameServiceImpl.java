@@ -271,7 +271,15 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             eventPublisher.publishToPlayerInTheLobby(gameId, principalName, new MyCardsState(currentPlayer));
             eventPublisher.publishToLobby(gameId, new TurnState(game));
 
-            if(!game.turnHasEnded()) return;
+            if(!game.turnHasEnded()) {
+                eventPublisher.publishToLobby(
+                        gameId,
+                        new NextPlayerState(game.getCurrentPlayerWithoutIterating()
+                                .getUser()
+                                .getUsername(), false)
+                );
+                return;
+            }
 
             List<Action> currentTurn = currentRound.getLastNActions(4);
 
@@ -304,6 +312,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 }
             }else{
                 game.setNewOrderAfterTurnEnd(winningAction.getPlayer());
+                outEvents.add(new NextPlayerState(winningAction.getPlayer().getUser().getUsername(), true));
             }
             outEvents.add(new PlayersOrderState(game));
             eventPublisher.publishToLobby(gameId, outEvents);
@@ -340,6 +349,13 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             eventPublisher.publishToLobby(gameId, outEvents);
         }
+    }
+
+    public void sendCall(Long gameId, Call call) {
+        if (activeGameRepository.findById(gameId).isEmpty())
+            return;
+
+        eventPublisher.publishToLobby(gameId, new CallState(call));
     }
 
     @Override
