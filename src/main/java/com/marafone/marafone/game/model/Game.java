@@ -165,4 +165,28 @@ public class Game {
         return gamePlayer;
     }
 
+    public List<GamePlayer> getGamePlayersFromTeam(Team team) {
+        return playersList.stream()
+                .filter(gamePlayer ->  gamePlayer.getTeam() == team)
+                .toList();
+    }
+
+    public int getTeamPoints(Team team) {
+        return getGamePlayersFromTeam(team).stream()
+                .map(GamePlayer::getPoints)
+                .reduce(0, Integer::sum);
+    }
+
+    public GamePlayer findTopScorerInTeam(Team team) {
+        var gamePlayersTeam = getGamePlayersFromTeam(team);
+        GamePlayer topScorer = null;
+
+        for (var gamePlayer: gamePlayersTeam) {
+            if (topScorer == null || gamePlayer.getPoints() > topScorer.getPoints())
+                topScorer = gamePlayer;
+        }
+
+        return topScorer;
+    }
+
 }
