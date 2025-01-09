@@ -1,14 +1,17 @@
 package com.marafone.marafone.game.active;
+
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
-import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.model.Call;
+import com.marafone.marafone.game.model.GameDTO;
+import com.marafone.marafone.game.model.JoinGameResult;
+import com.marafone.marafone.game.model.Team;
 import com.marafone.marafone.user.User;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ActiveGameService {
     List<GameDTO> getWaitingGames();
@@ -20,6 +23,7 @@ public interface ActiveGameService {
     void startGame(@DestinationVariable Long gameId, String principalName);
     void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);
     void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName);
+    void sendCall(Long gameId, Call call);
     void reconnectToGame(Long gameId, String principalName);
     boolean doesNotStartedGameAlreadyExist(String name);
 }

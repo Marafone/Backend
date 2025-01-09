@@ -79,6 +79,11 @@ public class ActiveGameController {
         activeGameService.selectSuit(gameId, trumpSuitSelectEvent, principal.getName());
     }
 
+    @MessageMapping("/game/{id}/call")
+    public void sendCall(@DestinationVariable("id") Long gameId, Call call) {
+        activeGameService.sendCall(gameId, call);
+    }
+
     @MessageMapping("/game/{id}/timeout")
     public void checkTimeout(@DestinationVariable("id") Long gameId){
         activeGameService.checkTimeout(gameId);
