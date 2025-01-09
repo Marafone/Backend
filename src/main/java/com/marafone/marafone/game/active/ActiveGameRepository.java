@@ -7,6 +7,7 @@ import java.util.Optional;
 
 public interface ActiveGameRepository {
     Optional<Game> findById(Long id);
+    void removeById(Long id);
     Long put(Game game);
     List<Game> getWaitingGames();
 }
