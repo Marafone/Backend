@@ -298,7 +298,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
             else if (game.getLeadingSuit() != null && selectedCard.getSuit() != game.getLeadingSuit()
                     && currentPlayer.hasCardOfSuit(game.getLeadingSuit()))
-                errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(currentRound.getTrumpSuit()));
+                errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(game.getLeadingSuit()));
 
             if (errorEvent != null) {
                 game.getCurrentPlayer().previous();
@@ -349,16 +349,24 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     eventPublisher.publishToLobby(gameId, outEvents);
                     return;
                 }else{
+                    reduceTeamsPoints(game);
+
                     game.setNewOrderAfterRoundEnd();
 
                     randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
                     game.addRound();
 
                     outEvents.add(new NewRound());
-                    outEvents.add(new MyCardsState(currentPlayer));
+                    game.getPlayersList().forEach(gamePlayer ->
+                            eventPublisher.publishToPlayerInTheLobby(
+                                    gameId,
+                                    gamePlayer.getUser().getUsername(),
+                                    new MyCardsState(gamePlayer))
+                    );
                 }
             }else{
                 game.setNewOrderAfterTurnEnd(winningAction.getPlayer());
+                outEvents.add(new NewTurn());
                 outEvents.add(new NextPlayerState(winningAction.getPlayer().getUser().getUsername(), true));
             }
             outEvents.add(new PlayersOrderState(game));
@@ -466,6 +474,17 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 return aRank.compareTo(bRank);
             }
         }).orElseThrow();
+    }
+
+    private void reduceTeamsPoints(Game game) {
+        int redTeamPoints = game.getTeamPoints(Team.RED);
+        int blueTeamPoints = game.getTeamPoints(Team.BLUE);
+
+        GamePlayer redTeamTopScorer = game.findTopScorerInTeam(Team.RED);
+        GamePlayer blueTeamTopScorer = game.findTopScorerInTeam(Team.BLUE);
+
+        redTeamTopScorer.subtractPoints(redTeamPoints % 3);
+        blueTeamTopScorer.subtractPoints(blueTeamPoints % 3);
     }
 
 }
