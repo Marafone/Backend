@@ -63,6 +63,8 @@ public class GamePlayer {
         this.points += points;
     }
 
+    public void subtractPoints(int points) { this.points -= points; }
+
     public void addBonusPoint(){
         addPoints(3);
     }
