@@ -108,10 +108,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         Game game = gameOptional.get();
 
-        if (game.hasStarted())
-            return;
-
         synchronized (game) {
+            if (game.hasStarted())
+                return;
+
             Optional<GamePlayer> optionalGamePlayer = game
                     .getPlayersList()
                     .stream()
