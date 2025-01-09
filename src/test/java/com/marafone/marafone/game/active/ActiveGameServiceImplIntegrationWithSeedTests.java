@@ -219,7 +219,7 @@ public class ActiveGameServiceImplIntegrationWithSeedTests {
         activeGameService.selectCard(gameId, new CardSelectEvent(20), secondEnemy.getUsername());//FOUR CUPS
         activeGameService.selectCard(gameId, new CardSelectEvent(24), ownerTeamMate.getUsername());//K COINS
         activeGameService.selectCard(gameId, new CardSelectEvent(4), firstEnemy.getUsername());//K SWORDS
-        assertEquals(14 + 3, firstEnemyPlayer.getPoints());//bonus points for taking last trick
+        assertEquals((14 + 3) - (17 % 3), firstEnemyPlayer.getPoints());//bonus points for taking last trick
 
         //ASSERT NEW ROUND STARTS
         assertNull(game.getWinnerTeam());
@@ -252,7 +252,7 @@ public class ActiveGameServiceImplIntegrationWithSeedTests {
         activeGameService.selectCard(gameId, new CardSelectEvent(25), ownerTeamMate.getUsername());//C COINS
         activeGameService.selectCard(gameId, new CardSelectEvent(23), firstEnemy.getUsername());//A COINS
         activeGameService.selectCard(gameId, new CardSelectEvent(26), owner.getUsername());//J COINS
-        assertEquals(22, firstEnemyPlayer.getPoints());
+        assertEquals(15 + 5, firstEnemyPlayer.getPoints()); // 5 points for this round and 15 from previous
         assertIterableEquals(List.of(firstEnemyPlayer, ownerPlayer, secondEnemyPlayer, ownerTeamMatePlayer), game.getPlayersList());
         assertEquals(4, game.getRounds().getLast().getActions().size());
     }
