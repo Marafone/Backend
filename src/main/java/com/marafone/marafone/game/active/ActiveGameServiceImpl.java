@@ -344,19 +344,22 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 winningAction.getPlayer().addBonusPoint();
 
                 if(game.setWinnersIfPossible()){
+                    outEvents.add(new PointState(game));
                     outEvents.add(new WinnerState(game));
+
                     endedGameService.saveEndedGame(game);
                     eventPublisher.publishToLobby(gameId, outEvents);
                     return;
                 }else{
                     reduceTeamsPoints(game);
+                    outEvents.add(new PointState(game));
 
                     game.setNewOrderAfterRoundEnd();
 
                     randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
                     game.addRound();
 
-                    outEvents.add(new NewRound());
+                    outEvents.add(new NewRound(game.getCurrentPlayerWithoutIterating().getUser().getUsername()));
                     game.getPlayersList().forEach(gamePlayer ->
                             eventPublisher.publishToPlayerInTheLobby(
                                     gameId,
