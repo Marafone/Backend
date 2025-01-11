@@ -338,13 +338,14 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             winningAction.getPlayer().addPoints(earnedPoints);
 
             List<OutEvent> outEvents = new LinkedList<>();
-            outEvents.add(new PointState(game));
 
             if(game.roundHasEnded()){
                 winningAction.getPlayer().addBonusPoint();
 
                 if(game.setWinnersIfPossible()){
+                    outEvents.add(new PointState(game));
                     outEvents.add(new WinnerState(game));
+
                     endedGameService.saveEndedGame(game);
                     eventPublisher.publishToLobby(gameId, outEvents);
                     return;
@@ -356,7 +357,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
                     game.addRound();
 
-                    outEvents.add(new NewRound());
+                    outEvents.add(new NewRound(game.getCurrentPlayerWithoutIterating().getUser().getUsername()));
                     game.getPlayersList().forEach(gamePlayer ->
                             eventPublisher.publishToPlayerInTheLobby(
                                     gameId,
@@ -369,6 +370,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 outEvents.add(new NewTurn());
                 outEvents.add(new NextPlayerState(winningAction.getPlayer().getUser().getUsername(), true));
             }
+            outEvents.add(new PointState(game));
             outEvents.add(new PlayersOrderState(game));
             eventPublisher.publishToLobby(gameId, outEvents);
         }
