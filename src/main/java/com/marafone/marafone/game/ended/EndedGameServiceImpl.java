@@ -4,6 +4,7 @@ import com.marafone.marafone.game.model.Game;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,5 +21,10 @@ public class EndedGameServiceImpl implements EndedGameService{
     @Override
     public Game saveEndedGame(Game game) {
         return endedGameRepository.save(game);
+    }
+
+    @Override
+    public List<Game> getPlayerEndedGames(String playerName) {
+        return endedGameRepository.findAllByPlayerName(playerName);
     }
 }
