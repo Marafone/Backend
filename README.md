@@ -59,4 +59,5 @@ The application follows a layered architecture, divided into:
 ---
 
 ## Class Diagram
-![Class Diagram](./readme_assets/marafone18_00.jpg)
+![Class Diagram](https://github.com/user-attachments/assets/3c0c4724-4b87-4af0-a80d-604374e99552)
+
