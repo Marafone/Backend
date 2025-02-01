@@ -1,9 +1,13 @@
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\DummyData.java
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\active\ActiveGameControllerTest.java
+C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\active\ActiveGameRepositoryImplCacheTest.java
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\active\ActiveGameRepositoryImplTest.java
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\active\ActiveGameServiceImplIntegrationTest.java
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\active\ActiveGameServiceImplIntegrationWithMocksTest.java
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\active\ActiveGameServiceImplIntegrationWithSeedTests.java
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\active\ActiveGameServiceImplTest.java
+C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\ended\EndedGameControllerTest.java
+C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\ended\EndedGameServiceImplTest.java
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\model\GameTest.java
+C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\game\random\MarafoneRandomAssignerTest.java
 C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\src\test\java\com\marafone\marafone\MarafoneApplicationTests.java

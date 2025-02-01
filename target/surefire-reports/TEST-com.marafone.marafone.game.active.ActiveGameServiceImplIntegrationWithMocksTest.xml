@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest" time="1.425" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest" time="1.832" tests="2" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -16,7 +16,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="PL"/>
     <property name="sun.boot.library.path" value="C:\Users\kozia\.jdks\corretto-21.0.2\bin"/>
-    <property name="sun.java.command" value="C:\Users\kozia\AppData\Local\Temp\surefire8684775739173897319\surefirebooter11403037220477984027.jar C:\Users\kozia\AppData\Local\Temp\surefire8684775739173897319 2025-01-03T16-43-00_424-jvmRun1 surefire6469310964855977136tmp surefire_01418277413224984841tmp"/>
+    <property name="sun.java.command" value="C:\Users\kozia\AppData\Local\Temp\surefire16399388076707528663\surefirebooter5693687033889084176.jar C:\Users\kozia\AppData\Local\Temp\surefire16399388076707528663 2025-02-01T17-28-33_855-jvmRun1 surefire5697348151649626642tmp surefire_010705116593908592237tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\target\test-classes;C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone\target\classes;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-data-jpa\3.3.5\spring-boot-starter-data-jpa-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-aop\3.3.5\spring-boot-starter-aop-3.3.5.jar;C:\Users\kozia\.m2\repository\org\aspectj\aspectjweaver\1.9.22.1\aspectjweaver-1.9.22.1.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-jdbc\3.3.5\spring-boot-starter-jdbc-3.3.5.jar;C:\Users\kozia\.m2\repository\com\zaxxer\HikariCP\5.1.0\HikariCP-5.1.0.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-jdbc\6.1.14\spring-jdbc-6.1.14.jar;C:\Users\kozia\.m2\repository\org\hibernate\orm\hibernate-core\6.5.3.Final\hibernate-core-6.5.3.Final.jar;C:\Users\kozia\.m2\repository\jakarta\persistence\jakarta.persistence-api\3.1.0\jakarta.persistence-api-3.1.0.jar;C:\Users\kozia\.m2\repository\jakarta\transaction\jakarta.transaction-api\2.0.1\jakarta.transaction-api-2.0.1.jar;C:\Users\kozia\.m2\repository\org\jboss\logging\jboss-logging\3.5.3.Final\jboss-logging-3.5.3.Final.jar;C:\Users\kozia\.m2\repository\org\hibernate\common\hibernate-commons-annotations\6.0.6.Final\hibernate-commons-annotations-6.0.6.Final.jar;C:\Users\kozia\.m2\repository\io\smallrye\jandex\3.1.2\jandex-3.1.2.jar;C:\Users\kozia\.m2\repository\com\fasterxml\classmate\1.7.0\classmate-1.7.0.jar;C:\Users\kozia\.m2\repository\net\bytebuddy\byte-buddy\1.14.19\byte-buddy-1.14.19.jar;C:\Users\kozia\.m2\repository\org\glassfish\jaxb\jaxb-runtime\4.0.5\jaxb-runtime-4.0.5.jar;C:\Users\kozia\.m2\repository\org\glassfish\jaxb\jaxb-core\4.0.5\jaxb-core-4.0.5.jar;C:\Users\kozia\.m2\repository\org\eclipse\angus\angus-activation\2.0.2\angus-activation-2.0.2.jar;C:\Users\kozia\.m2\repository\org\glassfish\jaxb\txw2\4.0.5\txw2-4.0.5.jar;C:\Users\kozia\.m2\repository\com\sun\istack\istack-commons-runtime\4.1.2\istack-commons-runtime-4.1.2.jar;C:\Users\kozia\.m2\repository\jakarta\inject\jakarta.inject-api\2.0.1\jakarta.inject-api-2.0.1.jar;C:\Users\kozia\.m2\repository\org\antlr\antlr4-runtime\4.13.0\antlr4-runtime-4.13.0.jar;C:\Users\kozia\.m2\repository\org\springframework\data\spring-data-jpa\3.3.5\spring-data-jpa-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\data\spring-data-commons\3.3.5\spring-data-commons-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-orm\6.1.14\spring-orm-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-context\6.1.14\spring-context-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-tx\6.1.14\spring-tx-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-beans\6.1.14\spring-beans-6.1.14.jar;C:\Users\kozia\.m2\repository\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;C:\Users\kozia\.m2\repository\org\slf4j\slf4j-api\2.0.16\slf4j-api-2.0.16.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-aspects\6.1.14\spring-aspects-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-security\3.3.5\spring-boot-starter-security-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter\3.3.5\spring-boot-starter-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-autoconfigure\3.3.5\spring-boot-autoconfigure-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-logging\3.3.5\spring-boot-starter-logging-3.3.5.jar;C:\Users\kozia\.m2\repository\ch\qos\logback\logback-classic\1.5.11\logback-classic-1.5.11.jar;C:\Users\kozia\.m2\repository\ch\qos\logback\logback-core\1.5.11\logback-core-1.5.11.jar;C:\Users\kozia\.m2\repository\org\apache\logging\log4j\log4j-to-slf4j\2.23.1\log4j-to-slf4j-2.23.1.jar;C:\Users\kozia\.m2\repository\org\apache\logging\log4j\log4j-api\2.23.1\log4j-api-2.23.1.jar;C:\Users\kozia\.m2\repository\org\slf4j\jul-to-slf4j\2.0.16\jul-to-slf4j-2.0.16.jar;C:\Users\kozia\.m2\repository\org\yaml\snakeyaml\2.2\snakeyaml-2.2.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-aop\6.1.14\spring-aop-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\security\spring-security-config\6.3.4\spring-security-config-6.3.4.jar;C:\Users\kozia\.m2\repository\org\springframework\security\spring-security-web\6.3.4\spring-security-web-6.3.4.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-expression\6.1.14\spring-expression-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-web\3.3.5\spring-boot-starter-web-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-json\3.3.5\spring-boot-starter-json-3.3.5.jar;C:\Users\kozia\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.17.2\jackson-datatype-jdk8-2.17.2.jar;C:\Users\kozia\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.17.2\jackson-datatype-jsr310-2.17.2.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-tomcat\3.3.5\spring-boot-starter-tomcat-3.3.5.jar;C:\Users\kozia\.m2\repository\org\apache\tomcat\embed\tomcat-embed-core\10.1.31\tomcat-embed-core-10.1.31.jar;C:\Users\kozia\.m2\repository\org\apache\tomcat\embed\tomcat-embed-el\10.1.31\tomcat-embed-el-10.1.31.jar;C:\Users\kozia\.m2\repository\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.31\tomcat-embed-websocket-10.1.31.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-web\6.1.14\spring-web-6.1.14.jar;C:\Users\kozia\.m2\repository\io\micrometer\micrometer-observation\1.13.6\micrometer-observation-1.13.6.jar;C:\Users\kozia\.m2\repository\io\micrometer\micrometer-commons\1.13.6\micrometer-commons-1.13.6.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-webmvc\6.1.14\spring-webmvc-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-docker-compose\3.3.5\spring-boot-docker-compose-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot\3.3.5\spring-boot-3.3.5.jar;C:\Users\kozia\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.17.2\jackson-databind-2.17.2.jar;C:\Users\kozia\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.17.2\jackson-annotations-2.17.2.jar;C:\Users\kozia\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.17.2\jackson-core-2.17.2.jar;C:\Users\kozia\.m2\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.17.2\jackson-module-parameter-names-2.17.2.jar;C:\Users\kozia\.m2\repository\org\postgresql\postgresql\42.7.4\postgresql-42.7.4.jar;C:\Users\kozia\.m2\repository\org\checkerframework\checker-qual\3.42.0\checker-qual-3.42.0.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-websocket\3.3.5\spring-boot-starter-websocket-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-messaging\6.1.14\spring-messaging-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-websocket\6.1.14\spring-websocket-6.1.14.jar;C:\Users\kozia\.m2\repository\org\projectlombok\lombok\1.18.34\lombok-1.18.34.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-starter-test\3.3.5\spring-boot-starter-test-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-test\3.3.5\spring-boot-test-3.3.5.jar;C:\Users\kozia\.m2\repository\org\springframework\boot\spring-boot-test-autoconfigure\3.3.5\spring-boot-test-autoconfigure-3.3.5.jar;C:\Users\kozia\.m2\repository\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;C:\Users\kozia\.m2\repository\jakarta\xml\bind\jakarta.xml.bind-api\4.0.2\jakarta.xml.bind-api-4.0.2.jar;C:\Users\kozia\.m2\repository\jakarta\activation\jakarta.activation-api\2.1.3\jakarta.activation-api-2.1.3.jar;C:\Users\kozia\.m2\repository\net\minidev\json-smart\2.5.1\json-smart-2.5.1.jar;C:\Users\kozia\.m2\repository\net\minidev\accessors-smart\2.5.1\accessors-smart-2.5.1.jar;C:\Users\kozia\.m2\repository\org\ow2\asm\asm\9.6\asm-9.6.jar;C:\Users\kozia\.m2\repository\org\assertj\assertj-core\3.25.3\assertj-core-3.25.3.jar;C:\Users\kozia\.m2\repository\org\awaitility\awaitility\4.2.2\awaitility-4.2.2.jar;C:\Users\kozia\.m2\repository\org\hamcrest\hamcrest\2.2\hamcrest-2.2.jar;C:\Users\kozia\.m2\repository\org\junit\jupiter\junit-jupiter\5.10.5\junit-jupiter-5.10.5.jar;C:\Users\kozia\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.10.5\junit-jupiter-api-5.10.5.jar;C:\Users\kozia\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\kozia\.m2\repository\org\junit\platform\junit-platform-commons\1.10.5\junit-platform-commons-1.10.5.jar;C:\Users\kozia\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\kozia\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.10.5\junit-jupiter-params-5.10.5.jar;C:\Users\kozia\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.10.5\junit-jupiter-engine-5.10.5.jar;C:\Users\kozia\.m2\repository\org\junit\platform\junit-platform-engine\1.10.5\junit-platform-engine-1.10.5.jar;C:\Users\kozia\.m2\repository\org\mockito\mockito-core\5.11.0\mockito-core-5.11.0.jar;C:\Users\kozia\.m2\repository\net\bytebuddy\byte-buddy-agent\1.14.19\byte-buddy-agent-1.14.19.jar;C:\Users\kozia\.m2\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;C:\Users\kozia\.m2\repository\org\mockito\mockito-junit-jupiter\5.11.0\mockito-junit-jupiter-5.11.0.jar;C:\Users\kozia\.m2\repository\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;C:\Users\kozia\.m2\repository\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-core\6.1.14\spring-core-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-jcl\6.1.14\spring-jcl-6.1.14.jar;C:\Users\kozia\.m2\repository\org\springframework\spring-test\6.1.14\spring-test-6.1.14.jar;C:\Users\kozia\.m2\repository\org\xmlunit\xmlunit-core\2.9.1\xmlunit-core-2.9.1.jar;C:\Users\kozia\.m2\repository\org\springframework\security\spring-security-test\6.3.4\spring-security-test-6.3.4.jar;C:\Users\kozia\.m2\repository\org\springframework\security\spring-security-core\6.3.4\spring-security-core-6.3.4.jar;C:\Users\kozia\.m2\repository\org\springframework\security\spring-security-crypto\6.3.4\spring-security-crypto-6.3.4.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -33,7 +33,7 @@
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="FILE_LOG_CHARSET" value="UTF-8"/>
     <property name="java.awt.headless" value="true"/>
-    <property name="surefire.real.class.path" value="C:\Users\kozia\AppData\Local\Temp\surefire8684775739173897319\surefirebooter11403037220477984027.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\kozia\AppData\Local\Temp\surefire16399388076707528663\surefirebooter5693687033889084176.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.2+13-LTS"/>
@@ -54,7 +54,7 @@
     <property name="user.dir" value="C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone"/>
     <property name="os.arch" value="amd64"/>
     <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
-    <property name="PID" value="14744"/>
+    <property name="PID" value="9048"/>
     <property name="sun.os.patch.level" value=""/>
     <property name="CONSOLE_LOG_CHARSET" value="UTF-8"/>
     <property name="native.encoding" value="Cp1250"/>
@@ -67,9 +67,9 @@
     <property name="java.class.version" value="65.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[marafone] "/>
   </properties>
-  <testcase name="testThatGameEndsAfterRoundsEndsWithAchievedPoints" classname="com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest" time="0.318">
-    <system-out><![CDATA[2025-01-03T16:43:10.163+01:00  INFO 14744 --- [marafone] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest]: ActiveGameServiceImplIntegrationWithMocksTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2025-01-03T16:43:10.166+01:00  INFO 14744 --- [marafone] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.marafone.marafone.MarafoneApplication for test class com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest
+  <testcase name="testThatGameEndsAfterRoundsEndsWithAchievedPoints" classname="com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest" time="0.347">
+    <system-out><![CDATA[2025-02-01T17:28:46.543+01:00  INFO 9048 --- [marafone] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest]: ActiveGameServiceImplIntegrationWithMocksTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2025-02-01T17:28:46.546+01:00  INFO 9048 --- [marafone] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.marafone.marafone.MarafoneApplication for test class com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -80,17 +80,17 @@
 
  :: Spring Boot ::                (v3.3.5)
 
-2025-01-03T16:43:10.217+01:00  INFO 14744 --- [marafone] [           main] eGameServiceImplIntegrationWithMocksTest : Starting ActiveGameServiceImplIntegrationWithMocksTest using Java 21.0.2 with PID 14744 (started by kozia in C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone)
-2025-01-03T16:43:10.217+01:00  INFO 14744 --- [marafone] [           main] eGameServiceImplIntegrationWithMocksTest : The following 1 profile is active: "test"
-2025-01-03T16:43:10.432+01:00  INFO 14744 --- [marafone] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2025-01-03T16:43:10.458+01:00  INFO 14744 --- [marafone] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 26 ms. Found 2 JPA repository interfaces.
-2025-01-03T16:43:10.621+01:00  INFO 14744 --- [marafone] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-01-03T16:43:10.623+01:00  INFO 14744 --- [marafone] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2025-01-03T16:43:10.634+01:00  INFO 14744 --- [marafone] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2025-01-03T16:43:10.635+01:00  INFO 14744 --- [marafone] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
-2025-01-03T16:43:10.653+01:00  INFO 14744 --- [marafone] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@543895d2
-2025-01-03T16:43:10.653+01:00  INFO 14744 --- [marafone] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
-2025-01-03T16:43:10.812+01:00  INFO 14744 --- [marafone] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-02-01T17:28:46.596+01:00  INFO 9048 --- [marafone] [           main] eGameServiceImplIntegrationWithMocksTest : Starting ActiveGameServiceImplIntegrationWithMocksTest using Java 21.0.2 with PID 9048 (started by kozia in C:\Users\kozia\Desktop\Marafone\Backend\marafone\marafone)
+2025-02-01T17:28:46.597+01:00  INFO 9048 --- [marafone] [           main] eGameServiceImplIntegrationWithMocksTest : The following 1 profile is active: "test"
+2025-02-01T17:28:46.833+01:00  INFO 9048 --- [marafone] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-02-01T17:28:46.854+01:00  INFO 9048 --- [marafone] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 20 ms. Found 2 JPA repository interfaces.
+2025-02-01T17:28:46.991+01:00  INFO 9048 --- [marafone] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-02-01T17:28:46.994+01:00  INFO 9048 --- [marafone] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-02-01T17:28:47.004+01:00  INFO 9048 --- [marafone] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-02-01T17:28:47.005+01:00  INFO 9048 --- [marafone] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2025-02-01T17:28:47.023+01:00  INFO 9048 --- [marafone] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@5876bdbb
+2025-02-01T17:28:47.024+01:00  INFO 9048 --- [marafone] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2025-02-01T17:28:47.168+01:00  INFO 9048 --- [marafone] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
 Hibernate: alter table if exists action drop constraint if exists FKt27x1t8cntuh73mqb0hwn0khe
 Hibernate: alter table if exists action drop constraint if exists FKsetvcw8f7b2qe2fkkbi1lm8ua
 Hibernate: alter table if exists action drop constraint if exists FKh4gnd66inflni3bo7y0mugsnr
@@ -127,14 +127,14 @@ Hibernate: alter table if exists game add constraint FK6u3scxnwwd9fgiacklyfwxw6o
 Hibernate: alter table if exists game_player add constraint FKr63jxnue4k17epv16brqn5sp3 foreign key (user_id) references users
 Hibernate: alter table if exists game_player add constraint FKck50lvsqnjl8a0hj4y5wfli59 foreign key (players_list_id) references game
 Hibernate: alter table if exists round add constraint FKm33gy9qtu8tyh8avj5mj6sj2o foreign key (rounds_id) references game
-2025-01-03T16:43:11.000+01:00  INFO 14744 --- [marafone] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2025-01-03T16:43:11.116+01:00  WARN 14744 --- [marafone] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2025-01-03T16:43:11.121+01:00  INFO 14744 --- [marafone] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsService
-2025-01-03T16:43:11.132+01:00  INFO 14744 --- [marafone] [           main] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page: class path resource [static/index.html]
-2025-01-03T16:43:11.249+01:00  INFO 14744 --- [marafone] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
-2025-01-03T16:43:11.249+01:00  INFO 14744 --- [marafone] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@4058b398]]
-2025-01-03T16:43:11.249+01:00  INFO 14744 --- [marafone] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
-2025-01-03T16:43:11.252+01:00  INFO 14744 --- [marafone] [           main] eGameServiceImplIntegrationWithMocksTest : Started ActiveGameServiceImplIntegrationWithMocksTest in 1.077 seconds (process running for 10.302)
+2025-02-01T17:28:47.377+01:00  INFO 9048 --- [marafone] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-02-01T17:28:47.492+01:00  WARN 9048 --- [marafone] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-02-01T17:28:47.499+01:00  INFO 9048 --- [marafone] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsService
+2025-02-01T17:28:47.534+01:00  INFO 9048 --- [marafone] [           main] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page: class path resource [static/index.html]
+2025-02-01T17:28:47.653+01:00  INFO 9048 --- [marafone] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2025-02-01T17:28:47.653+01:00  INFO 9048 --- [marafone] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@2df9b4f3]]
+2025-02-01T17:28:47.654+01:00  INFO 9048 --- [marafone] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2025-02-01T17:28:47.656+01:00  INFO 9048 --- [marafone] [           main] eGameServiceImplIntegrationWithMocksTest : Started ActiveGameServiceImplIntegrationWithMocksTest in 1.102 seconds (process running for 13.297)
 Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
 Hibernate: select nextval('users_seq')
 Hibernate: insert into users (email,password,username,id) values (?,?,?,?)
@@ -246,6 +246,155 @@ Hibernate: update game_player set players_list_id=? where id=?
 Hibernate: update game_player set players_list_id=? where id=?
 Hibernate: update game_player set players_list_id=? where id=?
 Hibernate: update game_player set players_list_id=? where id=?
+Hibernate: update round set rounds_id=? where id=?
+]]></system-out>
+  </testcase>
+  <testcase name="testGamePlaysDifferentRoundsEndsAfterSetAmountOfPoints" classname="com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationWithMocksTest" time="0.352">
+    <system-out><![CDATA[Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
+Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
+Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
+Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
+Hibernate: select g1_0.id,g1_0.created_at,g1_0.game_type,g1_0.join_game_code,g1_0.name,o1_0.id,o1_0.email,o1_0.password,o1_0.username,g1_0.started_at,g1_0.winner_team,pl1_0.players_list_id,pl1_0.id,pl1_0.points,pl1_0.team,u1_0.id,u1_0.email,u1_0.password,u1_0.username from game g1_0 left join users o1_0 on o1_0.id=g1_0.owner_id left join game_player pl1_0 on g1_0.id=pl1_0.players_list_id left join users u1_0 on u1_0.id=pl1_0.user_id where g1_0.id=?
+Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
+Hibernate: select nextval('game_seq')
+Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
+Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
+Hibernate: select u1_0.id,u1_0.email,u1_0.password,u1_0.username from users u1_0 where u1_0.id=?
+Hibernate: select nextval('round_seq')
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select nextval('action_seq')
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select c1_0.id,c1_0.rank,c1_0.suit from card c1_0 where c1_0.id=?
+Hibernate: select nextval('action_seq')
+Hibernate: insert into game (created_at,game_type,join_game_code,name,owner_id,started_at,winner_team,id) values (?,?,?,?,?,?,?,?)
+Hibernate: insert into game_player (points,team,user_id,id) values (?,?,?,?)
+Hibernate: insert into game_player (points,team,user_id,id) values (?,?,?,?)
+Hibernate: insert into game_player (points,team,user_id,id) values (?,?,?,?)
+Hibernate: insert into game_player (points,team,user_id,id) values (?,?,?,?)
+Hibernate: insert into round (trump_suit,id) values (?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into round (trump_suit,id) values (?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: insert into action (card_id,player_id,round_id,timestamp,id) values (?,?,?,?,?)
+Hibernate: update game_player set players_list_id=? where id=?
+Hibernate: update game_player set players_list_id=? where id=?
+Hibernate: update game_player set players_list_id=? where id=?
+Hibernate: update game_player set players_list_id=? where id=?
+Hibernate: update round set rounds_id=? where id=?
 Hibernate: update round set rounds_id=? where id=?
 ]]></system-out>
   </testcase>

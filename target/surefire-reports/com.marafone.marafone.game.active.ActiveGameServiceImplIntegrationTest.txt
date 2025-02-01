@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.155 s - in com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.728 s - in com.marafone.marafone.game.active.ActiveGameServiceImplIntegrationTest
