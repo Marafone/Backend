@@ -1,5 +1,7 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.marafone.errors.ChangeTeamErrorMessages;
+import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
@@ -98,8 +100,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         return JoinGameResult.SUCCESS;
     }
-    // TODO when owner leaves - make other player the owner
-    // TODO when last person leaves - remove the game
+
+    @Override
     public void leaveGame(Long gameId, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
         if (gameOptional.isEmpty()) return;
@@ -107,6 +109,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         Game game = gameOptional.get();
 
         synchronized (game) {
+            if (game.hasStarted())
+                return;
+
             Optional<GamePlayer> optionalGamePlayer = game
                     .getPlayersList()
                     .stream()
@@ -117,10 +122,24 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             GamePlayer gamePlayerToRemove = optionalGamePlayer.get();
             game.getPlayersList().remove(gamePlayerToRemove);
 
+            // if last person left - remove the game
+            if (game.getPlayersList().isEmpty()) {
+                activeGameRepository.removeById(gameId);
+                return;
+            }
+
             eventPublisher.publishToLobby(gameId, new PlayerLeftEvent(user.getUsername()));
+
+            // when owner leaves, first player of players list becomes new owner
+            if (user.getUsername().equals(game.getOwner().getUsername())) {
+                User newOwner = game.getPlayersList().getFirst().getUser();
+                game.setOwner(newOwner);
+                eventPublisher.publishToLobby(gameId, new OwnerEvent(newOwner.getUsername(), true));
+            }
         }
     }
 
+    @Override
     public void changeTeam(Long gameId, Team team, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
         if (gameOptional.isEmpty())
@@ -130,12 +149,25 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         synchronized (game) {
 
-            if (game.teamIsFull(team))
-                return;
-
             GamePlayer gamePlayer = game.findGamePlayerByUsername(user.getUsername());
-            if (gamePlayer == null || gamePlayer.getTeam() == team)
+
+            if (gamePlayer == null) {
                 return;
+            } else if (gamePlayer.getTeam() == team) {
+                eventPublisher.publishToPlayerInTheLobby(
+                        gameId,
+                        user.getUsername(),
+                        new ErrorEvent(ChangeTeamErrorMessages.SAME_TEAM.getMessage())
+                );
+                return;
+            } else if (game.teamIsFull(team)) {
+                eventPublisher.publishToPlayerInTheLobby(
+                        gameId,
+                        user.getUsername(),
+                        new ErrorEvent(ChangeTeamErrorMessages.TEAM_IS_FULL.getMessage())
+                );
+                return;
+            }
 
             gamePlayer.setTeam(team);
 
@@ -194,13 +226,28 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         Game game = gameOptional.get();
 
         synchronized (game){
-            // will be replaced with proper events sending in future
-            if(!game.getOwner().getUsername().equals(principalName))
+            if(!game.getOwner().getUsername().equals(principalName)) {
+                eventPublisher.publishToPlayerInTheLobby(
+                        gameId,
+                        principalName,
+                        new ErrorEvent(StartGameErrorMessages.OWNER_MISMATCH.getMessage())
+                );
                 return;
-            else if (game.getStartedAt() != null)
+            } else if (game.getStartedAt() != null) {
+                eventPublisher.publishToPlayerInTheLobby(
+                    gameId,
+                    principalName,
+                    new ErrorEvent(StartGameErrorMessages.GAME_ALREADY_STARTED.getMessage())
+                );
                 return;
-            else if (game.anyTeamNotFull())
+            } else if (game.anyTeamNotFull()) {
+                eventPublisher.publishToPlayerInTheLobby(
+                        gameId,
+                        principalName,
+                        new ErrorEvent(StartGameErrorMessages.TEAMS_NOT_FULL.getMessage())
+                );
                 return;
+            }
 
             game.setStartedAt(LocalDateTime.now());
 
@@ -251,7 +298,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
             else if (game.getLeadingSuit() != null && selectedCard.getSuit() != game.getLeadingSuit()
                     && currentPlayer.hasCardOfSuit(game.getLeadingSuit()))
-                errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(currentRound.getTrumpSuit()));
+                errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(game.getLeadingSuit()));
 
             if (errorEvent != null) {
                 game.getCurrentPlayer().previous();
@@ -271,7 +318,15 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             eventPublisher.publishToPlayerInTheLobby(gameId, principalName, new MyCardsState(currentPlayer));
             eventPublisher.publishToLobby(gameId, new TurnState(game));
 
-            if(!game.turnHasEnded()) return;
+            if(!game.turnHasEnded()) {
+                eventPublisher.publishToLobby(
+                        gameId,
+                        new NextPlayerState(game.getCurrentPlayerWithoutIterating()
+                                .getUser()
+                                .getUsername(), false)
+                );
+                return;
+            }
 
             List<Action> currentTurn = currentRound.getLastNActions(4);
 
@@ -283,28 +338,39 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             winningAction.getPlayer().addPoints(earnedPoints);
 
             List<OutEvent> outEvents = new LinkedList<>();
-            outEvents.add(new PointState(game));
 
             if(game.roundHasEnded()){
                 winningAction.getPlayer().addBonusPoint();
 
                 if(game.setWinnersIfPossible()){
+                    outEvents.add(new PointState(game));
                     outEvents.add(new WinnerState(game));
+
                     endedGameService.saveEndedGame(game);
                     eventPublisher.publishToLobby(gameId, outEvents);
                     return;
                 }else{
+                    reduceTeamsPoints(game);
+
                     game.setNewOrderAfterRoundEnd();
 
                     randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
                     game.addRound();
 
-                    outEvents.add(new NewRound());
-                    outEvents.add(new MyCardsState(currentPlayer));
+                    outEvents.add(new NewRound(game.getCurrentPlayerWithoutIterating().getUser().getUsername()));
+                    game.getPlayersList().forEach(gamePlayer ->
+                            eventPublisher.publishToPlayerInTheLobby(
+                                    gameId,
+                                    gamePlayer.getUser().getUsername(),
+                                    new MyCardsState(gamePlayer))
+                    );
                 }
             }else{
                 game.setNewOrderAfterTurnEnd(winningAction.getPlayer());
+                outEvents.add(new NewTurn());
+                outEvents.add(new NextPlayerState(winningAction.getPlayer().getUser().getUsername(), true));
             }
+            outEvents.add(new PointState(game));
             outEvents.add(new PlayersOrderState(game));
             eventPublisher.publishToLobby(gameId, outEvents);
         }
@@ -342,6 +408,13 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
     }
 
+    public void sendCall(Long gameId, Call call) {
+        if (activeGameRepository.findById(gameId).isEmpty())
+            return;
+
+        eventPublisher.publishToLobby(gameId, new CallState(call));
+    }
+
     @Override
     public void reconnectToGame(Long gameId, String principalName) {
         Game game = activeGameRepository.findById(gameId)
@@ -365,8 +438,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
                 if(game.getWinnerTeam() != null)
                     outEvents.add(new WinnerState(game));
-            }else
+            }else {
                 outEvents.add(new TeamState(game));
+                outEvents.add(new OwnerEvent(game.getOwner().getUsername(), false));
+            }
 
             eventPublisher.publishToPlayerInTheLobby(gameId, principalName, outEvents);
         }
@@ -401,6 +476,17 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 return aRank.compareTo(bRank);
             }
         }).orElseThrow();
+    }
+
+    private void reduceTeamsPoints(Game game) {
+        int redTeamPoints = game.getTeamPoints(Team.RED);
+        int blueTeamPoints = game.getTeamPoints(Team.BLUE);
+
+        GamePlayer redTeamTopScorer = game.findTopScorerInTeam(Team.RED);
+        GamePlayer blueTeamTopScorer = game.findTopScorerInTeam(Team.BLUE);
+
+        redTeamTopScorer.subtractPoints(redTeamPoints % 3);
+        blueTeamTopScorer.subtractPoints(blueTeamPoints % 3);
     }
 
 }

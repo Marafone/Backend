@@ -28,7 +28,7 @@ public class Round {
         List<Action> currentTurn = new LinkedList<>();
         Iterator<Action> actionDescIterator = actions.reversed().iterator();
         for(int i = 0; i < N; i++){
-            currentTurn.add(actionDescIterator.next());
+            currentTurn.addFirst(actionDescIterator.next());
         }
         return currentTurn;
     }

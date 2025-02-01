@@ -4,7 +4,8 @@ public abstract sealed class OutEvent permits
         MyCardsState, NewRound, PlayersOrderState, PointState,
         TeamState, TrumpSuitState, TurnState, WinnerState,
         PlayerJoinedEvent, PlayerLeftEvent, GameStartedEvent,
-        ErrorEvent {
+        ErrorEvent, OwnerEvent, NextPlayerState, CallState,
+        NewTurn {
 
     public final String eventType;
 
