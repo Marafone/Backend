@@ -163,7 +163,7 @@ public class DummyData {
     }
 
     public static CreateGameRequest getCreateGameRequestA(){
-        return new CreateGameRequest("name", GameType.MARAFFA, "123");
+        return new CreateGameRequest("name", GameType.MARAFFA, "123", 21);
     }
 
     public static JoinGameRequest getJoinGameRequestA(){
