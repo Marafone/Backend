@@ -9,6 +9,7 @@ import com.marafone.marafone.game.model.GameDTO;
 import com.marafone.marafone.game.model.JoinGameResult;
 import com.marafone.marafone.game.model.Team;
 import com.marafone.marafone.user.User;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public interface ActiveGameService {
     JoinGameResult joinGame(Long gameId, JoinGameRequest joinGameRequest, User user);
     void leaveGame(Long gameId, User user);
     void changeTeam(Long gameId, Team team, User user);
+    ResponseEntity<String> addAI(Long gameId, Team team, User user);
     void checkTimeout(@DestinationVariable Long gameId);
     void startGame(@DestinationVariable Long gameId, String principalName);
     void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);

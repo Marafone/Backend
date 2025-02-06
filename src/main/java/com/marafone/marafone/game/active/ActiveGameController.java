@@ -69,6 +69,12 @@ public class ActiveGameController {
         activeGameService.changeTeam(gameId, Team.valueOf(teamName), user);
     }
 
+    @PostMapping("/game/{id}/add-ai")
+    @ResponseBody
+    public void addAI(@PathVariable("id") Long gameId, @RequestBody String teamName, @AuthenticationPrincipal User user) {
+        activeGameService.addAI(gameId, Team.valueOf(teamName), user);
+    }
+
     @MessageMapping("/game/{id}/card")
     public void selectCard(@DestinationVariable("id") Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
         activeGameService.selectCard(gameId, cardSelectEvent, principal.getName());

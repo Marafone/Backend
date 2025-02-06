@@ -1,5 +1,7 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.ai.DummyData;
+import com.marafone.ai.MarafoneAI;
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
@@ -14,8 +16,10 @@ import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -31,6 +35,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
+    private int addedAIs = 0;
 
     private final RandomAssigner randomAssigner;
 
@@ -173,6 +178,43 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             eventPublisher.publishToLobby(gameId, new TeamState(game));
 
+        }
+    }
+
+    @Override
+    public ResponseEntity<String> addAI(Long gameId, Team team, User user) {
+
+        try {
+            // Load the trained AI
+            MarafoneAI trainedAI = MarafoneAI.load("trained_ai.ser");
+
+            User aiUser = DummyData.getUserA();
+
+            // Create a dummy user for the AI
+            switch (addedAIs) {
+                case 0:
+                    aiUser = DummyData.getUserA();
+                    break;
+                case 1:
+                    aiUser = DummyData.getUserB();
+                    break;
+                case 2:
+                    aiUser = DummyData.getUserC();
+                    break;
+            }
+            addedAIs++;
+
+            // Join the AI to the game
+            JoinGameRequest joinRequest = new JoinGameRequest(team, "ABC"); // Use the correct game code
+            JoinGameResult result = this.joinGame(gameId, joinRequest, aiUser);
+
+            if (result == SUCCESS) {
+                return ResponseEntity.ok("AI player added to " + team + " team");
+            } else {
+                return ResponseEntity.badRequest().body("Failed to add AI player: " + result);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            return ResponseEntity.internalServerError().body("Failed to load AI: " + e.getMessage());
         }
     }
 
