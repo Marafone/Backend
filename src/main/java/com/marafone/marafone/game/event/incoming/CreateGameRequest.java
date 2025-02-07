@@ -10,4 +10,5 @@ public class CreateGameRequest {
     String gameName;
     GameType gameType;
     String joinGameCode;
+    Integer pointsToWin;
 }

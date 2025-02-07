@@ -36,7 +36,7 @@ class ActiveGameControllerTest {
     void createGame_WhenGameAlreadyExists_ShouldReturnBadRequestInfo() throws Exception {
         // given
         CreateGameRequest createGameRequest =
-                new CreateGameRequest("game", GameType.MARAFFA, "");
+                new CreateGameRequest("game", GameType.MARAFFA, "", 21);
 
         Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(Mockito.any())).thenReturn(true);
         String jsonRequest = new ObjectMapper().writeValueAsString(createGameRequest);
@@ -54,7 +54,7 @@ class ActiveGameControllerTest {
     void createGame_WhenGameDoesNotExist_ShouldReturnOkResponseInfo() throws Exception {
         // given
         CreateGameRequest createGameRequest =
-                new CreateGameRequest("game", GameType.MARAFFA, "");
+                new CreateGameRequest("game", GameType.MARAFFA, "", 21);
 
         Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(Mockito.any())).thenReturn(false);
         String jsonRequest = new ObjectMapper().writeValueAsString(createGameRequest);
