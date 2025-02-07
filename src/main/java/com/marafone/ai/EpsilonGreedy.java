@@ -1,6 +1,9 @@
 package com.marafone.ai;
 
-public class EpsilonGreedy {
+import java.io.Serializable;
+
+public class EpsilonGreedy implements Serializable {
+    private static final long serialVersionUID = 2L;
     private double epsilon;
     private final double minEpsilon;
     private final double decayRate;

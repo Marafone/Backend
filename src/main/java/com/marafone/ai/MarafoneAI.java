@@ -8,7 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.io.*;
 
-public class MarafoneAI {
+public class MarafoneAI implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final EpsilonGreedy epsilonGreedy;
     private final Map<Move, Double> qValues; // Q-values for moves
 
