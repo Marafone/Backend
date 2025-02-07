@@ -4,6 +4,7 @@ import com.marafone.marafone.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -52,10 +53,10 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // Allow all endpoints
-                        .allowedOrigins("http://localhost:5173")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*") // allow any headers
-                        .allowCredentials(true); // cookies or authorization headers are also allowed
+                        .allowedOrigins("http://localhost:5173") // Allow requests from this origin
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allow these HTTP methods
+                        .allowedHeaders("*") // Allow all headers
+                        .allowCredentials(true); // Allow cookies or authorization headers
             }
         };
     }
@@ -63,17 +64,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())//disable for testing
+                .csrf(csrf -> csrf.disable()) // Disable CSRF for testing
+                .cors(Customizer.withDefaults()) // Enable CORS with the configured CORS policy
                 .authorizeHttpRequests(authorize -> authorize
-                        //.requestMatchers("/auth/login", "/auth/register").anonymous()
-                        //.anyRequest().authenticated()
-                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS requests
+                        .anyRequest().permitAll() // Allow all requests (for testing)
                 )
                 .logout((logout) -> logout
                         .logoutUrl("/auth/logout")
-                        .logoutSuccessHandler((new HttpStatusReturningLogoutSuccessHandler()))
-                )
-        ;
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+                        .permitAll() // Allow logout without authentication
+                );
         return http.build();
     }
 
