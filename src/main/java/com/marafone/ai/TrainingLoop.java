@@ -122,7 +122,7 @@ public class TrainingLoop {
         }
     }
 
-    private static List<Move> getValidMoves(Game game, GamePlayer player) {
+    public static List<Move> getValidMoves(Game game, GamePlayer player) {
         List<Move> validMoves = new ArrayList<>();
 
         if (game.getRounds().isEmpty()) {
@@ -175,6 +175,8 @@ public class TrainingLoop {
             // Selecting the trump suit
             TrumpSuitSelectEvent selectEvent = new TrumpSuitSelectEvent(move.getSuit());
             activeGameService.selectSuit(gameId, selectEvent, playerName);
+            CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());
+            activeGameService.selectCard(gameId, cardEvent, playerName);
         } else if (move.getCard() != null) {
             // Playing a card
             CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());

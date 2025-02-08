@@ -2,6 +2,7 @@ package com.marafone.marafone.game.active;
 
 import com.marafone.ai.DummyData;
 import com.marafone.ai.MarafoneAI;
+import com.marafone.ai.Move;
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
@@ -22,7 +23,10 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
+import static com.marafone.ai.TrainingLoop.getValidMoves;
 import static com.marafone.marafone.errors.SelectCardErrorMessages.*;
 import static com.marafone.marafone.game.model.JoinGameResult.*;
 
@@ -35,7 +39,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
-    private int addedAIs = 0;
+
+    // Map to store AI instances
+    private final Map<String, MarafoneAI> aiPlayers = new HashMap<>();
 
     private final RandomAssigner randomAssigner;
 
@@ -183,15 +189,13 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
     @Override
     public ResponseEntity<String> addAI(Long gameId, Team team, User user) {
-
         try {
             // Load the trained AI
             MarafoneAI trainedAI = MarafoneAI.load("trained_ai.ser");
 
-            User aiUser = DummyData.getUserA();
-
             // Create a dummy user for the AI
-            switch (addedAIs) {
+            User aiUser;
+            switch (aiPlayers.size()) {
                 case 0:
                     aiUser = DummyData.getUserA();
                     break;
@@ -201,20 +205,66 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 case 2:
                     aiUser = DummyData.getUserC();
                     break;
+                default:
+                    return ResponseEntity.badRequest().body("Maximum number of AI players reached.");
             }
-            addedAIs++;
 
             // Join the AI to the game
             JoinGameRequest joinRequest = new JoinGameRequest(team, "ABC"); // Use the correct game code
             JoinGameResult result = this.joinGame(gameId, joinRequest, aiUser);
 
             if (result == SUCCESS) {
+                // Store the AI instance
+                aiPlayers.put(aiUser.getUsername(), trainedAI);
                 return ResponseEntity.ok("AI player added to " + team + " team");
             } else {
                 return ResponseEntity.badRequest().body("Failed to add AI player: " + result);
             }
         } catch (IOException | ClassNotFoundException e) {
             return ResponseEntity.internalServerError().body("Failed to load AI: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public ResponseEntity<String> makeAIMove(Long gameId, String playerUsername) {
+        Game game = activeGameRepository.findById(gameId).orElseThrow();
+
+        // Retrieve the AI instance for this player
+        MarafoneAI trainedAI = aiPlayers.get(playerUsername);
+        if (trainedAI == null) {
+            return ResponseEntity.badRequest().body("No AI found for player: " + playerUsername);
+        }
+
+        // Get valid moves and let the AI choose one
+        List<Move> validMoves = getValidMoves(game, game.getPlayersList().stream()
+                .filter(p -> p.getUser().getUsername().equals(playerUsername))
+                .findFirst()
+                .orElseThrow());
+        Move chosenMove = trainedAI.selectMove(validMoves);
+        applyMove(game,game.getPlayersList().stream()
+                .filter(p -> p.getUser().getUsername().equals(playerUsername))
+                .findFirst()
+                .orElseThrow(), chosenMove);
+
+        return ResponseEntity.ok("AI move applied");
+    }
+
+    private void applyMove(Game game, GamePlayer player, Move move) {
+        Long gameId = game.getId();
+        String playerName = player.getUser().getUsername();
+
+        if (move.getCard() == null && move.getSuit() != null) {
+            // Selecting the trump suit
+            TrumpSuitSelectEvent selectEvent = new TrumpSuitSelectEvent(move.getSuit());
+            selectSuit(gameId, selectEvent, playerName);
+
+            CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());
+            selectCard(gameId, cardEvent, playerName);
+
+        } else if (move.getCard() != null) {
+            // Playing a card
+            CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());
+            selectCard(gameId, cardEvent, playerName);
         }
     }
 
