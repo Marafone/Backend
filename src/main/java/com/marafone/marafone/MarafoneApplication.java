@@ -19,8 +19,8 @@ public class MarafoneApplication {
 	CommandLineRunner runTrainingLoop(ApplicationContext context) {
 		return args -> {
 			TrainingLoop trainingLoop = context.getBean(TrainingLoop.class);
-			trainingLoop.runTraining(1000); // Run training for 1000 episodes
+			trainingLoop.runTraining(500); // Run training for 500 episodes
 		};
 	}
-	 */
+	*/
 }

@@ -57,7 +57,7 @@ public class TrainingLoop {
 
         // Initialize the epsilon-greedy strategy and AI
         EpsilonGreedy epsilonGreedy = new EpsilonGreedy(1.0, 0.1, 0.99);
-        MarafoneAI ai = new MarafoneAI(epsilonGreedy);
+        MarafoneAI ai = new MarafoneAI(epsilonGreedy, "Qvalue");
 
         // Run the training loop for the specified number of episodes
         for (int episode = 0; episode < episodes; episode++) {
@@ -175,8 +175,17 @@ public class TrainingLoop {
             // Selecting the trump suit
             TrumpSuitSelectEvent selectEvent = new TrumpSuitSelectEvent(move.getSuit());
             activeGameService.selectSuit(gameId, selectEvent, playerName);
-            CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());
-            activeGameService.selectCard(gameId, cardEvent, playerName);
+
+            // After selecting the trump suit, play a card
+            List<Move> validMoves = getValidMoves(game, player);
+            if (!validMoves.isEmpty()) {
+                // Select the first valid move (or use AI logic to choose a move)
+                Move cardMove = validMoves.get(0);
+                if (cardMove.getCard() != null) {
+                    CardSelectEvent cardEvent = new CardSelectEvent(cardMove.getCard().getId());
+                    activeGameService.selectCard(gameId, cardEvent, playerName);
+                }
+            }
         } else if (move.getCard() != null) {
             // Playing a card
             CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());

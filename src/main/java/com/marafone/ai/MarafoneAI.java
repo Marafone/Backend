@@ -13,22 +13,42 @@ public class MarafoneAI implements Serializable {
     private final EpsilonGreedy epsilonGreedy;
     private final Map<Move, Double> qValues; // Q-values for moves
 
-    public MarafoneAI(EpsilonGreedy epsilonGreedy) {
+    public MarafoneAI(EpsilonGreedy epsilonGreedy, String saveFilePath) {
         this.epsilonGreedy = epsilonGreedy;
-        this.qValues = new HashMap<>();
+        this.qValues = loadQTable(saveFilePath);
+    }
+
+    private Map<Move, Double> loadQTable(String filePath) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath))) {
+            return (Map<Move, Double>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            return new HashMap<>(); // If file doesn't exist, start fresh
+        }
     }
 
     public Move selectMove(List<Move> validMoves) {
-        // Use epsilon-greedy strategy to select a move
+        if (validMoves.isEmpty()) {
+            throw new IllegalStateException("No valid moves available for AI");
+        }
+
+        // Log Q-values for debugging
+        validMoves.forEach(m -> System.out.println("Move: " + m + " Q-Value: " + getQValue(m)));
+
+        Move selectedMove;
         if (Math.random() < epsilonGreedy.getEpsilon()) {
             // Explore: choose a random move
-            return validMoves.get((int) (Math.random() * validMoves.size()));
+            selectedMove = validMoves.get((int) (Math.random() * validMoves.size()));
         } else {
             // Exploit: choose the move with the highest Q-value
-            return validMoves.stream()
+            selectedMove = validMoves.stream()
                     .max((m1, m2) -> Double.compare(getQValue(m1), getQValue(m2)))
                     .orElseThrow();
         }
+
+        // Ensure the move is stored for updating later
+        qValues.putIfAbsent(selectedMove, getQValue(selectedMove));
+
+        return selectedMove;
     }
 
     public void updateQValues(Game game) {
@@ -51,8 +71,7 @@ public class MarafoneAI implements Serializable {
     }
 
     private double getQValue(Move move) {
-        // Retrieve the Q-value for the move (default to 0 if not found)
-        return qValues.getOrDefault(move, 0.0);
+        return qValues.computeIfAbsent(move, m -> Math.random() * 0.1); // Small random initialization
     }
 
     // Save the AI's state to a file

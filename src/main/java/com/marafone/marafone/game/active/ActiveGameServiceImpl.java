@@ -23,8 +23,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 import static com.marafone.ai.TrainingLoop.getValidMoves;
 import static com.marafone.marafone.errors.SelectCardErrorMessages.*;
@@ -235,21 +233,34 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             return ResponseEntity.badRequest().body("No AI found for player: " + playerUsername);
         }
 
-        // Get valid moves and let the AI choose one
-        List<Move> validMoves = getValidMoves(game, game.getPlayersList().stream()
+        // Get the AI player
+        GamePlayer aiPlayer = game.getPlayersList().stream()
                 .filter(p -> p.getUser().getUsername().equals(playerUsername))
                 .findFirst()
-                .orElseThrow());
-        Move chosenMove = trainedAI.selectMove(validMoves);
-        applyMove(game,game.getPlayersList().stream()
-                .filter(p -> p.getUser().getUsername().equals(playerUsername))
-                .findFirst()
-                .orElseThrow(), chosenMove);
+                .orElseThrow();
 
-        return ResponseEntity.ok("AI move applied");
+        // Get valid moves and let the AI choose one
+        List<Move> validMoves = getValidMoves(game, aiPlayer);
+        if (validMoves.isEmpty()) {
+            return ResponseEntity.badRequest().body("No valid moves for AI player: " + playerUsername);
+        }
+
+        // Try up to 10 times to apply a valid move
+        for (int attempt = 0; attempt < 10; attempt++) {
+            Move chosenMove = trainedAI.selectMove(validMoves);
+            ResponseEntity<String> result = applyMove(game, aiPlayer, chosenMove);
+            if (result.getStatusCode().is2xxSuccessful()) {
+                return ResponseEntity.ok("AI move applied");
+            } else {
+                // Remove the invalid move and try again
+                validMoves.remove(chosenMove);
+            }
+        }
+
+        return ResponseEntity.badRequest().body("Failed to apply a valid move for AI player: " + playerUsername);
     }
 
-    private void applyMove(Game game, GamePlayer player, Move move) {
+    private ResponseEntity<String> applyMove(Game game, GamePlayer player, Move move) {
         Long gameId = game.getId();
         String playerName = player.getUser().getUsername();
 
@@ -258,14 +269,24 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             TrumpSuitSelectEvent selectEvent = new TrumpSuitSelectEvent(move.getSuit());
             selectSuit(gameId, selectEvent, playerName);
 
-            CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());
-            selectCard(gameId, cardEvent, playerName);
-
+            // After selecting the trump suit, play a card
+            List<Move> validMoves = getValidMoves(game, player);
+            if (!validMoves.isEmpty()) {
+                // Select the first valid move (or use AI logic to choose a move)
+                Move cardMove = validMoves.get(0);
+                if (cardMove.getCard() != null) {
+                    CardSelectEvent cardEvent = new CardSelectEvent(cardMove.getCard().getId());
+                    return selectCard(gameId, cardEvent, playerName);
+                }
+            }
+            return ResponseEntity.badRequest().body("No valid card move after selecting trump suit");
         } else if (move.getCard() != null) {
             // Playing a card
             CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());
-            selectCard(gameId, cardEvent, playerName);
+            return selectCard(gameId, cardEvent, playerName);
         }
+
+        return ResponseEntity.badRequest().body("Invalid move");
     }
 
     private Optional<Game> findGameById(Long gameId) {
@@ -368,13 +389,14 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
-    public void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
+    public ResponseEntity<String> selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
         Game game = activeGameRepository.findById(gameId)
                 .orElseThrow();
 
-        synchronized (game){
-            if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext())
-                return;
+        synchronized (game) {
+            if (game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext()) {
+                return ResponseEntity.badRequest().body("No current player or invalid game state");
+            }
 
             Round currentRound = game.getRounds().getLast();
             GamePlayer currentPlayer = game.getCurrentPlayer().next();
@@ -382,42 +404,44 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             Card selectedCard = allCards.get((int) (cardSelectEvent.cardId - 1));
             ErrorEvent errorEvent = null;
 
-            if (!currentPlayer.getUser().getUsername().equals(principalName))
+            if (!currentPlayer.getUser().getUsername().equals(principalName)) {
                 errorEvent = new ErrorEvent(NOT_YOUR_TURN.formatMessage(currentPlayer.getUser().getUsername()));
-            else if (!currentPlayer.hasCard(selectedCard))
+            } else if (!currentPlayer.hasCard(selectedCard)) {
                 errorEvent = new ErrorEvent(CARD_NOT_IN_HAND.getMessage());
-            else if (currentRound.getTrumpSuit() == null)
+            } else if (currentRound.getTrumpSuit() == null) {
                 errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
-            else if (game.getLeadingSuit() != null && selectedCard.getSuit() != game.getLeadingSuit()
-                    && currentPlayer.hasCardOfSuit(game.getLeadingSuit()))
+            } else if (game.getLeadingSuit() != null && selectedCard.getSuit() != game.getLeadingSuit()
+                    && currentPlayer.hasCardOfSuit(game.getLeadingSuit())) {
                 errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(game.getLeadingSuit()));
+            }
 
             if (errorEvent != null) {
                 game.getCurrentPlayer().previous();
                 eventPublisher.publishToPlayerInTheLobby(gameId, principalName, errorEvent);
-                return;
+                return ResponseEntity.badRequest().body(errorEvent.getErrorMessage());
             }
 
             currentRound.getActions().addLast(
-                Action.builder().player(currentPlayer).round(currentRound).card(selectedCard).timestamp(LocalDateTime.now()).build()
+                    Action.builder().player(currentPlayer).round(currentRound).card(selectedCard).timestamp(LocalDateTime.now()).build()
             );
 
-            if(game.getLeadingSuit() == null)
+            if (game.getLeadingSuit() == null) {
                 game.setLeadingSuit(selectedCard.getSuit());
+            }
 
             currentPlayer.removeCard(selectedCard);
 
             eventPublisher.publishToPlayerInTheLobby(gameId, principalName, new MyCardsState(currentPlayer));
             eventPublisher.publishToLobby(gameId, new TurnState(game));
 
-            if(!game.turnHasEnded()) {
+            if (!game.turnHasEnded()) {
                 eventPublisher.publishToLobby(
                         gameId,
                         new NextPlayerState(game.getCurrentPlayerWithoutIterating()
                                 .getUser()
                                 .getUsername(), false)
                 );
-                return;
+                return ResponseEntity.ok("Card played successfully");
             }
 
             List<Action> currentTurn = currentRound.getLastNActions(4);
@@ -431,17 +455,17 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             List<OutEvent> outEvents = new LinkedList<>();
 
-            if(game.roundHasEnded()){
+            if (game.roundHasEnded()) {
                 winningAction.getPlayer().addBonusPoint();
 
-                if(game.setWinnersIfPossible()){
+                if (game.setWinnersIfPossible()) {
                     outEvents.add(new PointState(game));
                     outEvents.add(new WinnerState(game));
 
                     endedGameService.saveEndedGame(game);
                     eventPublisher.publishToLobby(gameId, outEvents);
-                    return;
-                }else{
+                    return ResponseEntity.ok("Game ended");
+                } else {
                     reduceTeamsPoints(game);
 
                     game.setNewOrderAfterRoundEnd();
@@ -457,7 +481,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                                     new MyCardsState(gamePlayer))
                     );
                 }
-            }else{
+            } else {
                 game.setNewOrderAfterTurnEnd(winningAction.getPlayer());
                 outEvents.add(new NewTurn());
                 outEvents.add(new NextPlayerState(winningAction.getPlayer().getUser().getUsername(), true));
@@ -465,8 +489,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             outEvents.add(new PointState(game));
             outEvents.add(new PlayersOrderState(game));
             eventPublisher.publishToLobby(gameId, outEvents);
-        }
 
+            return ResponseEntity.ok("Card played successfully");
+        }
     }
 
     @Override

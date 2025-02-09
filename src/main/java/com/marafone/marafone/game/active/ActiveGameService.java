@@ -21,7 +21,7 @@ public interface ActiveGameService {
     void checkTimeout(@DestinationVariable Long gameId);
     void startGame(@DestinationVariable Long gameId, String principalName);
     ResponseEntity<String> makeAIMove(Long gameId, String playerUsername);
-    void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);
+    ResponseEntity<String> selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);
     void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName);
     void sendCall(Long gameId, Call call);
     void reconnectToGame(Long gameId, String principalName);

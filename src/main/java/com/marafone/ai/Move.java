@@ -2,10 +2,11 @@ package com.marafone.ai;
 
 import com.marafone.marafone.game.model.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Move {
+public class Move implements Serializable {
 
     Card card;
     Suit suit;
