@@ -3,6 +3,7 @@ package com.marafone.marafone.game.active;
 import com.marafone.ai.DummyData;
 import com.marafone.ai.MarafoneAI;
 import com.marafone.ai.Move;
+import com.marafone.ai.MoveApplier;
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
@@ -248,7 +249,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         // Try up to 10 times to apply a valid move
         for (int attempt = 0; attempt < 10; attempt++) {
             Move chosenMove = trainedAI.selectMove(validMoves);
-            ResponseEntity<String> result = applyMove(game, aiPlayer, chosenMove);
+            ResponseEntity<String> result = MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
             if (result.getStatusCode().is2xxSuccessful()) {
                 return ResponseEntity.ok("AI move applied");
             } else {
@@ -258,35 +259,6 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
 
         return ResponseEntity.badRequest().body("Failed to apply a valid move for AI player: " + playerUsername);
-    }
-
-    private ResponseEntity<String> applyMove(Game game, GamePlayer player, Move move) {
-        Long gameId = game.getId();
-        String playerName = player.getUser().getUsername();
-
-        if (move.getCard() == null && move.getSuit() != null) {
-            // Selecting the trump suit
-            TrumpSuitSelectEvent selectEvent = new TrumpSuitSelectEvent(move.getSuit());
-            selectSuit(gameId, selectEvent, playerName);
-
-            // After selecting the trump suit, play a card
-            List<Move> validMoves = getValidMoves(game, player);
-            if (!validMoves.isEmpty()) {
-                // Select the first valid move (or use AI logic to choose a move)
-                Move cardMove = validMoves.get(0);
-                if (cardMove.getCard() != null) {
-                    CardSelectEvent cardEvent = new CardSelectEvent(cardMove.getCard().getId());
-                    return selectCard(gameId, cardEvent, playerName);
-                }
-            }
-            return ResponseEntity.badRequest().body("No valid card move after selecting trump suit");
-        } else if (move.getCard() != null) {
-            // Playing a card
-            CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());
-            return selectCard(gameId, cardEvent, playerName);
-        }
-
-        return ResponseEntity.badRequest().body("Invalid move");
     }
 
     private Optional<Game> findGameById(Long gameId) {

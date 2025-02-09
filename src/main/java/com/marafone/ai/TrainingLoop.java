@@ -93,12 +93,12 @@ public class TrainingLoop {
                         // AI players (userA and userB)
                         List<Move> validMoves = getValidMoves(game, player);
                         Move chosenMove = ai.selectMove(validMoves);
-                        applyMove(game, player, chosenMove);
+                        MoveApplier.applyMove(game, player, chosenMove, activeGameService);
                     } else {
                         // Non-AI players (userC and userD) - use random moves for now
                         List<Move> validMoves = getValidMoves(game, player);
                         Move randomMove = validMoves.get((int) (Math.random() * validMoves.size()));
-                        applyMove(game, player, randomMove);
+                        MoveApplier.applyMove(game, player, randomMove, activeGameService);
                     }
                 }
             }
@@ -165,31 +165,5 @@ public class TrainingLoop {
         }
 
         return validMoves;
-    }
-
-    private void applyMove(Game game, GamePlayer player, Move move) {
-        Long gameId = game.getId();
-        String playerName = player.getUser().getUsername();
-
-        if (move.getCard() == null && move.getSuit() != null) {
-            // Selecting the trump suit
-            TrumpSuitSelectEvent selectEvent = new TrumpSuitSelectEvent(move.getSuit());
-            activeGameService.selectSuit(gameId, selectEvent, playerName);
-
-            // After selecting the trump suit, play a card
-            List<Move> validMoves = getValidMoves(game, player);
-            if (!validMoves.isEmpty()) {
-                // Select the first valid move (or use AI logic to choose a move)
-                Move cardMove = validMoves.get(0);
-                if (cardMove.getCard() != null) {
-                    CardSelectEvent cardEvent = new CardSelectEvent(cardMove.getCard().getId());
-                    activeGameService.selectCard(gameId, cardEvent, playerName);
-                }
-            }
-        } else if (move.getCard() != null) {
-            // Playing a card
-            CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());
-            activeGameService.selectCard(gameId, cardEvent, playerName);
-        }
     }
 }
