@@ -21,17 +21,6 @@ public class MoveApplier {
             // Selecting the trump suit
             TrumpSuitSelectEvent selectEvent = new TrumpSuitSelectEvent(move.getSuit());
             gameService.selectSuit(gameId, selectEvent, playerName);
-
-            // After selecting the trump suit, play a card
-            List<Move> validMoves = getValidMoves(game, player);
-            if (!validMoves.isEmpty()) {
-                Move cardMove = validMoves.get(0);
-                if (cardMove.getCard() != null) {
-                    CardSelectEvent cardEvent = new CardSelectEvent(cardMove.getCard().getId());
-                    gameService.selectCard(gameId, cardEvent, playerName);
-                }
-            }
-            return ResponseEntity.badRequest().body("No valid card move after selecting trump suit");
         } else if (move.getCard() != null) {
             // Playing a card
             CardSelectEvent cardEvent = new CardSelectEvent(move.getCard().getId());

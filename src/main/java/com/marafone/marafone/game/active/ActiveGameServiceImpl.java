@@ -246,16 +246,22 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             return ResponseEntity.badRequest().body("No valid moves for AI player: " + playerUsername);
         }
 
-        // Try up to 10 times to apply a valid move
-        for (int attempt = 0; attempt < 10; attempt++) {
-            Move chosenMove = trainedAI.selectMove(validMoves);
-            ResponseEntity<String> result = MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
-            if (result.getStatusCode().is2xxSuccessful()) {
-                return ResponseEntity.ok("AI move applied");
-            } else {
-                // Remove the invalid move and try again
-                validMoves.remove(chosenMove);
-            }
+        ResponseEntity<String> result;
+
+        Move chosenMove = trainedAI.selectMove(validMoves);
+        if (chosenMove.getCard() == null && chosenMove.getSuit() != null) {
+            // the AI is the first to play needs to play two moves
+            result = MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
+            List<Move> validCards = getValidMoves(game, aiPlayer);
+            Move chosenCard = trainedAI.selectMove(validCards);
+            result = MoveApplier.applyMove(game, aiPlayer, chosenCard, this);
+        }
+        else{
+            result = MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
+        }
+
+        if (result.getStatusCode().is2xxSuccessful()) {
+            return ResponseEntity.ok("AI move applied");
         }
 
         return ResponseEntity.badRequest().body("Failed to apply a valid move for AI player: " + playerUsername);

@@ -2,6 +2,7 @@ package com.marafone.ai;
 
 import com.marafone.marafone.game.model.Game;
 import com.marafone.marafone.game.model.Team;
+import com.marafone.marafone.game.model.GamePlayer;
 
 import java.util.List;
 import java.util.HashMap;
@@ -62,12 +63,34 @@ public class MarafoneAI implements Serializable {
     }
 
     private double calculateReward(Game game) {
-        // Calculate the reward based on the game outcome
-        if (game.getWinnerTeam() == Team.RED) {
-            return 1.0; // Reward for winning
-        } else {
-            return -1.0; // Penalty for losing
+        // Get the AI's team (assuming the AI is on Team.RED)
+        Team aiTeam = Team.RED;
+
+        // Calculate the AI's points and the opponent's points
+        int aiPoints = game.getPlayersList().stream()
+                .filter(p -> p.getTeam() == aiTeam)
+                .mapToInt(GamePlayer::getPoints)
+                .sum();
+
+        int opponentPoints = game.getPlayersList().stream()
+                .filter(p -> p.getTeam() != aiTeam)
+                .mapToInt(GamePlayer::getPoints)
+                .sum();
+
+        // Calculate the point difference
+        int pointDifference = aiPoints - opponentPoints;
+
+        // Normalize the point difference to a reward between -1 and 1
+        double reward = (double) pointDifference / 21.0;
+
+        // Add a bonus reward for winning the game
+        if (game.getWinnerTeam() == aiTeam) {
+            reward += 1.0; // Bonus for winning
+        } else if (game.getWinnerTeam() != null) {
+            reward -= 1.0; // Penalty for losing
         }
+
+        return reward;
     }
 
     private double getQValue(Move move) {

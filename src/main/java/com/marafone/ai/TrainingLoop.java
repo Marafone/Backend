@@ -93,7 +93,16 @@ public class TrainingLoop {
                         // AI players (userA and userB)
                         List<Move> validMoves = getValidMoves(game, player);
                         Move chosenMove = ai.selectMove(validMoves);
-                        MoveApplier.applyMove(game, player, chosenMove, activeGameService);
+                        if (chosenMove.getCard() == null && chosenMove.getSuit() != null){
+                            // the AI is the first to play needs to play two moves
+                            MoveApplier.applyMove(game, player, chosenMove, activeGameService);
+                            List<Move> validCards = getValidMoves(game, player);
+                            Move chosenCard = ai.selectMove(validCards);
+                            MoveApplier.applyMove(game, player, chosenCard, activeGameService);
+                        }
+                        else {
+                            MoveApplier.applyMove(game, player, chosenMove, activeGameService);
+                        }
                     } else {
                         // Non-AI players (userC and userD) - use random moves for now
                         List<Move> validMoves = getValidMoves(game, player);
@@ -134,20 +143,18 @@ public class TrainingLoop {
         Suit leadingSuit = game.getLeadingSuit();  // Leading suit for the trick
         List<Card> hand = player.getOwnedCards();
 
-        boolean isFirstToPlay = game.getCurrentPlayerWithoutIterating().equals(player);
-
-        if (isFirstToPlay) {
-            // If leading the trick, AI can choose the trump suit (if not already set)
-            if (trumpSuit == null) {
-                for (Suit suit : Suit.values()) {
-                    validMoves.add(new Move(null, suit)); // Choosing a trump suit
-                }
+        if (trumpSuit == null) {
+            // If leading the trick, AI has to choose the trump suit (if not already set)
+            for (Suit suit : Suit.values()) {
+                validMoves.add(new Move(null, suit)); // Choosing a trump suit
             }
-            // AI can play any card from their hand
+        }
+        else if (leadingSuit == null) {
             for (Card card : hand) {
                 validMoves.add(new Move(card, null));
             }
-        } else {
+        }
+        else {
             // If not leading, must follow suit if possible
             List<Card> matchingSuitCards = hand.stream()
                     .filter(card -> card.getSuit().equals(leadingSuit))
