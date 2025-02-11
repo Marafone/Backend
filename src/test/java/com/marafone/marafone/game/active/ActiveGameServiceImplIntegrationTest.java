@@ -48,7 +48,7 @@ public class ActiveGameServiceImplIntegrationTest {
         userRepository.save(DummyData.getUserD());
 
         //CREATE GAME
-        CreateGameRequest createGameRequest = new CreateGameRequest("name", GameType.MARAFFA, "ABC");
+        CreateGameRequest createGameRequest = new CreateGameRequest("name", GameType.MARAFFA, "ABC", 21);
         User owner = DummyData.getUserA();
 
         Long gameId = activeGameService.createGame(createGameRequest, owner);

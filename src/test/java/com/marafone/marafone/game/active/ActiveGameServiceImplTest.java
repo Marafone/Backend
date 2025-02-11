@@ -399,4 +399,51 @@ class ActiveGameServiceImplTest {
         assertEquals(Team.BLUE, gamePlayersList.getLast().getTeam());
     }
 
+    @Test
+    void startingGameWithNoPlayersShouldNotStart() {
+        // given
+        Game sampleGame = DummyData.getGameInLobby();
+        sampleGame.setPlayersList(new LinkedList<>()); // No players in the game
+        Mockito.when(activeGameRepository.findById(1L)).thenReturn(Optional.of(sampleGame));
+
+        // when
+        activeGameServiceImpl.startGame(1L, sampleGame.getOwner().getUsername());
+
+        // then
+        assertNull(sampleGame.getStartedAt());
+    }
+
+    @Test
+    void joiningGameAfterItHasStartedShouldReturnGameAlreadyStarted() {
+        // given
+        Game sampleGame = DummyData.getGameInLobby();
+        sampleGame.setStartedAt(LocalDateTime.now());
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(sampleGame));
+
+        // when
+        JoinGameResult result = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserA());
+
+        // then
+        assertEquals(GAME_ALREADY_STARTED, result);
+    }
+
+    @Test
+    void changeTeam_WhenUserNotInGame_ShouldDoNothing() {
+        // given
+        User user = new User(1L, "user1", "", "user1");
+        Game game = Game.builder()
+                .playersList(new LinkedList<>(List.of(
+                        new GamePlayer(2L, new User(2L, "user2", "", "user2"), Team.RED, null, null)
+                )))
+                .id(1L)
+                .build();
+        Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(game));
+
+        // when
+        activeGameServiceImpl.changeTeam(1L, Team.BLUE, user);
+
+        // then
+        assertEquals(1, game.getPlayersList().size());
+        assertEquals(Team.RED, game.getPlayersList().get(0).getTeam());
+    }
 }

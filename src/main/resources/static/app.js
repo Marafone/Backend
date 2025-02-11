@@ -46,7 +46,8 @@ async function createGame() {
         },
         body: JSON.stringify({
             gameType: "MARAFFA",
-            joinGameCode: null
+            joinGameCode: null,
+            pointsToWin: $( "#pointsToWin" ).val()
         })
     });
     if (!response.ok) {
