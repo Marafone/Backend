@@ -15,6 +15,7 @@ import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
 import com.marafone.marafone.game.random.RandomAssigner;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.response.GameActionResponse;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
@@ -187,7 +188,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
-    public ResponseEntity<String> addAI(Long gameId, Team team, User user) {
+    public AddAIResult addAI(Long gameId, Team team, User user) {
         try {
             // Load the trained AI
             MarafoneAI trainedAI = MarafoneAI.load("trained_ai.ser");
@@ -205,7 +206,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     aiUser = DummyData.getUserC();
                     break;
                 default:
-                    return ResponseEntity.badRequest().body("Maximum number of AI players reached.");
+                    return AddAIResult.MAX_AI_REACHED;
             }
 
             // Join the AI to the game
@@ -215,56 +216,58 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             if (result == SUCCESS) {
                 // Store the AI instance
                 aiPlayers.put(aiUser.getUsername(), trainedAI);
-                return ResponseEntity.ok("AI player added to " + team + " team");
+                return AddAIResult.SUCCESS;
             } else {
-                return ResponseEntity.badRequest().body("Failed to add AI player: " + result);
+                return AddAIResult.FAILED_TO_ADD;
             }
         } catch (IOException | ClassNotFoundException e) {
-            return ResponseEntity.internalServerError().body("Failed to load AI: " + e.getMessage());
+            return AddAIResult.AI_LOAD_ERROR;
         }
     }
 
     @Override
-    public ResponseEntity<String> makeAIMove(Long gameId, String playerUsername) {
+    public MakeAIMoveResult makeAIMove(Long gameId, String playerUsername) {
         Game game = activeGameRepository.findById(gameId).orElseThrow();
 
-        // Retrieve the AI instance for this player
-        MarafoneAI trainedAI = aiPlayers.get(playerUsername);
-        if (trainedAI == null) {
-            return ResponseEntity.badRequest().body("No AI found for player: " + playerUsername);
+        synchronized (game) {
+            // Retrieve the AI instance for this player
+            MarafoneAI trainedAI = aiPlayers.get(playerUsername);
+            if (trainedAI == null) {
+                return MakeAIMoveResult.NO_AI_FOUND;
+            }
+
+            // Get the AI player
+            GamePlayer aiPlayer = game.getPlayersList().stream()
+                    .filter(p -> p.getUser().getUsername().equals(playerUsername))
+                    .findFirst()
+                    .orElseThrow();
+
+            // Get valid moves and let the AI choose one
+            List<Move> validMoves = getValidMoves(game, aiPlayer);
+            if (validMoves.isEmpty()) {
+                return MakeAIMoveResult.NO_VALID_MOVES;
+            }
+
+            Move chosenMove = trainedAI.selectMove(validMoves);
+            if (chosenMove.getCard() == null && chosenMove.getSuit() != null) {
+                // the AI is the first to play needs to play two moves
+                if (!MoveApplier.applyMove(game, aiPlayer, chosenMove, this).getStatusCode().is2xxSuccessful()) {
+                    return MakeAIMoveResult.MOVE_FAILED;
+                }
+
+                List<Move> validCards = getValidMoves(game, aiPlayer);
+                Move chosenCard = trainedAI.selectMove(validCards);
+                if (!MoveApplier.applyMove(game, aiPlayer, chosenCard, this).getStatusCode().is2xxSuccessful()) {
+                    return MakeAIMoveResult.MOVE_FAILED;
+                }
+            } else {
+                if (!MoveApplier.applyMove(game, aiPlayer, chosenMove, this).getStatusCode().is2xxSuccessful()) {
+                    return MakeAIMoveResult.MOVE_FAILED;
+                }
+            }
+
+            return MakeAIMoveResult.SUCCESS;
         }
-
-        // Get the AI player
-        GamePlayer aiPlayer = game.getPlayersList().stream()
-                .filter(p -> p.getUser().getUsername().equals(playerUsername))
-                .findFirst()
-                .orElseThrow();
-
-        // Get valid moves and let the AI choose one
-        List<Move> validMoves = getValidMoves(game, aiPlayer);
-        if (validMoves.isEmpty()) {
-            return ResponseEntity.badRequest().body("No valid moves for AI player: " + playerUsername);
-        }
-
-        ResponseEntity<String> result;
-
-        Move chosenMove = trainedAI.selectMove(validMoves);
-        if (chosenMove.getCard() == null && chosenMove.getSuit() != null) {
-            // the AI is the first to play needs to play two moves
-            result = MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
-            List<Move> validCards = getValidMoves(game, aiPlayer);
-            Move chosenCard = trainedAI.selectMove(validCards);
-            result = MoveApplier.applyMove(game, aiPlayer, chosenCard, this);
-        }
-        else{
-            result = MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
-        }
-
-        if (result.getStatusCode().is2xxSuccessful()) {
-            return ResponseEntity.ok("AI move applied");
-        }
-
-        return ResponseEntity.badRequest().body("Failed to apply a valid move for AI player: " + playerUsername);
     }
 
     private Optional<Game> findGameById(Long gameId) {
@@ -367,13 +370,13 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
-    public ResponseEntity<String> selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
+    public SelectCardResult selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
         Game game = activeGameRepository.findById(gameId)
                 .orElseThrow();
 
         synchronized (game) {
             if (game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext()) {
-                return ResponseEntity.badRequest().body("No current player or invalid game state");
+                return SelectCardResult.NOT_YOUR_TURN;
             }
 
             Round currentRound = game.getRounds().getLast();
@@ -396,7 +399,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             if (errorEvent != null) {
                 game.getCurrentPlayer().previous();
                 eventPublisher.publishToPlayerInTheLobby(gameId, principalName, errorEvent);
-                return ResponseEntity.badRequest().body(errorEvent.getErrorMessage());
+                return SelectCardResult.ERROR;
             }
 
             currentRound.getActions().addLast(
@@ -419,7 +422,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                                 .getUser()
                                 .getUsername(), false)
                 );
-                return ResponseEntity.ok("Card played successfully");
+                return SelectCardResult.SUCCESS;
             }
 
             List<Action> currentTurn = currentRound.getLastNActions(4);
@@ -442,7 +445,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
                     endedGameService.saveEndedGame(game);
                     eventPublisher.publishToLobby(gameId, outEvents);
-                    return ResponseEntity.ok("Game ended");
+                    return SelectCardResult.GAME_ENDED;
                 } else {
                     reduceTeamsPoints(game);
 
@@ -468,7 +471,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             outEvents.add(new PlayersOrderState(game));
             eventPublisher.publishToLobby(gameId, outEvents);
 
-            return ResponseEntity.ok("Card played successfully");
+            return SelectCardResult.SUCCESS;
         }
     }
 

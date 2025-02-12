@@ -17,11 +17,11 @@ public interface ActiveGameService {
     JoinGameResult joinGame(Long gameId, JoinGameRequest joinGameRequest, User user);
     void leaveGame(Long gameId, User user);
     void changeTeam(Long gameId, Team team, User user);
-    ResponseEntity<String> addAI(Long gameId, Team team, User user);
+    AddAIResult addAI(Long gameId, Team team, User user);
     void checkTimeout(@DestinationVariable Long gameId);
     void startGame(@DestinationVariable Long gameId, String principalName);
-    ResponseEntity<String> makeAIMove(Long gameId, String playerUsername);
-    ResponseEntity<String> selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);
+    MakeAIMoveResult makeAIMove(Long gameId, String playerUsername);
+    SelectCardResult selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName);
     void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName);
     void sendCall(Long gameId, Call call);
     void reconnectToGame(Long gameId, String principalName);
