@@ -251,19 +251,12 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             Move chosenMove = trainedAI.selectMove(validMoves);
             if (chosenMove.getCard() == null && chosenMove.getSuit() != null) {
                 // the AI is the first to play needs to play two moves
-                if (!MoveApplier.applyMove(game, aiPlayer, chosenMove, this).getStatusCode().is2xxSuccessful()) {
-                    return MakeAIMoveResult.MOVE_FAILED;
-                }
-
+                MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
                 List<Move> validCards = getValidMoves(game, aiPlayer);
                 Move chosenCard = trainedAI.selectMove(validCards);
-                if (!MoveApplier.applyMove(game, aiPlayer, chosenCard, this).getStatusCode().is2xxSuccessful()) {
-                    return MakeAIMoveResult.MOVE_FAILED;
-                }
+                MoveApplier.applyMove(game, aiPlayer, chosenCard, this);
             } else {
-                if (!MoveApplier.applyMove(game, aiPlayer, chosenMove, this).getStatusCode().is2xxSuccessful()) {
-                    return MakeAIMoveResult.MOVE_FAILED;
-                }
+                MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
             }
 
             return MakeAIMoveResult.SUCCESS;

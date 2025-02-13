@@ -30,9 +30,6 @@ public class TrainingLoop {
     private final UserRepository userRepository;
 
     @Autowired
-    private List<Card> allCards;
-
-    @Autowired
     private RandomAssigner randomAssigner;
 
     @Autowired
@@ -57,7 +54,17 @@ public class TrainingLoop {
 
         // Initialize the epsilon-greedy strategy and AI
         EpsilonGreedy epsilonGreedy = new EpsilonGreedy(1.0, 0.1, 0.99);
-        MarafoneAI ai = new MarafoneAI(epsilonGreedy, "Qvalue");
+        MarafoneAI trainingAI = new MarafoneAI(epsilonGreedy, "Qvalue");
+
+        // Load the previous trained AI for opponents
+        MarafoneAI oldAI;
+        try {
+            oldAI = MarafoneAI.load("trained_ai_old.ser");
+            System.out.println("Loaded previous trained AI from file.");
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Failed to load old AI. Falling back to random moves.");
+            oldAI = null;
+        }
 
         // Run the training loop for the specified number of episodes
         for (int episode = 0; episode < episodes; episode++) {
@@ -89,31 +96,38 @@ public class TrainingLoop {
             // Simulate the game
             while (!game.hasEnded()) {
                 for (GamePlayer player : game.getPlayersList()) {
+                    List<Move> validMoves = getValidMoves(game, player);
+                    Move chosenMove;
+
                     if (player.getUser().equals(userA) || player.getUser().equals(userB)) {
-                        // AI players (userA and userB)
-                        List<Move> validMoves = getValidMoves(game, player);
-                        Move chosenMove = ai.selectMove(validMoves);
-                        if (chosenMove.getCard() == null && chosenMove.getSuit() != null){
-                            // the AI is the first to play needs to play two moves
-                            MoveApplier.applyMove(game, player, chosenMove, activeGameService);
-                            List<Move> validCards = getValidMoves(game, player);
-                            Move chosenCard = ai.selectMove(validCards);
-                            MoveApplier.applyMove(game, player, chosenCard, activeGameService);
-                        }
-                        else {
-                            MoveApplier.applyMove(game, player, chosenMove, activeGameService);
-                        }
+                        // AI players A and B (who are training)
+                        chosenMove = trainingAI.selectMove(validMoves);
                     } else {
-                        // Non-AI players (userC and userD) - use random moves for now
-                        List<Move> validMoves = getValidMoves(game, player);
-                        Move randomMove = validMoves.get((int) (Math.random() * validMoves.size()));
-                        MoveApplier.applyMove(game, player, randomMove, activeGameService);
+                        // AI players C and D (who use the old AI)
+                        if (oldAI != null) {
+                            chosenMove = oldAI.selectMove(validMoves);
+                        } else {
+                            // Fallback to random moves if old AI is not available
+                            chosenMove = validMoves.get((int) (Math.random() * validMoves.size()));
+                        }
+                    }
+
+                    if (chosenMove.getCard() == null && chosenMove.getSuit() != null) {
+                        // The AI is leading the trick and needs to play two moves
+                        MoveApplier.applyMove(game, player, chosenMove, activeGameService);
+                        List<Move> validCards = getValidMoves(game, player);
+                        Move chosenCard = player.getUser().equals(userA) || player.getUser().equals(userB)
+                                ? trainingAI.selectMove(validCards)
+                                : (oldAI != null ? oldAI.selectMove(validCards) : validCards.get((int) (Math.random() * validCards.size())));
+                        MoveApplier.applyMove(game, player, chosenCard, activeGameService);
+                    } else {
+                        MoveApplier.applyMove(game, player, chosenMove, activeGameService);
                     }
                 }
             }
 
             // Update AI's Q-values based on the game outcome
-            ai.updateQValues(game);
+            trainingAI.updateQValues(game);
 
             // Decay epsilon for epsilon-greedy strategy
             epsilonGreedy.decayEpsilon();
@@ -124,7 +138,7 @@ public class TrainingLoop {
 
         // Save the trained AI to a file
         try {
-            ai.save("trained_ai.ser");
+            trainingAI.save("trained_ai.ser");
             System.out.println("AI training results saved to trained_ai.ser");
         } catch (IOException e) {
             System.err.println("Failed to save AI state: " + e.getMessage());
