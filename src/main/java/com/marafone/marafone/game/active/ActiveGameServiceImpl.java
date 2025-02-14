@@ -1,5 +1,9 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.ai.DummyData;
+import com.marafone.ai.MarafoneAI;
+import com.marafone.ai.Move;
+import com.marafone.ai.MoveApplier;
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
@@ -11,15 +15,19 @@ import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
 import com.marafone.marafone.game.random.RandomAssigner;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.response.GameActionResponse;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.marafone.ai.TrainingLoop.getValidMoves;
 import static com.marafone.marafone.errors.SelectCardErrorMessages.*;
 import static com.marafone.marafone.game.model.JoinGameResult.*;
 
@@ -33,6 +41,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
+
+    // Map to store AI instances
+    private final Map<String, MarafoneAI> aiPlayers = new HashMap<>();
 
     private final RandomAssigner randomAssigner;
 
@@ -179,6 +190,82 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
     }
 
+    @Override
+    public AddAIResult addAI(Long gameId, Team team, User user) {
+        try {
+            // Load the trained AI
+            MarafoneAI trainedAI = MarafoneAI.load("trained_ai.ser");
+
+            // Create a dummy user for the AI
+            User aiUser;
+            switch (aiPlayers.size()) {
+                case 0:
+                    aiUser = DummyData.getUserA();
+                    break;
+                case 1:
+                    aiUser = DummyData.getUserB();
+                    break;
+                case 2:
+                    aiUser = DummyData.getUserC();
+                    break;
+                default:
+                    return AddAIResult.MAX_AI_REACHED;
+            }
+
+            // Join the AI to the game
+            JoinGameRequest joinRequest = new JoinGameRequest(team, "ABC"); // Use the correct game code
+            JoinGameResult result = this.joinGame(gameId, joinRequest, aiUser);
+
+            if (result == SUCCESS) {
+                // Store the AI instance
+                aiPlayers.put(aiUser.getUsername(), trainedAI);
+                return AddAIResult.SUCCESS;
+            } else {
+                return AddAIResult.FAILED_TO_ADD;
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            return AddAIResult.AI_LOAD_ERROR;
+        }
+    }
+
+    @Override
+    public MakeAIMoveResult makeAIMove(Long gameId, String playerUsername) {
+        Game game = activeGameRepository.findById(gameId).orElseThrow();
+
+        synchronized (game) {
+            // Retrieve the AI instance for this player
+            MarafoneAI trainedAI = aiPlayers.get(playerUsername);
+            if (trainedAI == null) {
+                return MakeAIMoveResult.NO_AI_FOUND;
+            }
+
+            // Get the AI player
+            GamePlayer aiPlayer = game.getPlayersList().stream()
+                    .filter(p -> p.getUser().getUsername().equals(playerUsername))
+                    .findFirst()
+                    .orElseThrow();
+
+            // Get valid moves and let the AI choose one
+            List<Move> validMoves = getValidMoves(game, aiPlayer);
+            if (validMoves.isEmpty()) {
+                return MakeAIMoveResult.NO_VALID_MOVES;
+            }
+
+            Move chosenMove = trainedAI.selectMove(validMoves);
+            if (chosenMove.getCard() == null && chosenMove.getSuit() != null) {
+                // the AI is the first to play needs to play two moves
+                MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
+                List<Move> validCards = getValidMoves(game, aiPlayer);
+                Move chosenCard = trainedAI.selectMove(validCards);
+                MoveApplier.applyMove(game, aiPlayer, chosenCard, this);
+            } else {
+                MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
+            }
+
+            return MakeAIMoveResult.SUCCESS;
+        }
+    }
+
     private Optional<Game> findGameById(Long gameId) {
         return activeGameRepository.findById(gameId);
     }
@@ -279,13 +366,14 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
-    public void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
+    public SelectCardResult selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
         Game game = activeGameRepository.findById(gameId)
                 .orElseThrow();
 
-        synchronized (game){
-            if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext())
-                return;
+        synchronized (game) {
+            if (game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext()) {
+                return SelectCardResult.NOT_YOUR_TURN;
+            }
 
             Round currentRound = game.getRounds().getLast();
             GamePlayer currentPlayer = game.getCurrentPlayer().next();
@@ -293,42 +381,44 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             Card selectedCard = allCards.get((int) (cardSelectEvent.cardId - 1));
             ErrorEvent errorEvent = null;
 
-            if (!currentPlayer.getUser().getUsername().equals(principalName))
+            if (!currentPlayer.getUser().getUsername().equals(principalName)) {
                 errorEvent = new ErrorEvent(NOT_YOUR_TURN.formatMessage(currentPlayer.getUser().getUsername()));
-            else if (!currentPlayer.hasCard(selectedCard))
+            } else if (!currentPlayer.hasCard(selectedCard)) {
                 errorEvent = new ErrorEvent(CARD_NOT_IN_HAND.getMessage());
-            else if (currentRound.getTrumpSuit() == null)
+            } else if (currentRound.getTrumpSuit() == null) {
                 errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
-            else if (game.getLeadingSuit() != null && selectedCard.getSuit() != game.getLeadingSuit()
-                    && currentPlayer.hasCardOfSuit(game.getLeadingSuit()))
+            } else if (game.getLeadingSuit() != null && selectedCard.getSuit() != game.getLeadingSuit()
+                    && currentPlayer.hasCardOfSuit(game.getLeadingSuit())) {
                 errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(game.getLeadingSuit()));
+            }
 
             if (errorEvent != null) {
                 game.getCurrentPlayer().previous();
                 eventPublisher.publishToPlayerInTheLobby(gameId, principalName, errorEvent);
-                return;
+                return SelectCardResult.ERROR;
             }
 
             currentRound.getActions().addLast(
-                Action.builder().player(currentPlayer).round(currentRound).card(selectedCard).timestamp(LocalDateTime.now()).build()
+                    Action.builder().player(currentPlayer).round(currentRound).card(selectedCard).timestamp(LocalDateTime.now()).build()
             );
 
-            if(game.getLeadingSuit() == null)
+            if (game.getLeadingSuit() == null) {
                 game.setLeadingSuit(selectedCard.getSuit());
+            }
 
             currentPlayer.removeCard(selectedCard);
 
             eventPublisher.publishToPlayerInTheLobby(gameId, principalName, new MyCardsState(currentPlayer));
             eventPublisher.publishToLobby(gameId, new TurnState(game));
 
-            if(!game.turnHasEnded()) {
+            if (!game.turnHasEnded()) {
                 eventPublisher.publishToLobby(
                         gameId,
                         new NextPlayerState(game.getCurrentPlayerWithoutIterating()
                                 .getUser()
                                 .getUsername(), false)
                 );
-                return;
+                return SelectCardResult.SUCCESS;
             }
 
             List<Action> currentTurn = currentRound.getLastNActions(4);
@@ -342,8 +432,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             List<OutEvent> outEvents = new LinkedList<>();
 
-            if(game.roundHasEnded()){
+            if (game.roundHasEnded()) {
                 winningAction.getPlayer().addBonusPoint();
+
 
                 if(game.setWinnersIfPossible()){
                     userService.updateUsersStats(
@@ -357,8 +448,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
                     endedGameService.saveEndedGame(game);
                     eventPublisher.publishToLobby(gameId, outEvents);
-                    return;
-                }else{
+                    return SelectCardResult.GAME_ENDED;
+                } else {
                     reduceTeamsPoints(game);
 
                     game.setNewOrderAfterRoundEnd();
@@ -374,7 +465,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                                     new MyCardsState(gamePlayer))
                     );
                 }
-            }else{
+            } else {
                 game.setNewOrderAfterTurnEnd(winningAction.getPlayer());
                 outEvents.add(new NewTurn());
                 outEvents.add(new NextPlayerState(winningAction.getPlayer().getUser().getUsername(), true));
@@ -382,8 +473,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             outEvents.add(new PointState(game));
             outEvents.add(new PlayersOrderState(game));
             eventPublisher.publishToLobby(gameId, outEvents);
-        }
 
+            return SelectCardResult.SUCCESS;
+        }
     }
 
     @Override
