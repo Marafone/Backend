@@ -65,6 +65,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .gameType(createGameRequest.getGameType())
                 .owner(user)
                 .joinGameCode(createGameRequest.getJoinGameCode())
+                .pointsToWinGame(createGameRequest.getPointsToWin() * 3)
                 .build();
 
         return activeGameRepository.put(game);
