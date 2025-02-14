@@ -29,6 +29,8 @@ public class User implements UserDetails {
     private Long id;
     private String username;
     private String email;
+    private int wins;
+    private int losses;
     @JsonIgnore
     private String password;
 
@@ -51,5 +53,11 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+    public void increaseWins() {
+        wins++;
+    }
+    public void increaseLosses() {
+        losses++;
     }
 }

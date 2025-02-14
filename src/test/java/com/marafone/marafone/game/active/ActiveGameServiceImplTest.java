@@ -9,6 +9,8 @@ import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.game.random.MarafoneRandomAssigner;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
+import com.marafone.marafone.user.UserRepository;
+import com.marafone.marafone.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +34,8 @@ class ActiveGameServiceImplTest {
     @Mock
     private ActiveGameRepository activeGameRepository;
     @Mock
+    private UserService userService;
+    @Mock
     private EndedGameService endedGameService;
     @Mock
     private EventPublisher eventPublisher;
@@ -42,7 +46,7 @@ class ActiveGameServiceImplTest {
 
     @BeforeEach
     void setUp(){
-        activeGameServiceImpl = new ActiveGameServiceImpl(activeGameRepository, endedGameService, eventPublisher,
+        activeGameServiceImpl = new ActiveGameServiceImpl(activeGameRepository, endedGameService, userService, eventPublisher,
                 new GameConfig().allCards(), gameMapper, new MarafoneRandomAssigner(new GameConfig().allCards(), new GameConfig().random()));
     }
 
@@ -268,10 +272,10 @@ class ActiveGameServiceImplTest {
     @Test
     void leaveGame_WhenUserInGame_ShouldRemoveUserFromGamePlayersList() {
         // given
-        User user = new User(1L, "user1", "", "user1");
+        User user = new User(1L, "user1", "", 0, 0, "user1");
         GamePlayer gp1 = GamePlayer
                 .builder()
-                .user(new User(2L, "user2", "", "user2"))
+                .user(new User(2L, "user2", "", 0, 0, "user2"))
                 .build();
         GamePlayer gp2 = GamePlayer
                 .builder()
@@ -279,7 +283,7 @@ class ActiveGameServiceImplTest {
                 .build();
         GamePlayer gp3 = GamePlayer
                 .builder()
-                .user(new User(3L, "user3", "", "user3"))
+                .user(new User(3L, "user3", "", 0, 0, "user3"))
                 .build();
 
         List<GamePlayer> playersList = new ArrayList<>();
@@ -301,14 +305,14 @@ class ActiveGameServiceImplTest {
     @Test
     void leaveGame_WhenUserNotInGame_ShouldDoNothing() {
         // given
-        User user = new User(1L, "user1", "", "user1");
+        User user = new User(1L, "user1", "", 0, 0, "user1");
         GamePlayer gp1 = GamePlayer
                 .builder()
-                .user(new User(2L, "user2", "", "user2"))
+                .user(new User(2L, "user2", "", 0, 0, "user2"))
                 .build();
         GamePlayer gp2 = GamePlayer
                 .builder()
-                .user(new User(3L, "user3", "", "user3"))
+                .user(new User(3L, "user3", "", 0, 0, "user3"))
                 .build();
 
         List<GamePlayer> playersList = new ArrayList<>();
@@ -329,9 +333,9 @@ class ActiveGameServiceImplTest {
     void changeTeam_WhenTeamNotFull_ShouldChangeTeams() {
         // given
         List<User> users = Arrays.asList(
-                new User(1L, "user1", "", "user1"),
-                new User(2L, "user2", "", "user2"),
-                new User(3L, "user3", "", "user3")
+                new User(1L, "user1", "", 0, 0, "user1"),
+                new User(2L, "user2", "", 0, 0, "user2"),
+                new User(3L, "user3", "", 0, 0, "user3")
         );
         List<GamePlayer> gamePlayersList = Arrays.asList(
             new GamePlayer(1L, users.get(0), Team.RED, null, null),
@@ -355,10 +359,10 @@ class ActiveGameServiceImplTest {
     void changeTeam_WhenTeamFull_ShouldNotAllowUserToChangeTeam() {
         // given
         List<User> users = Arrays.asList(
-                new User(1L, "user1", "", "user1"),
-                new User(2L, "user2", "", "user2"),
-                new User(3L, "user3", "", "user3"),
-                new User(4L, "user4", "", "user4")
+                User.builder().id(1L).username("user1").build(),
+                User.builder().id(2L).username("user2").build(),
+                User.builder().id(3L).username("user3").build(),
+                User.builder().id(4L).username("user4").build()
         );
         List<GamePlayer> gamePlayersList = Arrays.asList(
                 new GamePlayer(1L, users.get(0), Team.RED, null, null),
@@ -381,8 +385,8 @@ class ActiveGameServiceImplTest {
     void changeTeam_WhenTargetTeamIsSameAsCurrentTeam_ShouldNotChangeTeams() {
         // given
         List<User> users = Arrays.asList(
-                new User(1L, "user1", "", "user1"),
-                new User(2L, "user2", "", "user2")
+                User.builder().id(1L).username("user1").build(),
+                User.builder().id(2L).username("user2").build()
         );
         List<GamePlayer> gamePlayersList = Arrays.asList(
                 new GamePlayer(1L, users.get(0), Team.RED, null, null),
@@ -430,10 +434,10 @@ class ActiveGameServiceImplTest {
     @Test
     void changeTeam_WhenUserNotInGame_ShouldDoNothing() {
         // given
-        User user = new User(1L, "user1", "", "user1");
+        User user = User.builder().id(1L).username("user1").build();
         Game game = Game.builder()
                 .playersList(new LinkedList<>(List.of(
-                        new GamePlayer(2L, new User(2L, "user2", "", "user2"), Team.RED, null, null)
+                        new GamePlayer(2L, User.builder().id(2L).username("user2").build(), Team.RED, null, null)
                 )))
                 .id(1L)
                 .build();

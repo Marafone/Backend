@@ -18,6 +18,7 @@ import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.game.response.GameActionResponse;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
+import com.marafone.marafone.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
     private final ActiveGameRepository activeGameRepository;
     private final EndedGameService endedGameService;
+    private final UserService userService;
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
@@ -433,7 +435,14 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             if (game.roundHasEnded()) {
                 winningAction.getPlayer().addBonusPoint();
 
-                if (game.setWinnersIfPossible()) {
+
+                if(game.setWinnersIfPossible()){
+                    userService.updateUsersStats(
+                            game.getGamePlayersFromTeam(Team.RED).stream().map(GamePlayer::getUser).toList(),
+                            game.getGamePlayersFromTeam(Team.BLUE).stream().map(GamePlayer::getUser).toList(),
+                            game.getWinnerTeam()
+                    );
+
                     outEvents.add(new PointState(game));
                     outEvents.add(new WinnerState(game));
 
@@ -580,5 +589,4 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         redTeamTopScorer.subtractPoints(redTeamPoints % 3);
         blueTeamTopScorer.subtractPoints(blueTeamPoints % 3);
     }
-
 }
