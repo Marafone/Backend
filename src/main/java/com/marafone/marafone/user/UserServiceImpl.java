@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +44,7 @@ public class UserServiceImpl implements UserService{
         return Optional.of(new RankingPageDTO(userRankingDTOS, pageNumber));
     }
 
+    @Transactional
     public void updateUsersStats(List<User> teamRed, List<User> teamBlue, Team winnerTeam) {
         List<User> winningTeam = (winnerTeam == Team.RED) ? teamRed : teamBlue;
         List<User> losingTeam = (winnerTeam == Team.RED) ? teamBlue : teamRed;
@@ -52,9 +54,6 @@ public class UserServiceImpl implements UserService{
 
         for (var user: losingTeam)
             user.increaseLosses();
-
-        userRepository.saveAll(winningTeam);
-        userRepository.saveAll(losingTeam);
     }
 
     private int calculatePageNumber(int position, int pageSize) {
