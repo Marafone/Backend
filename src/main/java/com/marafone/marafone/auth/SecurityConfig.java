@@ -52,7 +52,13 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())//for testing
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers(
+                                "/auth/login",
+                                "/auth/register",
+                                "/game/waiting",
+                                "/users/ranking",
+                                "/users/*/ranking")
+                        .permitAll()
                         .anyRequest().authenticated()
                 )
                 .logout(logout -> logout
