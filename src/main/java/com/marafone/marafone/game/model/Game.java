@@ -88,27 +88,27 @@ public class Game {
         return playersList.size() < 4;
     }
 
-    public boolean setWinnersIfPossible(){
-        int blueTeamPoints = 0;
-        int redTeamPoints = 0;
+    public boolean isEnded() {return winnerTeam != null;}
 
-        for(var gamePlayer: playersList){
-            if(gamePlayer.getTeam() == Team.RED)
-                redTeamPoints += gamePlayer.getPoints();
-            else
-                blueTeamPoints += gamePlayer.getPoints();
+    public boolean isSettingWinnersPossible() {
+        int redTeamPoints = getTeamPoints(Team.RED);
+        int blueTeamPoints = getTeamPoints(Team.BLUE);
+
+        return (redTeamPoints != blueTeamPoints) && ((redTeamPoints >= pointsToWinGame) || (blueTeamPoints >= pointsToWinGame));
+    }
+
+    public void setWinners() {
+        if (!isSettingWinnersPossible())
+            throw new IllegalStateException("Conditions for setting a winner are not met.");
+
+        int redTeamPoints = getTeamPoints(Team.RED);
+        int blueTeamPoints = getTeamPoints(Team.BLUE);
+
+        if (blueTeamPoints > redTeamPoints){
+            winnerTeam = Team.BLUE;
+        } else {
+            winnerTeam = Team.RED;
         }
-
-        if(blueTeamPoints != redTeamPoints && (blueTeamPoints >= pointsToWinGame || redTeamPoints >= pointsToWinGame)){
-            if(blueTeamPoints > redTeamPoints){
-                winnerTeam = Team.BLUE;
-            }else{
-                winnerTeam = Team.RED;
-            }
-            return true;
-        }
-
-        return false;
     }
 
     public void addRound(){
