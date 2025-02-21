@@ -287,39 +287,21 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext())
                 return;
 
-            Round currentRound = game.getRounds().getLast();
             GamePlayer currentPlayer = game.getCurrentPlayer().next();
-
+            Round currentRound = game.getRounds().getLast();
             Card selectedCard = allCards.get((int) (cardSelectEvent.cardId - 1));
-            ErrorEvent errorEvent = null;
 
-            if (!currentPlayer.getUser().getUsername().equals(principalName))
-                errorEvent = new ErrorEvent(NOT_YOUR_TURN.formatMessage(currentPlayer.getUser().getUsername()));
-            else if (!currentPlayer.hasCard(selectedCard))
-                errorEvent = new ErrorEvent(CARD_NOT_IN_HAND.getMessage());
-            else if (currentRound.getTrumpSuit() == null)
-                errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
-            else if (game.getLeadingSuit() != null && selectedCard.getSuit() != game.getLeadingSuit()
-                    && currentPlayer.hasCardOfSuit(game.getLeadingSuit()))
-                errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(game.getLeadingSuit()));
+            CurrentGameContext gameContext = new CurrentGameContext(gameId, currentPlayer, currentRound, selectedCard);
 
-            if (errorEvent != null) {
+            Optional<ErrorEvent> errorEvent = validateSelectCard(game, gameContext, principalName);
+            if (errorEvent.isPresent()) {
+                eventPublisher.publishToPlayerInTheLobby(gameId, principalName, errorEvent.get());
                 game.getCurrentPlayer().previous();
-                eventPublisher.publishToPlayerInTheLobby(gameId, principalName, errorEvent);
                 return;
             }
 
-            currentRound.getActions().addLast(
-                Action.builder().player(currentPlayer).round(currentRound).card(selectedCard).timestamp(LocalDateTime.now()).build()
-            );
-
-            if(game.getLeadingSuit() == null)
-                game.setLeadingSuit(selectedCard.getSuit());
-
-            currentPlayer.removeCard(selectedCard);
-
-            eventPublisher.publishToPlayerInTheLobby(gameId, principalName, new MyCardsState(currentPlayer));
-            eventPublisher.publishToLobby(gameId, new TurnState(game));
+            updateGameState(game, gameContext);
+            sendCurrentTurnChangeMessages(game, currentPlayer);
 
             if(!game.turnHasEnded()) {
                 eventPublisher.publishToLobby(
@@ -332,56 +314,17 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }
 
             List<Action> currentTurn = currentRound.getLastNActions(4);
+            GamePlayer winningPlayer = findWinningPlayer(currentTurn);
 
-            Action winningAction = getWinningAction(currentTurn);
+            handleEndedTurn(game, currentTurn, winningPlayer);
 
-            game.setLeadingSuit(null);
+            if (game.roundHasEnded())
+                handleEndedRound(game, winningPlayer);
+            else
+                handleNewTurn(game, winningPlayer);
 
-            int earnedPoints = currentTurn.stream().mapToInt(action -> action.getCard().getRank().getPoints()).sum();
-            winningAction.getPlayer().addPoints(earnedPoints);
-
-            List<OutEvent> outEvents = new LinkedList<>();
-
-            if(game.roundHasEnded()){
-                winningAction.getPlayer().addBonusPoint();
-
-                if(game.setWinnersIfPossible()){
-                    userService.updateUsersStats(
-                            game.getGamePlayersFromTeam(Team.RED).stream().map(GamePlayer::getUser).toList(),
-                            game.getGamePlayersFromTeam(Team.BLUE).stream().map(GamePlayer::getUser).toList(),
-                            game.getWinnerTeam()
-                    );
-
-                    outEvents.add(new PointState(game));
-                    outEvents.add(new WinnerState(game));
-
-                    endedGameService.saveEndedGame(game);
-                    eventPublisher.publishToLobby(gameId, outEvents);
-                    return;
-                }else{
-                    reduceTeamsPoints(game);
-
-                    game.setNewOrderAfterRoundEnd();
-
-                    randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
-                    game.addRound();
-
-                    outEvents.add(new NewRound(game.getCurrentPlayerWithoutIterating().getUser().getUsername()));
-                    game.getPlayersList().forEach(gamePlayer ->
-                            eventPublisher.publishToPlayerInTheLobby(
-                                    gameId,
-                                    gamePlayer.getUser().getUsername(),
-                                    new MyCardsState(gamePlayer))
-                    );
-                }
-            }else{
-                game.setNewOrderAfterTurnEnd(winningAction.getPlayer());
-                outEvents.add(new NewTurn());
-                outEvents.add(new NextPlayerState(winningAction.getPlayer().getUser().getUsername(), true));
-            }
-            outEvents.add(new PointState(game));
-            outEvents.add(new PlayersOrderState(game));
-            eventPublisher.publishToLobby(gameId, outEvents);
+            if (!game.isEnded())
+                eventPublisher.publishToLobby(gameId, List.of(new PointState(game), new PlayersOrderState(game)));
         }
 
     }
@@ -487,6 +430,123 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }).orElseThrow();
     }
 
+    private Optional<ErrorEvent> validateSelectCard(Game game, CurrentGameContext gameContext, String principalName) {
+        ErrorEvent errorEvent = null;
+
+        if (!isRequestPlayerTurn(gameContext.currentPlayer(), principalName))
+            errorEvent = new ErrorEvent(NOT_YOUR_TURN.formatMessage(gameContext.currentPlayer().getUser().getUsername()));
+        else if (!doesPlayerHaveCard(gameContext.currentPlayer(), gameContext.selectedCard()))
+            errorEvent = new ErrorEvent(CARD_NOT_IN_HAND.getMessage());
+        else if (!isTrumpSuitSelected(gameContext.currentRound()))
+            errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
+        else if (isInvalidLeadingSuitPlayed(game, gameContext.currentPlayer(), gameContext.selectedCard()))
+            errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(game.getLeadingSuit()));
+
+        return Optional.ofNullable(errorEvent);
+    }
+
+    private boolean isRequestPlayerTurn(GamePlayer actualPlayer, String requestPlayerName) {
+        return actualPlayer.getUser().getUsername().equals(requestPlayerName);
+    }
+
+    private boolean doesPlayerHaveCard(GamePlayer player, Card card) {
+        return player.hasCard(card);
+    }
+
+    private boolean isTrumpSuitSelected(Round round) {
+        return round.getTrumpSuit() != null;
+    }
+
+    private boolean isLeadingSuitSelected(Game game) {
+        return game.getLeadingSuit() != null;
+    }
+
+    private boolean isCardFromSuit(Card card, Suit suit) {
+        return card.getSuit() == suit;
+    }
+
+    private boolean isInvalidLeadingSuitPlayed(Game game, GamePlayer gamePlayer, Card selectedCard) {
+        return isLeadingSuitSelected(game)
+                && !isCardFromSuit(selectedCard, game.getLeadingSuit())
+                && gamePlayer.hasCardOfSuit(game.getLeadingSuit());
+    }
+
+    private void updateGameState(Game game, CurrentGameContext gameContext) {
+        Action actionToAdd = Action.builder()
+                .player(gameContext.currentPlayer())
+                .round(gameContext.currentRound())
+                .card(gameContext.selectedCard())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        addNewActionToRound(gameContext.currentRound(), actionToAdd);
+        updateGameLeadingSuit(game, gameContext.selectedCard().getSuit());
+        removePlayedCard(gameContext.currentPlayer(), gameContext.selectedCard());
+    }
+
+    private void addNewActionToRound(Round round, Action action) {
+        round.getActions().addLast(action);
+    }
+
+    private void updateGameLeadingSuit(Game game, Suit suit) {
+        if (game.getLeadingSuit() == null)
+            game.setLeadingSuit(suit);
+    }
+
+    private void removePlayedCard(GamePlayer currentPlayer, Card selectedCard) {
+        currentPlayer.removeCard(selectedCard);
+    }
+
+    private void sendCurrentTurnChangeMessages(Game game, GamePlayer currentPlayer) {
+        eventPublisher.publishToPlayerInTheLobby(
+                game.getId(),
+                currentPlayer.getUser().getUsername(),
+                new MyCardsState(currentPlayer)
+        );
+        eventPublisher.publishToLobby(game.getId(), new TurnState(game));
+    }
+
+    private void handleEndedTurn(Game game, List<Action> currentTurn, GamePlayer winningPlayer) {
+        game.setLeadingSuit(null);
+        updateWinningPlayerPoints(currentTurn, winningPlayer);
+    }
+
+    private void updateWinningPlayerPoints(List<Action> turn, GamePlayer winningPlayer) {
+        int earnedPoints = findPointsEarnedInTurn(turn);
+        winningPlayer.addPoints(earnedPoints);
+    }
+
+    private int findPointsEarnedInTurn(List<Action> turn) {
+        return turn.stream()
+                .mapToInt(action -> action.getCard().getRank().getPoints())
+                .sum();
+    }
+
+    private GamePlayer findWinningPlayer(List<Action> turn) {
+        Action winningAction = getWinningAction(turn);
+        return winningAction.getPlayer();
+    }
+
+    private void handleEndedRound(Game game, GamePlayer winningPlayer) {
+        winningPlayer.addBonusPoint();
+
+        if (game.isSettingWinnersPossible()) {
+            game.setWinners();
+            userService.updateUsersStats(
+                    game.getGamePlayersFromTeam(Team.RED).stream().map(GamePlayer::getUser).toList(),
+                    game.getGamePlayersFromTeam(Team.BLUE).stream().map(GamePlayer::getUser).toList(),
+                    game.getWinnerTeam()
+            );
+
+            endedGameService.saveEndedGame(game);
+            eventPublisher.publishToLobby(game.getId(), List.of(new PointState(game), new WinnerState(game)));
+        } else {
+            reduceTeamsPoints(game);
+            prepareGameForNextRound(game);
+            sendNewRoundMessages(game);
+        }
+    }
+
     private void reduceTeamsPoints(Game game) {
         int redTeamPoints = game.getTeamPoints(Team.RED);
         int blueTeamPoints = game.getTeamPoints(Team.BLUE);
@@ -497,4 +557,31 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         redTeamTopScorer.subtractPoints(redTeamPoints % 3);
         blueTeamTopScorer.subtractPoints(blueTeamPoints % 3);
     }
+
+    private void prepareGameForNextRound(Game game) {
+        game.setNewOrderAfterRoundEnd();
+        randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
+        game.addRound();
+    }
+
+    private void sendNewRoundMessages(Game game) {
+        Long gameId = game.getId();
+        GamePlayer currentPlayer = game.getCurrentPlayerWithoutIterating();
+        eventPublisher.publishToLobby(gameId, new NewRound(currentPlayer.getUser().getUsername()));
+        for (var gamePlayer: game.getPlayersList())
+            eventPublisher.publishToPlayerInTheLobby(gameId, gamePlayer.getUser().getUsername(), new MyCardsState(gamePlayer));
+    }
+
+    private void handleNewTurn(Game game, GamePlayer winningPlayer) {
+        game.setNewOrderAfterTurnEnd(winningPlayer);
+        sendNewTurnMessages(game.getId(), winningPlayer.getUser().getUsername());
+    }
+
+    private void sendNewTurnMessages(Long gameId, String winningPlayerName) {
+        eventPublisher.publishToLobby(
+                gameId,
+                List.of(new NewTurn(), new NextPlayerState(winningPlayerName, true))
+        );
+    }
+
 }
