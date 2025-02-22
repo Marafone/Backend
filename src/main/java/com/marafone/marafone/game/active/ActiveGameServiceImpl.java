@@ -539,6 +539,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             );
 
             endedGameService.saveEndedGame(game);
+            activeGameRepository.removeById(game.getId());
             eventPublisher.publishToLobby(game.getId(), List.of(new PointState(game), new WinnerState(game)));
         } else {
             reduceTeamsPoints(game);
