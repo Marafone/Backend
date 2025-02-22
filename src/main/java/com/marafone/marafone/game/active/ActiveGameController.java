@@ -1,15 +1,18 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.marafone.errors.CreateGameErrorMessages;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
-import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.model.Call;
+import com.marafone.marafone.game.model.GameDTO;
+import com.marafone.marafone.game.model.JoinGameResult;
+import com.marafone.marafone.game.model.Team;
 import com.marafone.marafone.game.response.JoinGameResponse;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -19,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.Map;
 
 import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
 
@@ -35,12 +37,22 @@ public class ActiveGameController {
         return activeGameService.getWaitingGames();
     }
 
+    @GetMapping("/game/reconnectable")
+    @ResponseBody
+    public ResponseEntity<Long> getReconnectableGame(Principal principal) {
+        var optionalGameId = activeGameService.getReconnectableGameForPlayer(principal.getName());
+        return optionalGameId
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
     @PostMapping("/game/create")
     @ResponseBody
     public synchronized ResponseEntity<String> createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
         if (activeGameService.doesNotStartedGameAlreadyExist(createGameRequest.getGameName()))
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("GAME_NAME_TAKEN");
+            return ResponseEntity.badRequest().body(CreateGameErrorMessages.GAME_NAME_TAKEN.getMessage());
+        else if (activeGameService.getReconnectableGameForPlayer(user.getUsername()).isPresent())
+            return ResponseEntity.badRequest().body(CreateGameErrorMessages.PLAYER_LEFT_ANOTHER_GAME.getMessage());
 
         Long gameId = activeGameService.createGame(createGameRequest, user);
         return ResponseEntity.ok(String.valueOf(gameId));
