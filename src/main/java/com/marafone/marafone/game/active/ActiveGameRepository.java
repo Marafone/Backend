@@ -10,4 +10,5 @@ public interface ActiveGameRepository {
     void removeById(Long id);
     Long put(Game game);
     List<Game> getWaitingGames();
+    List<Game> getStartedGames();
 }

@@ -41,4 +41,9 @@ public class ActiveGameRepositoryImplCache implements ActiveGameRepository{
 
         return LastSnapshotData;
     }
+
+    @Override
+    public List<Game> getStartedGames() {
+        return activeGameRepositoryImpl.getStartedGames();
+    }
 }

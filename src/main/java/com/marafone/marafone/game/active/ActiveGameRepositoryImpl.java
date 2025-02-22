@@ -47,4 +47,12 @@ public class ActiveGameRepositoryImpl implements ActiveGameRepository{
                 .filter(game -> !game.hasStarted() && game.isPublic() && game.anyTeamNotFull())
                 .toList();
     }
+
+    @Override
+    public List<Game> getStartedGames() {
+        return activeGames.values()
+                .stream()
+                .filter(Game::hasStarted)
+                .toList();
+    }
 }
