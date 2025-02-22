@@ -44,6 +44,17 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                         .toList();
     }
 
+    public Optional<Long> getReconnectableGameForPlayer(String playerName) {
+        List<Game> startedGames = activeGameRepository.getStartedGames();
+        return startedGames.stream()
+                           .filter(game -> game.getPlayersList()
+                                     .stream()
+                                     .map(gp -> gp.getUser().getUsername())
+                                     .anyMatch(username -> username.equals(playerName)))
+                           .map(Game::getId)
+                           .findFirst();
+    }
+
     @Override
     public Long createGame(CreateGameRequest createGameRequest, User user) {
         GamePlayer gamePlayer = createGamePlayer(user, Team.RED);
@@ -76,6 +87,8 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         if(gameOptional.isEmpty())
             return JoinGameResult.GAME_NOT_FOUND;
+        else if (getReconnectableGameForPlayer(user.getUsername()).isPresent())
+            return JoinGameResult.PLAYER_DURING_ANOTHER_GAME;
 
         Game game = gameOptional.get();
 
