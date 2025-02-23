@@ -44,7 +44,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                         .toList();
     }
 
-    public Optional<Long> getReconnectableGameForPlayer(String playerName) {
+    public Optional<Long> getActiveGameForPlayer(String playerName) {
         List<Game> startedGames = activeGameRepository.getStartedGames();
         return startedGames.stream()
                            .filter(game -> game.getPlayersList()
@@ -85,9 +85,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     public JoinGameResult joinGame(Long gameId, JoinGameRequest joinGameRequest, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
 
-        if(gameOptional.isEmpty())
+        if (gameOptional.isEmpty())
             return JoinGameResult.GAME_NOT_FOUND;
-        else if (getReconnectableGameForPlayer(user.getUsername()).isPresent())
+        else if (user.isInGame())
             return JoinGameResult.PLAYER_DURING_ANOTHER_GAME;
 
         Game game = gameOptional.get();
@@ -266,7 +266,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }
 
             game.setStartedAt(LocalDateTime.now());
-
+            markUsersAsInGame(game.getPlayersList().stream().map(GamePlayer::getUser).toList());
             randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
 
             List<GamePlayer> startingOrderOfPlayers = randomAssigner.assignRandomInitialOrder(game.getPlayersList());
@@ -509,5 +509,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         redTeamTopScorer.subtractPoints(redTeamPoints % 3);
         blueTeamTopScorer.subtractPoints(blueTeamPoints % 3);
+    }
+
+    private void markUsersAsInGame(List<User> users) {
+        for (var user: users)
+            user.setInGame(true);
     }
 }
