@@ -2,7 +2,10 @@ package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
+import com.marafone.marafone.exception.SelectCardException;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
+import com.marafone.marafone.game.context.SelectCardContext;
+import com.marafone.marafone.game.dto.GameDTO;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
@@ -11,17 +14,19 @@ import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
 import com.marafone.marafone.game.random.RandomAssigner;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.marafone.marafone.errors.SelectCardErrorMessages.*;
-import static com.marafone.marafone.game.model.JoinGameResult.*;
+import static com.marafone.marafone.game.response.JoinGameResult.*;
 
 @Service
 @RequiredArgsConstructor
@@ -291,16 +296,16 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             Round currentRound = game.getRounds().getLast();
             Card selectedCard = allCards.get((int) (cardSelectEvent.cardId - 1));
 
-            CurrentGameContext gameContext = new CurrentGameContext(gameId, currentPlayer, currentRound, selectedCard);
+            SelectCardContext selectCardContext = new SelectCardContext(gameId, currentPlayer, currentRound, selectedCard);
 
-            Optional<ErrorEvent> errorEvent = validateSelectCard(game, gameContext, principalName);
-            if (errorEvent.isPresent()) {
-                eventPublisher.publishToPlayerInTheLobby(gameId, principalName, errorEvent.get());
+            try {
+                validateOrThrowSelectCard(game.getLeadingSuit(), selectCardContext, principalName);
+            } catch (SelectCardException ex) {
                 game.getCurrentPlayer().previous();
-                return;
+                throw ex;
             }
 
-            updateGameState(game, gameContext);
+            updateGameState(game, selectCardContext);
             sendCurrentTurnChangeMessages(game, currentPlayer);
 
             if(!game.turnHasEnded()) {
@@ -430,62 +435,46 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }).orElseThrow();
     }
 
-    private Optional<ErrorEvent> validateSelectCard(Game game, CurrentGameContext gameContext, String principalName) {
-        ErrorEvent errorEvent = null;
+    private void validateOrThrowSelectCard(Suit leadingSuit, SelectCardContext selectCardContext, String principalName) {
+        GamePlayer currentPlayer = selectCardContext.currentPlayer();
+        Card selectedCard = selectCardContext.selectedCard();
+        Round currentRound = selectCardContext.currentRound();
 
-        if (!isRequestPlayerTurn(gameContext.currentPlayer(), principalName))
-            errorEvent = new ErrorEvent(NOT_YOUR_TURN.formatMessage(gameContext.currentPlayer().getUser().getUsername()));
-        else if (!doesPlayerHaveCard(gameContext.currentPlayer(), gameContext.selectedCard()))
-            errorEvent = new ErrorEvent(CARD_NOT_IN_HAND.getMessage());
-        else if (!isTrumpSuitSelected(gameContext.currentRound()))
-            errorEvent = new ErrorEvent(TRUMP_SUIT_NOT_SELECTED.getMessage());
-        else if (isInvalidLeadingSuitPlayed(game, gameContext.currentPlayer(), gameContext.selectedCard()))
-            errorEvent = new ErrorEvent(INVALID_LEADING_SUIT_PLAY.formatMessage(game.getLeadingSuit()));
-
-        return Optional.ofNullable(errorEvent);
+        if (!isRequestPlayerTurn(currentPlayer, principalName))
+            throw new SelectCardException(NOT_YOUR_TURN.formatMessage(currentPlayer.getUser().getUsername()));
+        else if (!currentPlayer.hasCard(selectedCard))
+            throw new SelectCardException(CARD_NOT_IN_HAND.getMessage());
+        else if (!currentRound.isTrumpSuitSelected())
+            throw new SelectCardException(TRUMP_SUIT_NOT_SELECTED.getMessage());
+        else if (isInvalidLeadingSuitPlayed(leadingSuit, currentPlayer, selectedCard))
+            throw new SelectCardException(INVALID_LEADING_SUIT_PLAY.formatMessage(leadingSuit));
     }
 
     private boolean isRequestPlayerTurn(GamePlayer actualPlayer, String requestPlayerName) {
         return actualPlayer.getUser().getUsername().equals(requestPlayerName);
     }
 
-    private boolean doesPlayerHaveCard(GamePlayer player, Card card) {
-        return player.hasCard(card);
+    private boolean isInvalidLeadingSuitPlayed(Suit leadingSuit, GamePlayer gamePlayer, Card selectedCard) {
+        return leadingSuit != null
+               && selectedCard.getSuit() != leadingSuit
+               && gamePlayer.hasCardOfSuit(leadingSuit);
     }
 
-    private boolean isTrumpSuitSelected(Round round) {
-        return round.getTrumpSuit() != null;
-    }
+    private void updateGameState(Game game, SelectCardContext selectCardContext) {
+        GamePlayer currentPlayer = selectCardContext.currentPlayer();
+        Round currentRound = selectCardContext.currentRound();
+        Card selectedCard = selectCardContext.selectedCard();
 
-    private boolean isLeadingSuitSelected(Game game) {
-        return game.getLeadingSuit() != null;
-    }
-
-    private boolean isCardFromSuit(Card card, Suit suit) {
-        return card.getSuit() == suit;
-    }
-
-    private boolean isInvalidLeadingSuitPlayed(Game game, GamePlayer gamePlayer, Card selectedCard) {
-        return isLeadingSuitSelected(game)
-                && !isCardFromSuit(selectedCard, game.getLeadingSuit())
-                && gamePlayer.hasCardOfSuit(game.getLeadingSuit());
-    }
-
-    private void updateGameState(Game game, CurrentGameContext gameContext) {
         Action actionToAdd = Action.builder()
-                .player(gameContext.currentPlayer())
-                .round(gameContext.currentRound())
-                .card(gameContext.selectedCard())
+                .player(currentPlayer)
+                .round(currentRound)
+                .card(selectedCard)
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        addNewActionToRound(gameContext.currentRound(), actionToAdd);
-        updateGameLeadingSuit(game, gameContext.selectedCard().getSuit());
-        removePlayedCard(gameContext.currentPlayer(), gameContext.selectedCard());
-    }
-
-    private void addNewActionToRound(Round round, Action action) {
-        round.getActions().addLast(action);
+        currentRound.addNewAction(actionToAdd);
+        updateGameLeadingSuit(game, selectedCard.getSuit());
+        removePlayedCard(currentPlayer, selectedCard);
     }
 
     private void updateGameLeadingSuit(Game game, Suit suit) {
