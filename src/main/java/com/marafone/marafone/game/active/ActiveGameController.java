@@ -37,10 +37,10 @@ public class ActiveGameController {
         return activeGameService.getWaitingGames();
     }
 
-    @GetMapping("/game/reconnectable")
+    @GetMapping("/game/active")
     @ResponseBody
-    public ResponseEntity<Long> getReconnectableGame(Principal principal) {
-        var optionalGameId = activeGameService.getReconnectableGameForPlayer(principal.getName());
+    public ResponseEntity<Long> getUserActiveGame(Principal principal) {
+        var optionalGameId = activeGameService.getActiveGameForPlayer(principal.getName());
         return optionalGameId
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.noContent().build());
@@ -51,7 +51,7 @@ public class ActiveGameController {
     public synchronized ResponseEntity<String> createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
         if (activeGameService.doesNotStartedGameAlreadyExist(createGameRequest.getGameName()))
             return ResponseEntity.badRequest().body(CreateGameErrorMessages.GAME_NAME_TAKEN.getMessage());
-        else if (activeGameService.getReconnectableGameForPlayer(user.getUsername()).isPresent())
+        else if (user.isInGame())
             return ResponseEntity.badRequest().body(CreateGameErrorMessages.PLAYER_LEFT_ANOTHER_GAME.getMessage());
 
         Long gameId = activeGameService.createGame(createGameRequest, user);
