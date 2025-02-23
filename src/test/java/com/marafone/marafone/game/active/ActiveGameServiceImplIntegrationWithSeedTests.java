@@ -6,6 +6,7 @@ import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -20,14 +21,14 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.Random;
 
-import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
+import static com.marafone.marafone.game.response.JoinGameResult.SUCCESS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext
-public class ActiveGameServiceImplIntegrationWithSeedTests {
+class ActiveGameServiceImplIntegrationWithSeedTests {
 
     private final ActiveGameService activeGameService;
     private final ActiveGameRepository activeGameRepository;

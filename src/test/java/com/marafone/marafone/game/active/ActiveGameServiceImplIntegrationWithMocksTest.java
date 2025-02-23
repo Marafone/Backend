@@ -1,13 +1,13 @@
 package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.DummyData;
-import com.marafone.marafone.game.config.GameConfig;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.game.random.RandomAssigner;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -21,15 +21,14 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
+import static com.marafone.marafone.game.response.JoinGameResult.SUCCESS;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext
-public class ActiveGameServiceImplIntegrationWithMocksTest {
+class ActiveGameServiceImplIntegrationWithMocksTest {
 
     private final ActiveGameService activeGameService;
     private final ActiveGameRepository activeGameRepository;
