@@ -16,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -72,7 +71,7 @@ class ActiveGameControllerTest {
                 new CreateGameRequest("game", GameType.MARAFFA, "", 21);
 
         Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(Mockito.any())).thenReturn(false);
-        Mockito.when(activeGameService.getReconnectableGameForPlayer(Mockito.any())).thenReturn(Optional.of(1L));
+        Mockito.when(mockedUser.isInGame()).thenReturn(true);
         String jsonRequest = new ObjectMapper().writeValueAsString(createGameRequest);
 
         // when & then
@@ -97,7 +96,7 @@ class ActiveGameControllerTest {
                 new CreateGameRequest("game", GameType.MARAFFA, "", 21);
 
         Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(Mockito.any())).thenReturn(false);
-        Mockito.when(activeGameService.getReconnectableGameForPlayer(Mockito.any())).thenReturn(Optional.empty());
+        Mockito.when(activeGameService.getActiveGameForPlayer(Mockito.any())).thenReturn(Optional.empty());
         String jsonRequest = new ObjectMapper().writeValueAsString(createGameRequest);
 
         // when & then
