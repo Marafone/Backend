@@ -98,9 +98,6 @@ public class Game {
     }
 
     public void setWinners() {
-        if (!isSettingWinnersPossible())
-            throw new IllegalStateException("Conditions for setting a winner are not met.");
-
         int redTeamPoints = getTeamPoints(Team.RED);
         int blueTeamPoints = getTeamPoints(Team.BLUE);
 
