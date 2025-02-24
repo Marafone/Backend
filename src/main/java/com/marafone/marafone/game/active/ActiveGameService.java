@@ -28,4 +28,5 @@ public interface ActiveGameService {
     void sendCall(Long gameId, Call call);
     void reconnectToGame(Long gameId, String principalName);
     boolean doesNotStartedGameAlreadyExist(String name);
+    void syncUserGameStatus(User user);
 }
