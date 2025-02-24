@@ -186,4 +186,9 @@ public class Game {
         return topScorer;
     }
 
+    public void setLeadingSuitIfUnset(Suit suit) {
+        if (leadingSuit == null)
+            leadingSuit = suit;
+    }
+
 }
