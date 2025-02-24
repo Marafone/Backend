@@ -73,7 +73,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         return activeGameRepository.put(game);
     }
 
-    /** checks if game with arg name already exists among games waiting for players to join */
+    @Override
     public boolean doesNotStartedGameAlreadyExist(String name) {
         return activeGameRepository.getWaitingGames()
                         .stream()
@@ -82,8 +82,16 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
+    public void syncUserGameStatus(User user) {
+        if (user.isInGame() && getActiveGameForPlayer(user.getUsername()).isEmpty())
+            user.setInGame(false);
+    }
+
+    @Override
     public JoinGameResult joinGame(Long gameId, JoinGameRequest joinGameRequest, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
+
+        syncUserGameStatus(user);
 
         if (gameOptional.isEmpty())
             return JoinGameResult.GAME_NOT_FOUND;
@@ -369,6 +377,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     outEvents.add(new WinnerState(game));
 
                     endedGameService.saveEndedGame(game);
+                    markUsersAsNotInGame(game.getPlayersList().stream().map(GamePlayer::getUser).toList());
                     eventPublisher.publishToLobby(gameId, outEvents);
                     return;
                 }else{
@@ -514,5 +523,10 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private void markUsersAsInGame(List<User> users) {
         for (var user: users)
             user.setInGame(true);
+    }
+
+    private void markUsersAsNotInGame(List<User> users) {
+        for (var user: users)
+            user.setInGame(false);
     }
 }
