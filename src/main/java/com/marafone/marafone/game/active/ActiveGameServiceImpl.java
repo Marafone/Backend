@@ -4,7 +4,7 @@ import com.marafone.ai.DummyData;
 import com.marafone.ai.MarafoneAI;
 import com.marafone.ai.Move;
 import com.marafone.ai.MoveApplier;
-import com.marafone.marafone.AiInitializer;
+import com.marafone.marafone.AiManager;
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
@@ -197,7 +197,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             MarafoneAI trainedAI = MarafoneAI.load("trained_ai.ser");
 
             // Get an available AI user
-            User aiUser = AiInitializer.getAvailableAI();
+            User aiUser = AiManager.getAvailableAI();
             if (aiUser == null) {
                 return AddAIResult.MAX_AI_REACHED;
             }
@@ -211,7 +211,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 aiPlayers.put(aiUser.getUsername(), trainedAI);
                 return AddAIResult.SUCCESS;
             } else {
-                AiInitializer.releaseAI(aiUser); // Release AI if joining fails
+                AiManager.releaseAI(aiUser); // Release AI if joining fails
                 return AddAIResult.FAILED_TO_ADD;
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -444,7 +444,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     game.getPlayersList().stream()
                             .map(GamePlayer::getUser)
                             .filter(user -> user.getUsername().startsWith("AI_"))
-                            .forEach(AiInitializer::releaseAI);
+                            .forEach(AiManager::releaseAI);
 
                     return SelectCardResult.GAME_ENDED;
                 } else {
