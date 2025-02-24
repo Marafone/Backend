@@ -19,7 +19,6 @@ import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -292,19 +291,13 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext())
                 return;
 
-            GamePlayer currentPlayer = game.getCurrentPlayer().next();
+            GamePlayer currentPlayer = game.getCurrentPlayerWithoutIterating();
             Round currentRound = game.getRounds().getLast();
             Card selectedCard = allCards.get((int) (cardSelectEvent.cardId - 1));
 
             SelectCardContext selectCardContext = new SelectCardContext(gameId, currentPlayer, currentRound, selectedCard);
 
-            try {
-                validateOrThrowSelectCard(game.getLeadingSuit(), selectCardContext, principalName);
-            } catch (SelectCardException ex) {
-                game.getCurrentPlayer().previous();
-                throw ex;
-            }
-
+            validateSelectCard(game.getLeadingSuit(), selectCardContext, principalName);
             updateGameState(game, selectCardContext);
             sendCurrentTurnChangeMessages(game, currentPlayer);
 
@@ -435,7 +428,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }).orElseThrow();
     }
 
-    private void validateOrThrowSelectCard(Suit leadingSuit, SelectCardContext selectCardContext, String principalName) {
+    private void validateSelectCard(Suit leadingSuit, SelectCardContext selectCardContext, String principalName) {
         GamePlayer currentPlayer = selectCardContext.currentPlayer();
         Card selectedCard = selectCardContext.selectedCard();
         Round currentRound = selectCardContext.currentRound();
@@ -472,17 +465,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .timestamp(LocalDateTime.now())
                 .build();
 
+        game.getCurrentPlayer().next();
         currentRound.addNewAction(actionToAdd);
-        updateGameLeadingSuit(game, selectedCard.getSuit());
-        removePlayedCard(currentPlayer, selectedCard);
-    }
-
-    private void updateGameLeadingSuit(Game game, Suit suit) {
-        if (game.getLeadingSuit() == null)
-            game.setLeadingSuit(suit);
-    }
-
-    private void removePlayedCard(GamePlayer currentPlayer, Card selectedCard) {
+        game.setLeadingSuitIfUnset(selectedCard.getSuit());
         currentPlayer.removeCard(selectedCard);
     }
 
