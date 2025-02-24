@@ -44,6 +44,17 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                         .toList();
     }
 
+    public Optional<Long> getActiveGameForPlayer(String playerName) {
+        List<Game> startedGames = activeGameRepository.getStartedGames();
+        return startedGames.stream()
+                           .filter(game -> game.getPlayersList()
+                                     .stream()
+                                     .map(gp -> gp.getUser().getUsername())
+                                     .anyMatch(username -> username.equals(playerName)))
+                           .map(Game::getId)
+                           .findFirst();
+    }
+
     @Override
     public Long createGame(CreateGameRequest createGameRequest, User user) {
         GamePlayer gamePlayer = createGamePlayer(user, Team.RED);
@@ -62,7 +73,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         return activeGameRepository.put(game);
     }
 
-    /** checks if game with arg name already exists among games waiting for players to join */
+    @Override
     public boolean doesNotStartedGameAlreadyExist(String name) {
         return activeGameRepository.getWaitingGames()
                         .stream()
@@ -71,11 +82,21 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
+    public void syncUserGameStatus(User user) {
+        if (user.isInGame() && getActiveGameForPlayer(user.getUsername()).isEmpty())
+            user.setInGame(false);
+    }
+
+    @Override
     public JoinGameResult joinGame(Long gameId, JoinGameRequest joinGameRequest, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
 
-        if(gameOptional.isEmpty())
+        syncUserGameStatus(user);
+
+        if (gameOptional.isEmpty())
             return JoinGameResult.GAME_NOT_FOUND;
+        else if (user.isInGame())
+            return JoinGameResult.PLAYER_DURING_ANOTHER_GAME;
 
         Game game = gameOptional.get();
 
@@ -253,7 +274,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }
 
             game.setStartedAt(LocalDateTime.now());
-
+            markUsersAsInGame(game.getPlayersList().stream().map(GamePlayer::getUser).toList());
             randomAssigner.assignRandomCardsToPlayers(game.getPlayersList());
 
             List<GamePlayer> startingOrderOfPlayers = randomAssigner.assignRandomInitialOrder(game.getPlayersList());
@@ -356,6 +377,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                     outEvents.add(new WinnerState(game));
 
                     endedGameService.saveEndedGame(game);
+                    markUsersAsNotInGame(game.getPlayersList().stream().map(GamePlayer::getUser).toList());
                     eventPublisher.publishToLobby(gameId, outEvents);
                     return;
                 }else{
@@ -496,5 +518,15 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         redTeamTopScorer.subtractPoints(redTeamPoints % 3);
         blueTeamTopScorer.subtractPoints(blueTeamPoints % 3);
+    }
+
+    private void markUsersAsInGame(List<User> users) {
+        for (var user: users)
+            user.setInGame(true);
+    }
+
+    private void markUsersAsNotInGame(List<User> users) {
+        for (var user: users)
+            user.setInGame(false);
     }
 }

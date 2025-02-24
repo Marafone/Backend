@@ -31,6 +31,7 @@ public class User implements UserDetails {
     private String email;
     private int wins;
     private int losses;
+    private boolean isInGame;
     @JsonIgnore
     private String password;
 
