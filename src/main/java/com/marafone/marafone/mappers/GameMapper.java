@@ -1,7 +1,7 @@
 package com.marafone.marafone.mappers;
 
 import com.marafone.marafone.game.model.Game;
-import com.marafone.marafone.game.model.GameDTO;
+import com.marafone.marafone.game.dto.GameDTO;
 import org.springframework.stereotype.Component;
 
 @Component

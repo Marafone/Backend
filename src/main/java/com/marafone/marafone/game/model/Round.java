@@ -33,6 +33,10 @@ public class Round {
         return currentTurn;
     }
 
+    public void addNewAction(Action action) {
+        actions.add(action);
+    }
+
     public boolean isTrumpSuitSelected(){
         return trumpSuit != null;
     }

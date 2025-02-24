@@ -1,4 +1,4 @@
-package com.marafone.marafone.game.model;
+package com.marafone.marafone.game.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,7 +1,6 @@
 package com.marafone.marafone.game.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.marafone.marafone.game.model.JoinGameResult;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;

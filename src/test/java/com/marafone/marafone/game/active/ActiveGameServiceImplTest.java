@@ -7,9 +7,9 @@ import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.game.random.MarafoneRandomAssigner;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
-import com.marafone.marafone.user.UserRepository;
 import com.marafone.marafone.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,12 +18,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
 import java.time.LocalDateTime;
-
 import java.util.*;
 
-import static com.marafone.marafone.game.model.JoinGameResult.*;
+import static com.marafone.marafone.game.response.JoinGameResult.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 

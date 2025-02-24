@@ -1,11 +1,13 @@
 package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.DummyData;
+import com.marafone.marafone.exception.SelectCardException;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -20,14 +22,14 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.Random;
 
-import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
+import static com.marafone.marafone.game.response.JoinGameResult.SUCCESS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext
-public class ActiveGameServiceImplIntegrationWithSeedTests {
+class ActiveGameServiceImplIntegrationWithSeedTests {
 
     private final ActiveGameService activeGameService;
     private final ActiveGameRepository activeGameRepository;
@@ -108,11 +110,21 @@ public class ActiveGameServiceImplIntegrationWithSeedTests {
         );
 
         //SELECT CARD WITHOUT TRUMP SUIT
-        activeGameService.selectCard(gameId, new CardSelectEvent(28), owner.getUsername());
-        activeGameService.selectCard(gameId, new CardSelectEvent(29), secondEnemy.getUsername());
+
+        assertThrows(
+            SelectCardException.class,
+            () -> activeGameService.selectCard(gameId, new CardSelectEvent(28), owner.getUsername())
+        );
+
+        assertThrows(
+            SelectCardException.class,
+            () -> activeGameService.selectCard(gameId, new CardSelectEvent(29), secondEnemy.getUsername())
+        );
+
         assertEquals(0, game.getRounds().getLast().getActions().size());
 
         //SELECT TRUMP SUIT BY BAD PLAYER
+
         activeGameService.selectSuit(gameId, new TrumpSuitSelectEvent(Suit.COINS), secondEnemy.getUsername());
         assertNull(game.getRounds().getLast().getTrumpSuit());
 
@@ -123,11 +135,21 @@ public class ActiveGameServiceImplIntegrationWithSeedTests {
         //FIRST TURN
         activeGameService.selectCard(gameId, new CardSelectEvent(28), owner.getUsername()); //SIX COINS
         activeGameService.selectCard(gameId, new CardSelectEvent(29), secondEnemy.getUsername()); //FIVE COINS
-        activeGameService.selectCard(gameId, new CardSelectEvent(39), ownerTeamMate.getUsername());//BAD LEADING SUIT
+
+        assertThrows(
+                SelectCardException.class,
+                () -> activeGameService.selectCard(gameId, new CardSelectEvent(39), ownerTeamMate.getUsername())
+        ); // BAD LEADING SUIT
+
         assertEquals(10, ownerTeamMatePlayer.getOwnedCards().size());
         activeGameService.selectCard(gameId, new CardSelectEvent(26), ownerTeamMate.getUsername());//J COINS
         assertEquals(9, ownerTeamMatePlayer.getOwnedCards().size());
-        activeGameService.selectCard(gameId, new CardSelectEvent(24), ownerTeamMate.getUsername());//SELECTING CARD SECOND TIME IN SAME TURN
+
+        assertThrows(
+                SelectCardException.class,
+                () -> activeGameService.selectCard(gameId, new CardSelectEvent(24), ownerTeamMate.getUsername())
+        ); //SELECTING CARD SECOND TIME IN SAME TURN
+
         assertEquals(9, ownerTeamMatePlayer.getOwnedCards().size());
         activeGameService.selectCard(gameId, new CardSelectEvent(22), firstEnemy.getUsername()); //TWO COINS
 
@@ -156,7 +178,12 @@ public class ActiveGameServiceImplIntegrationWithSeedTests {
         activeGameService.selectCard(gameId, new CardSelectEvent(6), ownerTeamMate.getUsername());//J SWORDS
         activeGameService.selectCard(gameId, new CardSelectEvent(1), firstEnemy.getUsername());//THREE SWORDS
         assertEquals(7, ownerPlayer.getOwnedCards().size());
-        activeGameService.selectCard(gameId, new CardSelectEvent(27), owner.getUsername());//SEVEN COINS - should not work
+
+        assertThrows(
+            SelectCardException.class,
+            () -> activeGameService.selectCard(gameId, new CardSelectEvent(27), owner.getUsername())
+        ); //SEVEN COINS - should not work
+
         assertEquals(7, ownerPlayer.getOwnedCards().size());
         activeGameService.selectCard(gameId, new CardSelectEvent(8), owner.getUsername());//SIX SWORDS
         assertEquals(7, firstEnemyPlayer.getPoints());
@@ -193,8 +220,17 @@ public class ActiveGameServiceImplIntegrationWithSeedTests {
         activeGameService.selectCard(gameId, new CardSelectEvent(25), ownerTeamMate.getUsername());//C COINS
         activeGameService.selectCard(gameId, new CardSelectEvent(7), firstEnemy.getUsername());//SEVEN SWORDS
         activeGameService.selectCard(gameId, new CardSelectEvent(23), owner.getUsername());//A COINS
-        activeGameService.selectCard(gameId, new CardSelectEvent(20), secondEnemy.getUsername());//SHOULD DO NOTHING
-        activeGameService.selectCard(gameId, new CardSelectEvent(3), secondEnemy.getUsername());//SHOULD DO NOTHING
+
+        assertThrows(
+                SelectCardException.class,
+                () -> activeGameService.selectCard(gameId, new CardSelectEvent(20), secondEnemy.getUsername())
+        ); // SHOULD DO NOTHING
+
+        assertThrows(
+                SelectCardException.class,
+                () -> activeGameService.selectCard(gameId, new CardSelectEvent(3), secondEnemy.getUsername())
+        ); // SHOULD DO NOTHING
+
         activeGameService.selectCard(gameId, new CardSelectEvent(21), secondEnemy.getUsername());//THREE COINS
 
         assertEquals(12, firstEnemyPlayer.getPoints());
@@ -210,9 +246,22 @@ public class ActiveGameServiceImplIntegrationWithSeedTests {
         assertIterableEquals(List.of(ownerPlayer, secondEnemyPlayer, ownerTeamMatePlayer, firstEnemyPlayer), game.getPlayersList());
 
         //PICK ENEMY CARDS (SHOULD DO NOTHING)
-        activeGameService.selectCard(gameId, new CardSelectEvent(20), owner.getUsername());
-        activeGameService.selectCard(gameId, new CardSelectEvent(24), owner.getUsername());
-        activeGameService.selectCard(gameId, new CardSelectEvent(4), owner.getUsername());
+
+        assertThrows(
+                SelectCardException.class,
+                () -> activeGameService.selectCard(gameId, new CardSelectEvent(20), owner.getUsername())
+        );
+
+        assertThrows(
+                SelectCardException.class,
+                () -> activeGameService.selectCard(gameId, new CardSelectEvent(24), owner.getUsername())
+        );
+
+        assertThrows(
+                SelectCardException.class,
+                () -> activeGameService.selectCard(gameId, new CardSelectEvent(4), owner.getUsername())
+        );
+
         assertEquals(1, ownerPlayer.getOwnedCards().size());
 
         activeGameService.selectCard(gameId, new CardSelectEvent(30), owner.getUsername());//FOUR COINS
@@ -235,8 +284,13 @@ public class ActiveGameServiceImplIntegrationWithSeedTests {
         assertNull(game.getRounds().getLast().getTrumpSuit());
 
         //SHOULD DO NOTHING (TRUMP SUIT NOT SELECTED)
-        for(int i = 1; i < 40; i++)
-            activeGameService.selectCard(gameId, new CardSelectEvent(i), owner.getUsername());
+        for(int i = 1; i < 40; i++) {
+            int cardIndex = i;
+            assertThrows(
+                    SelectCardException.class,
+                    () -> activeGameService.selectCard(gameId, new CardSelectEvent(cardIndex), owner.getUsername())
+            );
+        }
 
         assertEquals(10, ownerPlayer.getOwnedCards().size());
         assertEquals(0, game.getRounds().getLast().getActions().size());
