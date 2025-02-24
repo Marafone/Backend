@@ -69,7 +69,7 @@ public class TrainingLoop {
         // Run the training loop for the specified number of episodes
         for (int episode = 0; episode < episodes; episode++) {
             // Create a new game
-            CreateGameRequest createGameRequest = new CreateGameRequest("Training Game", GameType.MARAFFA, "ABC");
+            CreateGameRequest createGameRequest = new CreateGameRequest("Training Game", GameType.MARAFFA, "ABC", 21);
             Long gameId = activeGameService.createGame(createGameRequest, userA);
 
             // Join players to the game

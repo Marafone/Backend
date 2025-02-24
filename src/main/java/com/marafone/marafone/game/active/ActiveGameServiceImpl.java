@@ -4,6 +4,7 @@ import com.marafone.ai.DummyData;
 import com.marafone.ai.MarafoneAI;
 import com.marafone.ai.Move;
 import com.marafone.ai.MoveApplier;
+import com.marafone.marafone.AiInitializer;
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
@@ -189,27 +190,16 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
         }
     }
-
     @Override
     public AddAIResult addAI(Long gameId, Team team, User user) {
         try {
             // Load the trained AI
             MarafoneAI trainedAI = MarafoneAI.load("trained_ai.ser");
 
-            // Create a dummy user for the AI
-            User aiUser;
-            switch (aiPlayers.size()) {
-                case 0:
-                    aiUser = DummyData.getUserA();
-                    break;
-                case 1:
-                    aiUser = DummyData.getUserB();
-                    break;
-                case 2:
-                    aiUser = DummyData.getUserC();
-                    break;
-                default:
-                    return AddAIResult.MAX_AI_REACHED;
+            // Get an available AI user
+            User aiUser = AiInitializer.getAvailableAI();
+            if (aiUser == null) {
+                return AddAIResult.MAX_AI_REACHED;
             }
 
             // Join the AI to the game
@@ -221,6 +211,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 aiPlayers.put(aiUser.getUsername(), trainedAI);
                 return AddAIResult.SUCCESS;
             } else {
+                AiInitializer.releaseAI(aiUser); // Release AI if joining fails
                 return AddAIResult.FAILED_TO_ADD;
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -448,6 +439,13 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
                     endedGameService.saveEndedGame(game);
                     eventPublisher.publishToLobby(gameId, outEvents);
+
+                    // Release AI players
+                    game.getPlayersList().stream()
+                            .map(GamePlayer::getUser)
+                            .filter(user -> user.getUsername().startsWith("AI_"))
+                            .forEach(AiInitializer::releaseAI);
+
                     return SelectCardResult.GAME_ENDED;
                 } else {
                     reduceTeamsPoints(game);
