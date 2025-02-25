@@ -82,20 +82,17 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
-    public void syncUserGameStatus(User user) {
-        if (user.isInGame() && getActiveGameForPlayer(user.getUsername()).isEmpty())
-            user.setInGame(false);
+    public boolean checkIfUserIsInGame(User user) {
+        return getActiveGameForPlayer(user.getUsername()).isPresent();
     }
 
     @Override
     public JoinGameResult joinGame(Long gameId, JoinGameRequest joinGameRequest, User user) {
         Optional<Game> gameOptional = activeGameRepository.findById(gameId);
 
-        syncUserGameStatus(user);
-
         if (gameOptional.isEmpty())
             return JoinGameResult.GAME_NOT_FOUND;
-        else if (user.isInGame())
+        else if (user.isInGame(this::checkIfUserIsInGame))
             return JoinGameResult.PLAYER_DURING_ANOTHER_GAME;
 
         Game game = gameOptional.get();

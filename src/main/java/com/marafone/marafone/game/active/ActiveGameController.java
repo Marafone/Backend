@@ -49,11 +49,10 @@ public class ActiveGameController {
     @PostMapping("/game/create")
     @ResponseBody
     public synchronized ResponseEntity<String> createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
-        activeGameService.syncUserGameStatus(user);
 
         if (activeGameService.doesNotStartedGameAlreadyExist(createGameRequest.getGameName()))
             return ResponseEntity.badRequest().body(CreateGameErrorMessages.GAME_NAME_TAKEN.getMessage());
-        else if (user.isInGame())
+        else if (user.isInGame(activeGameService::checkIfUserIsInGame))
             return ResponseEntity.badRequest().body(CreateGameErrorMessages.PLAYER_LEFT_ANOTHER_GAME.getMessage());
 
         Long gameId = activeGameService.createGame(createGameRequest, user);
