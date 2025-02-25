@@ -39,7 +39,7 @@ public class ActiveGameController {
 
     @GetMapping("/game/active")
     @ResponseBody
-    public ResponseEntity<Long> getUserActiveGame(Principal principal) {
+    public ResponseEntity<Long> getUserActiveGameId(Principal principal) {
         var optionalGameId = activeGameService.getActiveGameForPlayer(principal.getName());
         return optionalGameId
                 .map(ResponseEntity::ok)

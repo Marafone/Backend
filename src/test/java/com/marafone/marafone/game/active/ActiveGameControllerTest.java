@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,7 +47,7 @@ class ActiveGameControllerTest {
         CreateGameRequest createGameRequest =
                 new CreateGameRequest("game", GameType.MARAFFA, "", 21);
 
-        Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(Mockito.any())).thenReturn(true);
+        Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(any())).thenReturn(true);
         String jsonRequest = new ObjectMapper().writeValueAsString(createGameRequest);
 
         // when & then
@@ -70,8 +71,8 @@ class ActiveGameControllerTest {
         CreateGameRequest createGameRequest =
                 new CreateGameRequest("game", GameType.MARAFFA, "", 21);
 
-        Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(Mockito.any())).thenReturn(false);
-        Mockito.when(mockedUser.isInGame()).thenReturn(true);
+        Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(any())).thenReturn(false);
+        Mockito.when(mockedUser.isInGame(any())).thenReturn(true);
         String jsonRequest = new ObjectMapper().writeValueAsString(createGameRequest);
 
         // when & then
@@ -95,8 +96,8 @@ class ActiveGameControllerTest {
         CreateGameRequest createGameRequest =
                 new CreateGameRequest("game", GameType.MARAFFA, "", 21);
 
-        Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(Mockito.any())).thenReturn(false);
-        Mockito.when(activeGameService.getActiveGameForPlayer(Mockito.any())).thenReturn(Optional.empty());
+        Mockito.when(activeGameService.doesNotStartedGameAlreadyExist(any())).thenReturn(false);
+        Mockito.when(activeGameService.getActiveGameForPlayer(any())).thenReturn(Optional.empty());
         String jsonRequest = new ObjectMapper().writeValueAsString(createGameRequest);
 
         // when & then
