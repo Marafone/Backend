@@ -302,6 +302,9 @@ class ActiveGameServiceImplIntegrationWithMocksTest {
         //ENEMY TEAM SHOULD WIN
         assertEquals(1, game.getRounds().size());
         assertEquals(Team.BLUE, game.getWinnerTeam());
+
+        // REMOVE CREATED GAME
+        activeGameRepository.removeById(gameId);
     }
 
     @Test
@@ -645,6 +648,9 @@ class ActiveGameServiceImplIntegrationWithMocksTest {
         //OWNER TEAM SHOULD WIN
         assertEquals(2, game.getRounds().size());
         assertEquals(Team.RED, game.getWinnerTeam());
+
+        // REMOVE CREATED GAME
+        activeGameRepository.removeById(gameId);
     }
 
 }

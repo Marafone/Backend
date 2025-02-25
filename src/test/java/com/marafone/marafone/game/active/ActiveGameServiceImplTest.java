@@ -270,10 +270,10 @@ class ActiveGameServiceImplTest {
     @Test
     void leaveGame_WhenUserInGame_ShouldRemoveUserFromGamePlayersList() {
         // given
-        User user = new User(1L, "user1", "", 0, 0, "user1");
+        User user = User.builder().id(1L).username("user1").build();
         GamePlayer gp1 = GamePlayer
                 .builder()
-                .user(new User(2L, "user2", "", 0, 0, "user2"))
+                .user(User.builder().id(2L).username("user2").build())
                 .build();
         GamePlayer gp2 = GamePlayer
                 .builder()
@@ -281,7 +281,7 @@ class ActiveGameServiceImplTest {
                 .build();
         GamePlayer gp3 = GamePlayer
                 .builder()
-                .user(new User(3L, "user3", "", 0, 0, "user3"))
+                .user(User.builder().id(3L).username("user3").build())
                 .build();
 
         List<GamePlayer> playersList = new ArrayList<>();
@@ -303,14 +303,14 @@ class ActiveGameServiceImplTest {
     @Test
     void leaveGame_WhenUserNotInGame_ShouldDoNothing() {
         // given
-        User user = new User(1L, "user1", "", 0, 0, "user1");
+        User user = User.builder().id(1L).username("user1").build();
         GamePlayer gp1 = GamePlayer
                 .builder()
-                .user(new User(2L, "user2", "", 0, 0, "user2"))
+                .user(User.builder().id(2L).username("user2").build())
                 .build();
         GamePlayer gp2 = GamePlayer
                 .builder()
-                .user(new User(3L, "user3", "", 0, 0, "user3"))
+                .user(User.builder().id(3L).username("user3").build())
                 .build();
 
         List<GamePlayer> playersList = new ArrayList<>();
@@ -331,9 +331,9 @@ class ActiveGameServiceImplTest {
     void changeTeam_WhenTeamNotFull_ShouldChangeTeams() {
         // given
         List<User> users = Arrays.asList(
-                new User(1L, "user1", "", 0, 0, "user1"),
-                new User(2L, "user2", "", 0, 0, "user2"),
-                new User(3L, "user3", "", 0, 0, "user3")
+                User.builder().id(1L).username("user1").build(),
+                User.builder().id(2L).username("user2").build(),
+                User.builder().id(3L).username("user3").build()
         );
         List<GamePlayer> gamePlayersList = Arrays.asList(
             new GamePlayer(1L, users.get(0), Team.RED, null, null),
