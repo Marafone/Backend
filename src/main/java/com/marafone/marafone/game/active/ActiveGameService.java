@@ -1,13 +1,13 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.marafone.game.dto.GameDTO;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.Call;
-import com.marafone.marafone.game.model.GameDTO;
-import com.marafone.marafone.game.model.JoinGameResult;
 import com.marafone.marafone.game.model.Team;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.user.User;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 

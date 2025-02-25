@@ -1,21 +1,24 @@
 package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.errors.CreateGameErrorMessages;
+import com.marafone.marafone.exception.SelectCardException;
+import com.marafone.marafone.game.dto.GameDTO;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.Call;
-import com.marafone.marafone.game.model.GameDTO;
-import com.marafone.marafone.game.model.JoinGameResult;
 import com.marafone.marafone.game.model.Team;
 import com.marafone.marafone.game.response.JoinGameResponse;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 
-import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
+import static com.marafone.marafone.game.response.JoinGameResult.SUCCESS;
 
 @Controller
 @RequiredArgsConstructor
@@ -85,6 +88,12 @@ public class ActiveGameController {
     @MessageMapping("/game/{id}/card")
     public void selectCard(@DestinationVariable("id") Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
         activeGameService.selectCard(gameId, cardSelectEvent, principal.getName());
+    }
+
+    @MessageExceptionHandler(SelectCardException.class)
+    @SendToUser("/queue/errors")
+    public String handleSelectCardException(SelectCardException ex) {
+        return ex.getMessage();
     }
 
     @MessageMapping("/game/{id}/suit")
