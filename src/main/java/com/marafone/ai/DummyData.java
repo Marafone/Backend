@@ -1,14 +1,6 @@
 package com.marafone.ai;
 
-import com.marafone.marafone.game.event.incoming.CreateGameRequest;
-import com.marafone.marafone.game.event.incoming.JoinGameRequest;
-import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.User;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
 
 public class DummyData {
 

@@ -1,15 +1,10 @@
 package com.marafone.ai;
 
 import com.marafone.marafone.game.active.ActiveGameService;
-import com.marafone.marafone.game.active.ActiveGameServiceImpl;
 import com.marafone.marafone.game.model.Game;
 import com.marafone.marafone.game.model.GamePlayer;
 import com.marafone.marafone.game.event.incoming.*;
 import org.springframework.http.ResponseEntity;
-
-import java.util.List;
-
-import static com.marafone.ai.TrainingLoop.getValidMoves;
 
 public class MoveApplier {
 

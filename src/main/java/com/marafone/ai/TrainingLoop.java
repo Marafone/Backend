@@ -2,10 +2,8 @@ package com.marafone.ai;
 
 import com.marafone.marafone.game.active.ActiveGameRepository;
 import com.marafone.marafone.game.active.ActiveGameService;
-import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
-import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserRepository;
@@ -13,14 +11,10 @@ import com.marafone.marafone.game.random.RandomAssigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import java.io.*;
-
-import static com.marafone.marafone.game.model.JoinGameResult.SUCCESS;
 
 @Component
 public class TrainingLoop {

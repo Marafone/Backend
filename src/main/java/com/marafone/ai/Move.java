@@ -3,8 +3,6 @@ package com.marafone.ai;
 import com.marafone.marafone.game.model.*;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Move implements Serializable {
 
