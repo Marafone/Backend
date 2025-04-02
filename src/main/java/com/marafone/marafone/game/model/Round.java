@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Round {
+public class Round implements Serializable {
     @Id
     @GeneratedValue
     private Long id;
@@ -35,5 +36,18 @@ public class Round {
 
     public boolean isTrumpSuitSelected(){
         return trumpSuit != null;
+    }
+
+    @Override
+    public int hashCode() {
+        return (id != null) ? id.hashCode() : 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Round other = (Round) obj;
+        return id != null && id.equals(other.id);
     }
 }

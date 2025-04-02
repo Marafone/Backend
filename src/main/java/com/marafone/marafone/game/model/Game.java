@@ -189,4 +189,14 @@ public class Game {
         return topScorer;
     }
 
+    public int getCurrentPlayerIndex() {
+        if (currentPlayer == null) {
+            throw new IllegalStateException("currentPlayer iterator is not initialized");
+        }
+        return currentPlayer.nextIndex();
+    }
+
+    public int getRoundNumber() {
+        return rounds.size();
+    }
 }

@@ -13,7 +13,7 @@ public class MarafoneApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(MarafoneApplication.class, args);
 	}
-	/*
+
 	// UNCOMMENT TO TRAIN THE AI ANEW
 	@Bean
 	CommandLineRunner runTrainingLoop(ApplicationContext context) {
@@ -22,5 +22,5 @@ public class MarafoneApplication {
 			trainingLoop.runTraining(1000); // Run training for 1000 episodes
 		};
 	}
-	*/
+
 }

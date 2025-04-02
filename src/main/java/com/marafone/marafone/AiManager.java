@@ -49,6 +49,7 @@ public class AiManager {
         };
     }
 
+
     public static User getAvailableAI() {
         return availableAIs.poll();
     }
