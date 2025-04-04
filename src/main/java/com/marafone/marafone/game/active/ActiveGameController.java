@@ -1,5 +1,9 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.marafone.errors.CreateGameErrorMessages;
+import com.marafone.marafone.exception.SelectCardException;
+import com.marafone.marafone.game.dto.GameDTO;
+import com.marafone.marafone.game.dto.GameDTO;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
@@ -7,20 +11,26 @@ import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.model.*;
 import com.marafone.marafone.game.response.GameActionResponse;
+import com.marafone.marafone.game.model.Call;
+import com.marafone.marafone.game.model.Team;
 import com.marafone.marafone.game.response.JoinGameResponse;
+import com.marafone.marafone.game.response.JoinGameResult;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.Map;
+
+import static com.marafone.marafone.game.response.JoinGameResult.SUCCESS;
 
 @Controller
 @RequiredArgsConstructor
@@ -34,12 +44,23 @@ public class ActiveGameController {
         return activeGameService.getWaitingGames();
     }
 
+    @GetMapping("/game/active")
+    @ResponseBody
+    public ResponseEntity<Long> getUserActiveGameId(Principal principal) {
+        var optionalGameId = activeGameService.getActiveGameForPlayer(principal.getName());
+        return optionalGameId
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
     @PostMapping("/game/create")
     @ResponseBody
     public synchronized ResponseEntity<String> createGame(@RequestBody CreateGameRequest createGameRequest, @AuthenticationPrincipal User user){
+
         if (activeGameService.doesNotStartedGameAlreadyExist(createGameRequest.getGameName()))
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("GAME_NAME_TAKEN");
+            return ResponseEntity.badRequest().body(CreateGameErrorMessages.GAME_NAME_TAKEN.getMessage());
+        else if (user.isInGame(activeGameService::checkIfUserIsInGame))
+            return ResponseEntity.badRequest().body(CreateGameErrorMessages.PLAYER_LEFT_ANOTHER_GAME.getMessage());
 
         Long gameId = activeGameService.createGame(createGameRequest, user);
         return ResponseEntity.ok(String.valueOf(gameId));
@@ -50,7 +71,7 @@ public class ActiveGameController {
     public ResponseEntity<JoinGameResponse> joinGame(@PathVariable("id") Long gameId, @RequestBody JoinGameRequest joinGameRequest, @AuthenticationPrincipal User user){
         JoinGameResult result = activeGameService.joinGame(gameId, joinGameRequest, user);
         JoinGameResponse joinGameResponse = new JoinGameResponse(result, result.getMessage());
-        if (result == JoinGameResult.SUCCESS)
+        if (result == SUCCESS)
             return ResponseEntity.ok().body(joinGameResponse);
         else
             return ResponseEntity.badRequest().body(joinGameResponse);
@@ -98,6 +119,12 @@ public class ActiveGameController {
         }
         else
             return ResponseEntity.badRequest().body(new GameActionResponse(false, result.getMessage()));
+    }
+
+    @MessageExceptionHandler(SelectCardException.class)
+    @SendToUser("/queue/errors")
+    public String handleSelectCardException(SelectCardException ex) {
+        return ex.getMessage();
     }
 
     @MessageMapping("/game/{id}/suit")

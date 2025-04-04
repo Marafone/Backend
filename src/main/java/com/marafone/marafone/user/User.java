@@ -16,6 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Entity
 @Data
@@ -29,6 +32,9 @@ public class User implements UserDetails {
     private Long id;
     private String username;
     private String email;
+    private int wins;
+    private int losses;
+    private boolean isInGame;
     @JsonIgnore
     private String password;
 
@@ -51,5 +57,27 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+    public void increaseWins() {
+        wins++;
+    }
+    public void increaseLosses() {
+        losses++;
+    }
+
+    /*
+        isInGame value cannot be trusted when set to true, as server can crash during game
+         and game end without isInGame value being set back to false, thus this method accepts
+          more time-consuming function that checks all active games
+     */
+    public boolean isInGame(Function<User,Boolean> checkUserInAllGames){
+        if(!isInGame)
+            return false;
+
+        if(!checkUserInAllGames.apply(this)){
+            isInGame = false;
+        }
+
+        return isInGame;
     }
 }

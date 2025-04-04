@@ -88,27 +88,24 @@ public class Game {
         return playersList.size() < 4;
     }
 
-    public boolean setWinnersIfPossible(){
-        int blueTeamPoints = 0;
-        int redTeamPoints = 0;
+    public boolean isEnded() {return winnerTeam != null;}
 
-        for(var gamePlayer: playersList){
-            if(gamePlayer.getTeam() == Team.RED)
-                redTeamPoints += gamePlayer.getPoints();
-            else
-                blueTeamPoints += gamePlayer.getPoints();
+    public boolean isSettingWinnersPossible() {
+        int redTeamPoints = getTeamPoints(Team.RED);
+        int blueTeamPoints = getTeamPoints(Team.BLUE);
+
+        return (redTeamPoints != blueTeamPoints) && ((redTeamPoints >= pointsToWinGame) || (blueTeamPoints >= pointsToWinGame));
+    }
+
+    public void setWinners() {
+        int redTeamPoints = getTeamPoints(Team.RED);
+        int blueTeamPoints = getTeamPoints(Team.BLUE);
+
+        if (blueTeamPoints > redTeamPoints){
+            winnerTeam = Team.BLUE;
+        } else {
+            winnerTeam = Team.RED;
         }
-
-        if(blueTeamPoints != redTeamPoints && (blueTeamPoints >= pointsToWinGame || redTeamPoints >= pointsToWinGame)){
-            if(blueTeamPoints > redTeamPoints){
-                winnerTeam = Team.BLUE;
-            }else{
-                winnerTeam = Team.RED;
-            }
-            return true;
-        }
-
-        return false;
     }
 
     public void addRound(){
@@ -199,4 +196,10 @@ public class Game {
     public int getRoundNumber() {
         return rounds.size();
     }
+
+    public void setLeadingSuitIfUnset(Suit suit) {
+        if (leadingSuit == null)
+            leadingSuit = suit;
+    }
+
 }

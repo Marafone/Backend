@@ -1,4 +1,4 @@
-package com.marafone.marafone.game.model;
+package com.marafone.marafone.game.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +11,8 @@ public enum JoinGameResult {
     TEAMS_FULL("Game team is already full"),
     GAME_ALREADY_STARTED("The game has already started"),
     INCORRECT_PASSWORD("Provided password was incorrect"),
-    PLAYER_ALREADY_JOINED("You have already joined this game");
+    PLAYER_ALREADY_JOINED("You have already joined this game"),
+    PLAYER_DURING_ANOTHER_GAME("You are already a member of another game");
 
     private final String message;
 }
