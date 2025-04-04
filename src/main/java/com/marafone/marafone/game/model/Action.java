@@ -20,7 +20,7 @@ public class Action implements Serializable {
     @Id
     @GeneratedValue
     private Long id;
-    @ManyToOne(cascade = CascadeTy2pe.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn
     private GamePlayer player;
     @ManyToOne(cascade = CascadeType.ALL)
