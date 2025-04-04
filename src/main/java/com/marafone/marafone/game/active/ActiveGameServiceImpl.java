@@ -418,7 +418,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             handleEndedTurn(game, currentTurn, winningPlayer);
 
-            if (game.roundHasEnded()){
+            if (game.roundHasEnded()) {
                 handleEndedRound(game, winningPlayer);
                 // Release AI players
                 game.getPlayersList().stream()
@@ -436,7 +436,6 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             return SelectCardResult.SUCCESS;
         }
-    }
 
     @Override
     public void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName) {
