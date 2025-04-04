@@ -15,12 +15,12 @@ public class MarafoneApplication {
 	}
 
 	// UNCOMMENT TO TRAIN THE AI ANEW
-	@Bean
-	CommandLineRunner runTrainingLoop(ApplicationContext context) {
-		return args -> {
-			TrainingLoop trainingLoop = context.getBean(TrainingLoop.class);
-			trainingLoop.runTraining(1000); // Run training for 1000 episodes
-		};
-	}
+//	@Bean
+//	CommandLineRunner runTrainingLoop(ApplicationContext context) {
+//		return args -> {
+//			TrainingLoop trainingLoop = context.getBean(TrainingLoop.class);
+//			trainingLoop.runTraining(1000); // Run training for 1000 episodes
+//		};
+//	}
 
 }
