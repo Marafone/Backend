@@ -1,6 +1,7 @@
 package com.marafone.marafone.auth;
 
 import com.marafone.marafone.user.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,6 +61,11 @@ public class SecurityConfig {
                                 "/users/*/ranking")
                         .permitAll()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception // to return 401 instead of 403 when unauthorized
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
                 )
                 .logout(logout -> logout
                         .logoutUrl("/auth/logout")
