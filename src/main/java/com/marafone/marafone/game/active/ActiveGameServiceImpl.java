@@ -2,6 +2,7 @@ package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
+import com.marafone.marafone.exception.GameNotFoundException;
 import com.marafone.marafone.exception.SelectCardException;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.context.SelectCardContext;
@@ -39,6 +40,14 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final GameMapper gameMapper;
 
     private final RandomAssigner randomAssigner;
+
+    public GameDTO getWaitingGameById(Long id) {
+        Optional<Game> gameOptional = activeGameRepository.findById(id);
+        if (gameOptional.isEmpty())
+            throw new GameNotFoundException("Game does not exist. Check game code and try again.");
+        Game game = gameOptional.get();
+        return gameMapper.toGameDTO(game);
+    }
 
     @Override
     public List<GameDTO> getWaitingGames() {

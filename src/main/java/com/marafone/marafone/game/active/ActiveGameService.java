@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ActiveGameService {
+    GameDTO getWaitingGameById(Long id);
     List<GameDTO> getWaitingGames();
     Optional<Long> getActiveGameForPlayer(String playerName);
     Long createGame(CreateGameRequest createGameRequest, User user);
