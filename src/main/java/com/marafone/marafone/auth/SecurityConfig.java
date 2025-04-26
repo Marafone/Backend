@@ -57,6 +57,7 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/register",
                                 "/game/waiting",
+                                "/game/waiting/*",
                                 "/users/ranking",
                                 "/users/*/ranking")
                         .permitAll()
