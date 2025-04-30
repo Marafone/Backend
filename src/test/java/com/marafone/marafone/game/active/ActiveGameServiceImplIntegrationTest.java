@@ -56,23 +56,23 @@ class ActiveGameServiceImplIntegrationTest {
 
         //JOIN GAME - should fail
         User ownerTeamMate = DummyData.getUserB();
-        JoinGameRequest joinRedWrongCode = new JoinGameRequest(Team.RED, "123");
+        JoinGameRequest joinWrongCode = new JoinGameRequest("123");
 
-        JoinGameResult joined = activeGameService.joinGame(gameId, joinRedWrongCode, ownerTeamMate);
+        JoinGameResult joined = activeGameService.joinGame(gameId, joinWrongCode, ownerTeamMate);
 
         assertEquals(INCORRECT_PASSWORD, joined);
 
         //JOIN GAME - should join
-        JoinGameRequest joinRedGoodCode = new JoinGameRequest(Team.RED, "ABC");
+        JoinGameRequest joinGoodCode = new JoinGameRequest("ABC");
 
-        joined = activeGameService.joinGame(gameId, joinRedGoodCode, ownerTeamMate);
+        joined = activeGameService.joinGame(gameId, joinGoodCode, ownerTeamMate);
 
         assertEquals(SUCCESS, joined);
 
-        //JOIN ENEMY TEAM
+        //JOIN GAME - ENEMIES
         User firstEnemy = DummyData.getUserC();
         User secondEnemy = DummyData.getUserD();
-        JoinGameRequest joinBlueTeam = new JoinGameRequest(Team.BLUE, "ABC");
+        JoinGameRequest joinBlueTeam = new JoinGameRequest("ABC"); // when red team is full, users are joining blue one
         activeGameService.joinGame(gameId, joinBlueTeam, firstEnemy);
         activeGameService.joinGame(gameId, joinBlueTeam, secondEnemy);
 
