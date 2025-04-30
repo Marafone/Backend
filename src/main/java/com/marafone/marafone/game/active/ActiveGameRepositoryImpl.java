@@ -1,7 +1,6 @@
 package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.game.model.Game;
-import com.marafone.marafone.game.model.Team;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -44,7 +43,7 @@ public class ActiveGameRepositoryImpl implements ActiveGameRepository{
     @Override
     public List<Game> getWaitingGames() {
         return activeGames.values().stream()
-                .filter(game -> !game.hasStarted() && game.isPublic() && game.anyTeamNotFull())
+                .filter(game -> !game.hasStarted() && game.anyTeamNotFull())
                 .toList();
     }
 
