@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GameMapper {
     public GameDTO toGameDTO(Game game) {
-        return new GameDTO(String.valueOf(game.getId()), game.getName(), game.getGameType(), game.getPlayersAmount());
+        boolean isPrivate = game.getJoinGameCode() != null && !game.getJoinGameCode().isEmpty();
+        return new GameDTO(String.valueOf(game.getId()), game.getName(), game.getGameType(), game.getPlayersAmount(), isPrivate);
     }
 }
