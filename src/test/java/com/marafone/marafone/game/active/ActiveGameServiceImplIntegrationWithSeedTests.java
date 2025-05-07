@@ -70,7 +70,7 @@ class ActiveGameServiceImplIntegrationWithSeedTests {
 
         //JOIN AS TEAMMATE
         User ownerTeamMate = DummyData.getUserB();
-        JoinGameRequest joinRedGoodCode = new JoinGameRequest(Team.RED, "ABC");
+        JoinGameRequest joinRedGoodCode = new JoinGameRequest("ABC");
 
         JoinGameResult joined = activeGameService.joinGame(gameId, joinRedGoodCode, ownerTeamMate);
 
@@ -79,7 +79,7 @@ class ActiveGameServiceImplIntegrationWithSeedTests {
         //JOIN ENEMY TEAM
         User firstEnemy = DummyData.getUserC();
         User secondEnemy = DummyData.getUserD();
-        JoinGameRequest joinBlueTeam = new JoinGameRequest(Team.BLUE, "ABC");
+        JoinGameRequest joinBlueTeam = new JoinGameRequest("ABC");
         activeGameService.joinGame(gameId, joinBlueTeam, firstEnemy);
         activeGameService.joinGame(gameId, joinBlueTeam, secondEnemy);
 

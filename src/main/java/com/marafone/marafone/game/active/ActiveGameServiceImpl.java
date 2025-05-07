@@ -116,7 +116,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 return TEAMS_FULL;
             else if (game.hasStarted())
                 return GAME_ALREADY_STARTED;
-            else if (!game.checkCode(joinGameRequest.joinGameCode))
+            else if (!game.checkCode(joinGameRequest.joinGameCode()))
                 return INCORRECT_PASSWORD;
             else if (game.playerAlreadyJoined(user.getUsername()))
                 return PLAYER_ALREADY_JOINED;
