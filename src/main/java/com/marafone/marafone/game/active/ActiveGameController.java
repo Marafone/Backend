@@ -1,6 +1,7 @@
 package com.marafone.marafone.game.active;
 
 import com.marafone.marafone.errors.CreateGameErrorMessages;
+import com.marafone.marafone.exception.GameNotFoundException;
 import com.marafone.marafone.exception.SelectCardException;
 import com.marafone.marafone.game.dto.GameDTO;
 import com.marafone.marafone.game.ended.EndedGameService;
@@ -14,6 +15,7 @@ import com.marafone.marafone.game.response.JoinGameResponse;
 import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
@@ -33,6 +35,12 @@ import static com.marafone.marafone.game.response.JoinGameResult.SUCCESS;
 public class ActiveGameController {
 
     private final ActiveGameService activeGameService;
+
+    @GetMapping("/game/waiting/{id}")
+    public ResponseEntity<GameDTO> getWaitingGameById(@PathVariable Long id) {
+        GameDTO gameDTO = activeGameService.getWaitingGameById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(gameDTO);
+    }
 
     @GetMapping("/game/waiting")
     @ResponseBody
@@ -130,5 +138,9 @@ public class ActiveGameController {
         endedGameService.saveEndedGame(activeGameRepository.findById(gameId).get());
     }
 
+    @ExceptionHandler(GameNotFoundException.class)
+    public ResponseEntity<String> handleGameNotFoundException(GameNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 
 }
