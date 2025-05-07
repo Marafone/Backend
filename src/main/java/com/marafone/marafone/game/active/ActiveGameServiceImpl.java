@@ -11,6 +11,7 @@ import com.marafone.ai.MoveApplier;
 import com.marafone.marafone.AiManager;
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
+import com.marafone.marafone.exception.GameNotFoundException;
 import com.marafone.marafone.exception.SelectCardException;
 import com.marafone.marafone.game.broadcaster.EventPublisher;
 import com.marafone.marafone.game.context.SelectCardContext;
@@ -55,6 +56,14 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final Map<String, MarafoneAI> aiPlayers = new HashMap<>();
 
     private final RandomAssigner randomAssigner;
+
+    public GameDTO getWaitingGameById(Long id) {
+        Optional<Game> gameOptional = activeGameRepository.findById(id);
+        if (gameOptional.isEmpty())
+            throw new GameNotFoundException("Game does not exist. Check game code and try again.");
+        Game game = gameOptional.get();
+        return gameMapper.toGameDTO(game);
+    }
 
     @Override
     public List<GameDTO> getWaitingGames() {
@@ -123,7 +132,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 return TEAMS_FULL;
             else if (game.hasStarted())
                 return GAME_ALREADY_STARTED;
-            else if (!game.checkCode(joinGameRequest.joinGameCode))
+            else if (!game.checkCode(joinGameRequest.joinGameCode()))
                 return INCORRECT_PASSWORD;
             else if (game.playerAlreadyJoined(user.getUsername()))
                 return PLAYER_ALREADY_JOINED;

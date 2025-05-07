@@ -167,7 +167,7 @@ public class DummyData {
     }
 
     public static JoinGameRequest getJoinGameRequestA(){
-        return new JoinGameRequest(Team.BLUE, null);
+        return new JoinGameRequest(null);
     }
 
 }

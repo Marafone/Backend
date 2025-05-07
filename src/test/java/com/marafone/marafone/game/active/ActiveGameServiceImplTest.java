@@ -70,7 +70,7 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(DummyData.getGameInLobby()));
 
         //when
-        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(null), DummyData.getUserB());
 
         //then
         assertSame(JoinGameResult.SUCCESS, joined);
@@ -87,7 +87,7 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(sampleGame));
 
         //when
-        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserC());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(null), DummyData.getUserC());
 
         //then
         assertEquals(TEAMS_FULL, joined);
@@ -99,7 +99,7 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.empty());
 
         //when
-        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserA());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(null), DummyData.getUserA());
 
         //then
         assertEquals(GAME_NOT_FOUND, joined);
@@ -113,7 +113,7 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(sampleGame));
 
         //when
-        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, "ABC"), DummyData.getUserB());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest("ABC"), DummyData.getUserB());
 
         //then
         assertEquals(INCORRECT_PASSWORD, joined);
@@ -125,8 +125,8 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(DummyData.getGameInLobby()));
 
         //when
-        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
-        JoinGameResult joinedAgain = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserB());
+        JoinGameResult joined = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(null), DummyData.getUserB());
+        JoinGameResult joinedAgain = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(null), DummyData.getUserB());
 
         //then
         assertEquals(SUCCESS, joined);
@@ -423,7 +423,7 @@ class ActiveGameServiceImplTest {
         Mockito.when(activeGameRepository.findById(any())).thenReturn(Optional.of(sampleGame));
 
         // when
-        JoinGameResult result = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(Team.RED, null), DummyData.getUserA());
+        JoinGameResult result = activeGameServiceImpl.joinGame(1L, new JoinGameRequest(null), DummyData.getUserA());
 
         // then
         assertEquals(GAME_ALREADY_STARTED, result);
