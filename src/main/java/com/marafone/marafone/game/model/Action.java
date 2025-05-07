@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 
@@ -15,7 +16,7 @@ import java.util.Comparator;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Action {
+public class Action implements Serializable {
     @Id
     @GeneratedValue
     private Long id;
@@ -34,5 +35,18 @@ public class Action {
     @Override
     public String toString() {
         return "Action id: " + id;
+    }
+
+    @Override
+    public int hashCode() {
+        return (id != null) ? id.hashCode() : 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Action other = (Action) obj;
+        return id != null && id.equals(other.id);
     }
 }

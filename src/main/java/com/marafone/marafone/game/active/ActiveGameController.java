@@ -4,14 +4,18 @@ import com.marafone.marafone.errors.CreateGameErrorMessages;
 import com.marafone.marafone.exception.GameNotFoundException;
 import com.marafone.marafone.exception.SelectCardException;
 import com.marafone.marafone.game.dto.GameDTO;
+import com.marafone.marafone.game.dto.GameDTO;
 import com.marafone.marafone.game.ended.EndedGameService;
 import com.marafone.marafone.game.event.incoming.CardSelectEvent;
 import com.marafone.marafone.game.event.incoming.CreateGameRequest;
 import com.marafone.marafone.game.event.incoming.JoinGameRequest;
 import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
+import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.response.GameActionResponse;
 import com.marafone.marafone.game.model.Call;
 import com.marafone.marafone.game.model.Team;
 import com.marafone.marafone.game.response.JoinGameResponse;
+import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.user.User;
 import lombok.RequiredArgsConstructor;
@@ -93,9 +97,36 @@ public class ActiveGameController {
         activeGameService.changeTeam(gameId, Team.valueOf(teamName), user);
     }
 
+    @PostMapping("/game/{id}/add-ai")
+    @ResponseBody
+    public ResponseEntity<GameActionResponse> addAI(@PathVariable("id") Long gameId, @RequestBody String teamName, @AuthenticationPrincipal User user) {
+        AddAIResult result = activeGameService.addAI(gameId, Team.valueOf(teamName), user);
+        if(result == AddAIResult.SUCCESS){
+            return ResponseEntity.ok().body( new GameActionResponse(true, result.getMessage()));
+        }
+        else
+            return ResponseEntity.badRequest().body(new GameActionResponse(false, result.getMessage()));
+    }
+
+    @PostMapping("/game/{id}/ai-move")
+    @ResponseBody
+    public ResponseEntity<GameActionResponse> makeAIMove(@PathVariable("id") Long gameId, @RequestBody String playerUsername) {
+        MakeAIMoveResult result = activeGameService.makeAIMove(gameId, playerUsername);
+        if(result == MakeAIMoveResult.SUCCESS){
+            return ResponseEntity.ok().body(new GameActionResponse(true, result.getMessage()));
+        }
+        else
+            return ResponseEntity.badRequest().body(new GameActionResponse(false, result.getMessage()));
+    }
+
     @MessageMapping("/game/{id}/card")
-    public void selectCard(@DestinationVariable("id") Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
-        activeGameService.selectCard(gameId, cardSelectEvent, principal.getName());
+    public ResponseEntity<GameActionResponse> selectCard(@DestinationVariable("id") Long gameId, CardSelectEvent cardSelectEvent, Principal principal){
+        SelectCardResult result = activeGameService.selectCard(gameId, cardSelectEvent, principal.getName());
+        if(result == SelectCardResult.SUCCESS){
+            return ResponseEntity.ok().body(new GameActionResponse(true, result.getMessage()));
+        }
+        else
+            return ResponseEntity.badRequest().body(new GameActionResponse(false, result.getMessage()));
     }
 
     @MessageExceptionHandler(SelectCardException.class)
