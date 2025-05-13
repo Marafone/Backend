@@ -8,14 +8,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class GamePlayer {
+public class GamePlayer implements Serializable {
     @Id
     @GeneratedValue
     private Long id;
@@ -31,10 +33,7 @@ public class GamePlayer {
 
     @Override
     public int hashCode() {
-        if(user == null)
-            return super.hashCode();
-
-        return user.getUsername().length() * user.getUsername().charAt(0);
+        return Objects.hash(id); // id should be a unique, immutable identifier
     }
 
     @Override

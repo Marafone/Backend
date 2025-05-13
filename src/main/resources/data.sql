@@ -1,7 +1,7 @@
 --INSERTS CARDS INTO DATABASE
 
 INSERT INTO card VALUES
-
+/* first enemy */
 (1, 'THREE', 'SWORDS'),
 (2, 'TWO', 'SWORDS'),
 (3, 'A', 'SWORDS'),
@@ -12,7 +12,7 @@ INSERT INTO card VALUES
 (8, 'SIX', 'SWORDS'),
 (9, 'FIVE', 'SWORDS'),
 (10, 'FOUR', 'SWORDS'),
-
+/* owner teammate */
 (11, 'THREE', 'CUPS'),
 (12, 'TWO', 'CUPS'),
 (13, 'A', 'CUPS'),
@@ -23,7 +23,7 @@ INSERT INTO card VALUES
 (18, 'SIX', 'CUPS'),
 (19, 'FIVE', 'CUPS'),
 (20, 'FOUR', 'CUPS'),
-
+/* owner */
 (21, 'THREE', 'COINS'),
 (22, 'TWO', 'COINS'),
 (23, 'A', 'COINS'),
@@ -34,7 +34,7 @@ INSERT INTO card VALUES
 (28, 'SIX', 'COINS'),
 (29, 'FIVE', 'COINS'),
 (30, 'FOUR', 'COINS'),
-
+/* second enemy */
 (31, 'THREE', 'CLUBS'),
 (32, 'TWO', 'CLUBS'),
 (33, 'A', 'CLUBS'),
