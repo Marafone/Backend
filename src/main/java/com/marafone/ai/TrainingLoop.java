@@ -67,8 +67,8 @@ public class TrainingLoop {
             Long gameId = activeGameService.createGame(createGameRequest, userA);
 
             // Join players to the game
-            JoinGameRequest joinRedTeam = new JoinGameRequest(Team.RED, "ABC");
-            JoinGameRequest joinBlueTeam = new JoinGameRequest(Team.BLUE, "ABC");
+            JoinGameRequest joinRedTeam = new JoinGameRequest("");
+            JoinGameRequest joinBlueTeam = new JoinGameRequest("");
 
             activeGameService.joinGame(gameId, joinRedTeam, userB); // Teammate
             activeGameService.joinGame(gameId, joinBlueTeam, userC); // Enemy 1

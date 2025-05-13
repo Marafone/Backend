@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.Objects;
 
 @Entity
 @Data
@@ -39,7 +40,8 @@ public class Action implements Serializable {
 
     @Override
     public int hashCode() {
-        return (id != null) ? id.hashCode() : 0;
+        return (id != null) ? id.hashCode()
+                : Objects.hash(player, card, timestamp);
     }
 
     @Override
@@ -47,6 +49,14 @@ public class Action implements Serializable {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Action other = (Action) obj;
-        return id != null && id.equals(other.id);
+
+        if (id != null && other.id != null) {
+            return id.equals(other.id);
+        }
+
+        // Fallback if not persisted
+        return player.equals(other.player) &&
+                card.equals(other.card) &&
+                timestamp.equals(other.timestamp);
     }
 }

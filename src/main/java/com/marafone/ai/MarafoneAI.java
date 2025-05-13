@@ -10,6 +10,7 @@ public class MarafoneAI implements Serializable {
     private final Map<StateActionPair, Double> qValues;
     private GameState currentState;
     private final int contextHistorySize = 3; // How many previous actions to consider
+    private StateActionPair lastStateAction = null;
 
     public MarafoneAI(EpsilonGreedy epsilonGreedy, String saveFilePath) {
         this.epsilonGreedy = epsilonGreedy;
@@ -26,13 +27,13 @@ public class MarafoneAI implements Serializable {
     }
 
     public void updateGameState(Game game) {
-        List<Action> recentActions = Collections.emptyList();
+        List<Action> recentActions =  new LinkedList<>();
         Suit trumpSuit = null;
 
         if (!game.getRounds().isEmpty()) {
-            Round currentRound = game.getRounds().get(game.getRounds().size() - 1);
+            Round currentRound = game.getRounds().getLast();
             trumpSuit = currentRound.getTrumpSuit();
-            recentActions = currentRound.getLastNActions(contextHistorySize);
+            recentActions = currentRound.getLastNActions(currentRound.getActions().size() - 1);
         }
 
         this.currentState = new GameState(
@@ -46,51 +47,34 @@ public class MarafoneAI implements Serializable {
     }
 
     public Move selectMove(List<Move> validMoves) {
-        if (validMoves.isEmpty()) {
-            throw new IllegalStateException("No valid moves available for AI");
-        }
-
-        // Log Q-values for debugging
-        validMoves.forEach(m -> System.out.println("Move: " + m +
-                " with state: " + currentState +
-                " Q-Value: " + getQValue(m)));
+        if (validMoves.isEmpty()) throw new IllegalStateException("No valid moves available for AI");
 
         Move selectedMove;
         if (Math.random() < epsilonGreedy.getEpsilon()) {
-            // Explore: choose a random move
             selectedMove = validMoves.get((int) (Math.random() * validMoves.size()));
         } else {
-            // Exploit: choose the move with the highest Q-value for current state
             selectedMove = validMoves.stream()
-                    .max((m1, m2) -> Double.compare(
-                            getQValue(m1),
-                            getQValue(m2)))
+                    .max(Comparator.comparingDouble(this::getQValue))
                     .orElseThrow();
         }
 
-        // Store the state-action pair
-        StateActionPair pair = new StateActionPair(currentState, selectedMove);
-        qValues.putIfAbsent(pair, getQValue(selectedMove));
-
+        lastStateAction = new StateActionPair(currentState, selectedMove); // 💡 Track move + state
+        qValues.putIfAbsent(lastStateAction, getQValue(selectedMove));
         return selectedMove;
     }
 
     public void updateQValues(Game game) {
-        double reward = calculateReward(game);
+        if (lastStateAction == null) return; // No action to update
 
-        // Get the new state after the move
-        updateGameState(game);
+        double reward = calculateReward(game);
+        updateGameState(game); // update currentState to new state
         GameState newState = this.currentState;
 
-        // Update Q-values based on state transitions
-        for (StateActionPair pair : qValues.keySet()) {
-            if (pair.getState().equals(currentState)) {
-                double oldQValue = qValues.get(pair);
-                double maxNextQ = getMaxQValueForState(newState);
-                double newQValue = oldQValue + 0.1 * (reward + 0.9 * maxNextQ - oldQValue);
-                qValues.put(pair, newQValue);
-            }
-        }
+        double oldQValue = qValues.getOrDefault(lastStateAction, 0.0);
+        double maxNextQ = getMaxQValueForState(newState);
+        double newQValue = oldQValue + 0.1 * (reward + 0.9 * maxNextQ - oldQValue);
+
+        qValues.put(lastStateAction, newQValue);
     }
 
     private double getMaxQValueForState(GameState state) {

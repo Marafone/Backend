@@ -239,7 +239,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
             }
 
             // Join the AI to the game
-            JoinGameRequest joinRequest = new JoinGameRequest(team, "ABC"); // Use the correct game code
+            JoinGameRequest joinRequest = new JoinGameRequest(""); // Use the correct game code
             JoinGameResult result = this.joinGame(gameId, joinRequest, aiUser);
 
             if (result == SUCCESS) {
