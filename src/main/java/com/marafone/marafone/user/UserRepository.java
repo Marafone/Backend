@@ -36,7 +36,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             WITH RankedUsers AS (
                 SELECT
                     DENSE_RANK() OVER ("""
-                        + ORDER_DESCENDING_BY_WIN_RATIO + """
+                    + ORDER_DESCENDING_BY_WIN_RATIO + """
                     ) AS position,
                     u.username AS username,
                     u.wins AS wins,
@@ -54,7 +54,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 SELECT
                     u.username AS username,
                     ROW_NUMBER() OVER ("""
-                        + ORDER_DESCENDING_BY_WIN_RATIO + """
+                    + ORDER_DESCENDING_BY_WIN_RATIO + """
                     ) AS position
                 FROM User u
             )

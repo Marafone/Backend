@@ -1,5 +1,14 @@
 package com.marafone.marafone.game.active;
 
+import com.marafone.ai.DummyData;
+import com.marafone.ai.MarafoneAI;
+import com.marafone.ai.Move;
+import com.marafone.ai.MoveApplier;
+import com.marafone.marafone.AiManager;
+import com.marafone.ai.MarafoneAI;
+import com.marafone.ai.Move;
+import com.marafone.ai.MoveApplier;
+import com.marafone.marafone.AiManager;
 import com.marafone.marafone.errors.ChangeTeamErrorMessages;
 import com.marafone.marafone.errors.StartGameErrorMessages;
 import com.marafone.marafone.exception.GameNotFoundException;
@@ -15,16 +24,20 @@ import com.marafone.marafone.game.event.incoming.TrumpSuitSelectEvent;
 import com.marafone.marafone.game.event.outgoing.*;
 import com.marafone.marafone.game.random.RandomAssigner;
 import com.marafone.marafone.game.model.*;
+import com.marafone.marafone.game.response.GameActionResponse;
 import com.marafone.marafone.game.response.JoinGameResult;
 import com.marafone.marafone.mappers.GameMapper;
 import com.marafone.marafone.user.User;
 import com.marafone.marafone.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.marafone.ai.TrainingLoop.getValidMoves;
 import static com.marafone.marafone.errors.SelectCardErrorMessages.*;
 import static com.marafone.marafone.game.response.JoinGameResult.*;
 
@@ -38,6 +51,9 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     private final EventPublisher eventPublisher;
     private final List<Card> allCards;
     private final GameMapper gameMapper;
+
+    // Map to store AI instances
+    private final Map<String, MarafoneAI> aiPlayers = new HashMap<>();
 
     private final RandomAssigner randomAssigner;
 
@@ -210,6 +226,73 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
     }
 
+    @Override
+    public AddAIResult addAI(Long gameId, Team team, User user) {
+        try {
+            // Load the trained AI
+            MarafoneAI trainedAI = MarafoneAI.load("trained_ai.ser");
+
+            // Get an available AI user
+            User aiUser = AiManager.getAvailableAI();
+            if (aiUser == null) {
+                return AddAIResult.MAX_AI_REACHED;
+            }
+
+            // Join the AI to the game
+            JoinGameRequest joinRequest = new JoinGameRequest(activeGameRepository.findById(gameId).get().getJoinGameCode()); // Use the correct game code
+            JoinGameResult result = this.joinGame(gameId, joinRequest, aiUser);
+
+            if (result == SUCCESS) {
+                // Store the AI instance
+                aiPlayers.put(aiUser.getUsername(), trainedAI);
+                return AddAIResult.SUCCESS;
+            } else {
+                AiManager.releaseAI(aiUser); // Release AI if joining fails
+                return AddAIResult.FAILED_TO_ADD;
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            return AddAIResult.AI_LOAD_ERROR;
+        }
+    }
+
+    @Override
+    public MakeAIMoveResult makeAIMove(Long gameId, String playerUsername) {
+        Game game = activeGameRepository.findById(gameId).orElseThrow();
+
+        synchronized (game) {
+            // Retrieve the AI instance for this player
+            MarafoneAI trainedAI = aiPlayers.get(playerUsername);
+            if (trainedAI == null) {
+                return MakeAIMoveResult.NO_AI_FOUND;
+            }
+
+            // Get the AI player
+            GamePlayer aiPlayer = game.getPlayersList().stream()
+                    .filter(p -> p.getUser().getUsername().equals(playerUsername))
+                    .findFirst()
+                    .orElseThrow();
+
+            // Get valid moves and let the AI choose one
+            List<Move> validMoves = getValidMoves(game, aiPlayer);
+            if (validMoves.isEmpty()) {
+                return MakeAIMoveResult.NO_VALID_MOVES;
+            }
+
+            Move chosenMove = trainedAI.selectMove(validMoves);
+            if (chosenMove.getCard() == null && chosenMove.getSuit() != null) {
+                // the AI is the first to play needs to play two moves
+                MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
+                List<Move> validCards = getValidMoves(game, aiPlayer);
+                Move chosenCard = trainedAI.selectMove(validCards);
+                MoveApplier.applyMove(game, aiPlayer, chosenCard, this);
+            } else {
+                MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
+            }
+
+            return MakeAIMoveResult.SUCCESS;
+        }
+    }
+
     private Optional<Game> findGameById(Long gameId) {
         return activeGameRepository.findById(gameId);
     }
@@ -310,13 +393,14 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     }
 
     @Override
-    public void selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
+    public SelectCardResult selectCard(Long gameId, CardSelectEvent cardSelectEvent, String principalName) {
         Game game = activeGameRepository.findById(gameId)
                 .orElseThrow();
 
-        synchronized (game){
-            if(game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext())
-                return;
+        synchronized (game) {
+            if (game.getCurrentPlayer() == null || !game.getCurrentPlayer().hasNext()) {
+                return SelectCardResult.NOT_YOUR_TURN;
+            }
 
             GamePlayer currentPlayer = game.getCurrentPlayerWithoutIterating();
             Round currentRound = game.getRounds().getLast();
@@ -335,7 +419,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                                 .getUser()
                                 .getUsername(), false)
                 );
-                return;
+                return SelectCardResult.SUCCESS;
             }
 
             List<Action> currentTurn = currentRound.getLastNActions(4);
@@ -343,16 +427,24 @@ public class ActiveGameServiceImpl implements ActiveGameService{
 
             handleEndedTurn(game, currentTurn, winningPlayer);
 
-            if (game.roundHasEnded())
+            if (game.roundHasEnded()) {
                 handleEndedRound(game, winningPlayer);
-            else
+                // Release AI players
+                game.getPlayersList().stream()
+                        .map(GamePlayer::getUser)
+                        .filter(user -> user.getUsername().startsWith("AI_"))
+                        .forEach(AiManager::releaseAI);
+
+                return SelectCardResult.GAME_ENDED;
+            }else
                 handleNewTurn(game, winningPlayer);
 
             if (!game.isEnded())
                 eventPublisher.publishToLobby(gameId, List.of(new PointState(game), new PlayersOrderState(game)));
         }
 
-    }
+            return SelectCardResult.SUCCESS;
+        }
 
     @Override
     public void selectSuit(Long gameId, TrumpSuitSelectEvent trumpSuitSelectEvent, String principalName) {
