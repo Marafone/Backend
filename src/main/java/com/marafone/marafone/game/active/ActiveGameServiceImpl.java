@@ -88,6 +88,11 @@ public class ActiveGameServiceImpl implements ActiveGameService{
     public Long createGame(CreateGameRequest createGameRequest, User user) {
         GamePlayer gamePlayer = createGamePlayer(user, Team.RED);
 
+        Integer points = createGameRequest.getPointsToWin();
+        if (points == null) {
+            points = 21;
+        }
+
         Game game = Game.builder()
                 .createdAt(LocalDateTime.now())
                 .playersList(new ArrayList<>(List.of(gamePlayer)))
@@ -96,7 +101,7 @@ public class ActiveGameServiceImpl implements ActiveGameService{
                 .gameType(createGameRequest.getGameType())
                 .owner(user)
                 .joinGameCode(createGameRequest.getJoinGameCode())
-                .pointsToWinGame(createGameRequest.getPointsToWin() * 3)
+                .pointsToWinGame(points * 3)
                 .build();
 
         return activeGameRepository.put(game);
@@ -226,32 +231,30 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         }
     }
 
+    // W ActiveGameServiceImpl.java
+
     @Override
     public AddAIResult addAI(Long gameId, Team team, User user) {
-        try {
-            // Load the trained AI
-            MarafoneAI trainedAI = MarafoneAI.load("trained_ai.ser");
+        // KROK 1: Usuń try-catch związany z ładowaniem pliku
+        // try { ... } catch (IOException ...) - usuń to
 
-            // Get an available AI user
-            User aiUser = AiManager.getAvailableAI();
-            if (aiUser == null) {
-                return AddAIResult.MAX_AI_REACHED;
-            }
+        // KROK 2: Twórz nową instancję zamiast MarafoneAI.load(...)
+        // allCards jest już wstrzyknięte do serwisu (widzę to w Twoim pliku)
+        MarafoneAI smartAI = new MarafoneAI(allCards);
 
-            // Join the AI to the game
-            JoinGameRequest joinRequest = new JoinGameRequest(activeGameRepository.findById(gameId).get().getJoinGameCode()); // Use the correct game code
-            JoinGameResult result = this.joinGame(gameId, joinRequest, aiUser);
+        User aiUser = AiManager.getAvailableAI();
+        if (aiUser == null) return AddAIResult.MAX_AI_REACHED;
 
-            if (result == SUCCESS) {
-                // Store the AI instance
-                aiPlayers.put(aiUser.getUsername(), trainedAI);
-                return AddAIResult.SUCCESS;
-            } else {
-                AiManager.releaseAI(aiUser); // Release AI if joining fails
-                return AddAIResult.FAILED_TO_ADD;
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            return AddAIResult.AI_LOAD_ERROR;
+        JoinGameRequest joinRequest = new JoinGameRequest(activeGameRepository.findById(gameId).get().getJoinGameCode());
+        JoinGameResult result = this.joinGame(gameId, joinRequest, aiUser);
+
+        if (result == SUCCESS) {
+            // Zapisz instancję AI w mapie
+            aiPlayers.put(aiUser.getUsername(), smartAI);
+            return AddAIResult.SUCCESS;
+        } else {
+            AiManager.releaseAI(aiUser);
+            return AddAIResult.FAILED_TO_ADD;
         }
     }
 
@@ -260,30 +263,27 @@ public class ActiveGameServiceImpl implements ActiveGameService{
         Game game = activeGameRepository.findById(gameId).orElseThrow();
 
         synchronized (game) {
-            // Retrieve the AI instance for this player
-            MarafoneAI trainedAI = aiPlayers.get(playerUsername);
-            if (trainedAI == null) {
-                return MakeAIMoveResult.NO_AI_FOUND;
-            }
+            MarafoneAI aiBrain = aiPlayers.get(playerUsername);
+            if (aiBrain == null) return MakeAIMoveResult.NO_AI_FOUND;
 
-            // Get the AI player
             GamePlayer aiPlayer = game.getPlayersList().stream()
                     .filter(p -> p.getUser().getUsername().equals(playerUsername))
                     .findFirst()
                     .orElseThrow();
 
-            // Get valid moves and let the AI choose one
-            List<Move> validMoves = getValidMoves(game, aiPlayer);
-            if (validMoves.isEmpty()) {
-                return MakeAIMoveResult.NO_VALID_MOVES;
-            }
+            // KROK 3: Zmień wywołanie metody selectMove
+            // Było: Move chosenMove = trainedAI.selectMove(validMoves);
+            // Jest:
+            Move chosenMove = aiBrain.selectMove(game, aiPlayer);
 
-            Move chosenMove = trainedAI.selectMove(validMoves);
+            // Reszta kodu bez zmian (aplikowanie ruchu)
             if (chosenMove.getCard() == null && chosenMove.getSuit() != null) {
-                // the AI is the first to play needs to play two moves
+                // Obsługa wyboru atutu...
+                // Tu też pamiętaj, żeby drugie wywołanie selectMove też zaktualizować!
                 MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
-                List<Move> validCards = getValidMoves(game, aiPlayer);
-                Move chosenCard = trainedAI.selectMove(validCards);
+
+                // Aktualizacja drugiego ruchu (po wyborze atutu):
+                Move chosenCard = aiBrain.selectMove(game, aiPlayer);
                 MoveApplier.applyMove(game, aiPlayer, chosenCard, this);
             } else {
                 MoveApplier.applyMove(game, aiPlayer, chosenMove, this);
